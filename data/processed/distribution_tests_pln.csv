@@ -1,0 +1,949 @@
+ticker,distribution,n_obs,params,test,statistic,p_value,p_value_method,reject_H0_5pct
+PKO.WA,normal,2590,mu=-6.40493e-05; sigma=0.0178612,Pearson_chi2,441.0100386100387,6.061346551663267e-67,asymptotic chi2,True
+PKO.WA,normal,2590,mu=-6.40493e-05; sigma=0.0178612,G,312.2664647729604,4.069110918898109e-42,asymptotic chi2,True
+PKO.WA,normal,2590,mu=-6.40493e-05; sigma=0.0178612,KS,0.05041334973562922,0.001,parametric bootstrap B=999,True
+PKO.WA,normal,2590,mu=-6.40493e-05; sigma=0.0178612,Kuiper,0.09493805175665565,0.001,parametric bootstrap B=999,True
+PKO.WA,normal,2590,mu=-6.40493e-05; sigma=0.0178612,CvM,2.7107617029264297,0.001,parametric bootstrap B=999,True
+PKO.WA,normal,2590,mu=-6.40493e-05; sigma=0.0178612,AD,15.299983148883712,0.001,parametric bootstrap B=999,True
+PKO.WA,student_t,2590,loc=3.84282e-05; scale=0.0134287; df=4.487,Pearson_chi2,361.8540540540541,5.133891098016376e-52,asymptotic chi2,True
+PKO.WA,student_t,2590,loc=3.84282e-05; scale=0.0134287; df=4.487,G,257.5275023014438,2.2871829938021482e-32,asymptotic chi2,True
+PKO.WA,student_t,2590,loc=3.84282e-05; scale=0.0134287; df=4.487,KS,0.03235436113195961,0.005,parametric bootstrap B=199,True
+PKO.WA,student_t,2590,loc=3.84282e-05; scale=0.0134287; df=4.487,Kuiper,0.055984555984555984,0.005,parametric bootstrap B=199,True
+PKO.WA,student_t,2590,loc=3.84282e-05; scale=0.0134287; df=4.487,CvM,0.31586279454934896,0.005,parametric bootstrap B=199,True
+PKO.WA,student_t,2590,loc=3.84282e-05; scale=0.0134287; df=4.487,AD,1.4268656651101992,0.005,parametric bootstrap B=199,True
+PZU.WA,normal,2590,mu=0.000151649; sigma=0.0158834,Pearson_chi2,545.8254826254828,9.084264027884374e-88,asymptotic chi2,True
+PZU.WA,normal,2590,mu=0.000151649; sigma=0.0158834,G,367.2291687004243,1.3909565549408791e-52,asymptotic chi2,True
+PZU.WA,normal,2590,mu=0.000151649; sigma=0.0158834,KS,0.053899638464286026,0.001,parametric bootstrap B=999,True
+PZU.WA,normal,2590,mu=0.000151649; sigma=0.0158834,Kuiper,0.10196244810903116,0.001,parametric bootstrap B=999,True
+PZU.WA,normal,2590,mu=0.000151649; sigma=0.0158834,CvM,2.9540236479075284,0.001,parametric bootstrap B=999,True
+PZU.WA,normal,2590,mu=0.000151649; sigma=0.0158834,AD,15.570349733894545,0.001,parametric bootstrap B=999,True
+PZU.WA,student_t,2590,loc=0.000109884; scale=0.0120865; df=4.537,Pearson_chi2,375.97220077220084,9.625781914247776e-55,asymptotic chi2,True
+PZU.WA,student_t,2590,loc=0.000109884; scale=0.0120865; df=4.537,G,253.48638628927952,1.2510911230051843e-31,asymptotic chi2,True
+PZU.WA,student_t,2590,loc=0.000109884; scale=0.0120865; df=4.537,KS,0.032087330399201974,0.005,parametric bootstrap B=199,True
+PZU.WA,student_t,2590,loc=0.000109884; scale=0.0120865; df=4.537,Kuiper,0.06106838300256068,0.005,parametric bootstrap B=199,True
+PZU.WA,student_t,2590,loc=0.000109884; scale=0.0120865; df=4.537,CvM,0.523028849321138,0.005,parametric bootstrap B=199,True
+PZU.WA,student_t,2590,loc=0.000109884; scale=0.0120865; df=4.537,AD,2.5532228442662017,0.005,parametric bootstrap B=199,True
+KGH.WA,normal,2590,mu=0.000214641; sigma=0.0233508,Pearson_chi2,451.4988416988418,5.22729045260913e-69,asymptotic chi2,True
+KGH.WA,normal,2590,mu=0.000214641; sigma=0.0233508,G,319.88195946376544,1.4927627341167922e-43,asymptotic chi2,True
+KGH.WA,normal,2590,mu=0.000214641; sigma=0.0233508,KS,0.0526783191077686,0.001,parametric bootstrap B=999,True
+KGH.WA,normal,2590,mu=0.000214641; sigma=0.0233508,Kuiper,0.09699465589993678,0.001,parametric bootstrap B=999,True
+KGH.WA,normal,2590,mu=0.000214641; sigma=0.0233508,CvM,2.994406215168493,0.001,parametric bootstrap B=999,True
+KGH.WA,normal,2590,mu=0.000214641; sigma=0.0233508,AD,16.568704898102624,0.001,parametric bootstrap B=999,True
+KGH.WA,student_t,2590,loc=0.000333323; scale=0.0173857; df=4.344,Pearson_chi2,372.3065637065639,4.928416571815938e-54,asymptotic chi2,True
+KGH.WA,student_t,2590,loc=0.000333323; scale=0.0173857; df=4.344,G,256.365396437453,3.730333568060232e-32,asymptotic chi2,True
+KGH.WA,student_t,2590,loc=0.000333323; scale=0.0173857; df=4.344,KS,0.030003674039786876,0.005,parametric bootstrap B=199,True
+KGH.WA,student_t,2590,loc=0.000333323; scale=0.0173857; df=4.344,Kuiper,0.05791505791505791,0.005,parametric bootstrap B=199,True
+KGH.WA,student_t,2590,loc=0.000333323; scale=0.0173857; df=4.344,CvM,0.3521811692390523,0.005,parametric bootstrap B=199,True
+KGH.WA,student_t,2590,loc=0.000333323; scale=0.0173857; df=4.344,AD,1.5936232431358803,0.005,parametric bootstrap B=199,True
+PKN.WA,normal,2590,mu=0.000169153; sigma=0.0207044,Pearson_chi2,372.6694980694981,1.2453010516413639e-53,asymptotic chi2,True
+PKN.WA,normal,2590,mu=0.000169153; sigma=0.0207044,G,280.1892861001352,3.9271440386929646e-36,asymptotic chi2,True
+PKN.WA,normal,2590,mu=0.000169153; sigma=0.0207044,KS,0.04687166434027143,0.001,parametric bootstrap B=999,True
+PKN.WA,normal,2590,mu=0.000169153; sigma=0.0207044,Kuiper,0.0881587778777779,0.001,parametric bootstrap B=999,True
+PKN.WA,normal,2590,mu=0.000169153; sigma=0.0207044,CvM,2.123133266780162,0.001,parametric bootstrap B=999,True
+PKN.WA,normal,2590,mu=0.000169153; sigma=0.0207044,AD,11.682776440248745,0.001,parametric bootstrap B=999,True
+PKN.WA,student_t,2590,loc=0.000225602; scale=0.0162849; df=5.035,Pearson_chi2,291.37220077220087,1.2590907648810907e-38,asymptotic chi2,True
+PKN.WA,student_t,2590,loc=0.000225602; scale=0.0162849; df=5.035,G,210.02350431571605,7.547689572545528e-24,asymptotic chi2,True
+PKN.WA,student_t,2590,loc=0.000225602; scale=0.0162849; df=5.035,KS,0.03112918918767066,0.005,parametric bootstrap B=199,True
+PKN.WA,student_t,2590,loc=0.000225602; scale=0.0162849; df=5.035,Kuiper,0.05405405405405411,0.005,parametric bootstrap B=199,True
+PKN.WA,student_t,2590,loc=0.000225602; scale=0.0162849; df=5.035,CvM,0.24936828079313458,0.005,parametric bootstrap B=199,True
+PKN.WA,student_t,2590,loc=0.000225602; scale=0.0162849; df=5.035,AD,1.2041923811971174,0.01,parametric bootstrap B=199,True
+PEO.WA,normal,2590,mu=-0.000227842; sigma=0.0184399,Pearson_chi2,469.9359073359073,1.1967803897112966e-72,asymptotic chi2,True
+PEO.WA,normal,2590,mu=-0.000227842; sigma=0.0184399,G,337.6042339359559,6.517035093832593e-47,asymptotic chi2,True
+PEO.WA,normal,2590,mu=-0.000227842; sigma=0.0184399,KS,0.058219242614548083,0.001,parametric bootstrap B=999,True
+PEO.WA,normal,2590,mu=-0.000227842; sigma=0.0184399,Kuiper,0.10766412577265855,0.001,parametric bootstrap B=999,True
+PEO.WA,normal,2590,mu=-0.000227842; sigma=0.0184399,CvM,3.580758956967953,0.001,parametric bootstrap B=999,True
+PEO.WA,normal,2590,mu=-0.000227842; sigma=0.0184399,AD,20.711755514329525,0.001,parametric bootstrap B=999,True
+PEO.WA,student_t,2590,loc=-4.65933e-05; scale=0.0132067; df=4.112,Pearson_chi2,359.24092664092666,1.635881484747606e-51,asymptotic chi2,True
+PEO.WA,student_t,2590,loc=-4.65933e-05; scale=0.0132067; df=4.112,G,246.75948506402224,2.0931523346828473e-30,asymptotic chi2,True
+PEO.WA,student_t,2590,loc=-4.65933e-05; scale=0.0132067; df=4.112,KS,0.038443145022651115,0.005,parametric bootstrap B=199,True
+PEO.WA,student_t,2590,loc=-4.65933e-05; scale=0.0132067; df=4.112,Kuiper,0.06409266409266412,0.005,parametric bootstrap B=199,True
+PEO.WA,student_t,2590,loc=-4.65933e-05; scale=0.0132067; df=4.112,CvM,0.23207432830849986,0.01,parametric bootstrap B=199,True
+PEO.WA,student_t,2590,loc=-4.65933e-05; scale=0.0132067; df=4.112,AD,1.0374564740582173,0.01,parametric bootstrap B=199,True
+LPP.WA,normal,2590,mu=0.000558403; sigma=0.022087,Pearson_chi2,879.8702702702702,5.789036283653875e-156,asymptotic chi2,True
+LPP.WA,normal,2590,mu=0.000558403; sigma=0.022087,G,548.3572065862232,2.8220966220155505e-88,asymptotic chi2,True
+LPP.WA,normal,2590,mu=0.000558403; sigma=0.022087,KS,0.07065020222985696,0.001,parametric bootstrap B=999,True
+LPP.WA,normal,2590,mu=0.000558403; sigma=0.022087,Kuiper,0.1410625077940918,0.001,parametric bootstrap B=999,True
+LPP.WA,normal,2590,mu=0.000558403; sigma=0.022087,CvM,6.416392598723456,0.001,parametric bootstrap B=999,True
+LPP.WA,normal,2590,mu=0.000558403; sigma=0.022087,AD,33.44201480741867,0.001,parametric bootstrap B=999,True
+LPP.WA,student_t,2590,loc=0.0005264; scale=0.0142319; df=3.048,Pearson_chi2,827.8254826254828,7.310793222209274e-146,asymptotic chi2,True
+LPP.WA,student_t,2590,loc=0.0005264; scale=0.0142319; df=3.048,G,470.7932456785935,2.4276200594795014e-73,asymptotic chi2,True
+LPP.WA,student_t,2590,loc=0.0005264; scale=0.0142319; df=3.048,KS,0.041842798855446395,0.005,parametric bootstrap B=199,True
+LPP.WA,student_t,2590,loc=0.0005264; scale=0.0142319; df=3.048,Kuiper,0.08095487815610325,0.005,parametric bootstrap B=199,True
+LPP.WA,student_t,2590,loc=0.0005264; scale=0.0142319; df=3.048,CvM,0.8820015859358916,0.005,parametric bootstrap B=199,True
+LPP.WA,student_t,2590,loc=0.0005264; scale=0.0142319; df=3.048,AD,4.170531912536262,0.005,parametric bootstrap B=199,True
+CDR.WA,normal,2590,mu=0.00174141; sigma=0.0272902,Pearson_chi2,781.1158301158301,1.3299630403445535e-135,asymptotic chi2,True
+CDR.WA,normal,2590,mu=0.00174141; sigma=0.0272902,G,567.7017285818254,3.672286718005878e-92,asymptotic chi2,True
+CDR.WA,normal,2590,mu=0.00174141; sigma=0.0272902,KS,0.07914475014892264,0.001,parametric bootstrap B=999,True
+CDR.WA,normal,2590,mu=0.00174141; sigma=0.0272902,Kuiper,0.15281811603369932,0.001,parametric bootstrap B=999,True
+CDR.WA,normal,2590,mu=0.00174141; sigma=0.0272902,CvM,7.860443153269466,0.001,parametric bootstrap B=999,True
+CDR.WA,normal,2590,mu=0.00174141; sigma=0.0272902,AD,43.397737916428014,0.001,parametric bootstrap B=999,True
+CDR.WA,student_t,2590,loc=0.00133513; scale=0.0163443; df=2.729,Pearson_chi2,516.899613899614,1.5902777243315976e-82,asymptotic chi2,True
+CDR.WA,student_t,2590,loc=0.00133513; scale=0.0163443; df=2.729,G,333.6054913801105,1.3351970139458723e-46,asymptotic chi2,True
+CDR.WA,student_t,2590,loc=0.00133513; scale=0.0163443; df=2.729,KS,0.04325776088182515,0.005,parametric bootstrap B=199,True
+CDR.WA,student_t,2590,loc=0.00133513; scale=0.0163443; df=2.729,Kuiper,0.07335907335907332,0.005,parametric bootstrap B=199,True
+CDR.WA,student_t,2590,loc=0.00133513; scale=0.0163443; df=2.729,CvM,0.6264078877314114,0.005,parametric bootstrap B=199,True
+CDR.WA,student_t,2590,loc=0.00133513; scale=0.0163443; df=2.729,AD,3.031404545982241,0.005,parametric bootstrap B=199,True
+DNP.WA,normal,960,mu=0.00212861; sigma=0.0242864,Pearson_chi2,156.66666666666666,1.8445132051793428e-19,asymptotic chi2,True
+DNP.WA,normal,960,mu=0.00212861; sigma=0.0242864,G,132.1187143994708,4.108587380066469e-15,asymptotic chi2,True
+DNP.WA,normal,960,mu=0.00212861; sigma=0.0242864,KS,0.06399412911042845,0.001,parametric bootstrap B=999,True
+DNP.WA,normal,960,mu=0.00212861; sigma=0.0242864,Kuiper,0.12770954613364027,0.001,parametric bootstrap B=999,True
+DNP.WA,normal,960,mu=0.00212861; sigma=0.0242864,CvM,1.7668106508851729,0.001,parametric bootstrap B=999,True
+DNP.WA,normal,960,mu=0.00212861; sigma=0.0242864,AD,9.599171302179911,0.001,parametric bootstrap B=999,True
+DNP.WA,student_t,960,loc=0.0016835; scale=0.0166577; df=3.471,Pearson_chi2,78.06666666666668,1.2908141042428512e-06,asymptotic chi2,True
+DNP.WA,student_t,960,loc=0.0016835; scale=0.0166577; df=3.471,G,64.34453056344876,0.00011027059092783057,asymptotic chi2,True
+DNP.WA,student_t,960,loc=0.0016835; scale=0.0166577; df=3.471,KS,0.031365315722699294,0.005,parametric bootstrap B=199,True
+DNP.WA,student_t,960,loc=0.0016835; scale=0.0166577; df=3.471,Kuiper,0.06264618421272822,0.005,parametric bootstrap B=199,True
+DNP.WA,student_t,960,loc=0.0016835; scale=0.0166577; df=3.471,CvM,0.1908239502235372,0.005,parametric bootstrap B=199,True
+DNP.WA,student_t,960,loc=0.0016835; scale=0.0166577; df=3.471,AD,1.0212693710756184,0.005,parametric bootstrap B=199,True
+PGE.WA,normal,2590,mu=-0.000374196; sigma=0.0227548,Pearson_chi2,554.6447876447878,1.5445972076245855e-89,asymptotic chi2,True
+PGE.WA,normal,2590,mu=-0.000374196; sigma=0.0227548,G,405.9906230152264,4.327852553646805e-60,asymptotic chi2,True
+PGE.WA,normal,2590,mu=-0.000374196; sigma=0.0227548,KS,0.06701208932304581,0.001,parametric bootstrap B=999,True
+PGE.WA,normal,2590,mu=-0.000374196; sigma=0.0227548,Kuiper,0.1268134050698844,0.001,parametric bootstrap B=999,True
+PGE.WA,normal,2590,mu=-0.000374196; sigma=0.0227548,CvM,5.242649405892879,0.001,parametric bootstrap B=999,True
+PGE.WA,normal,2590,mu=-0.000374196; sigma=0.0227548,AD,30.26219591041854,0.001,parametric bootstrap B=999,True
+PGE.WA,student_t,2590,loc=-0.000463563; scale=0.0150957; df=3.473,Pearson_chi2,407.6563706563708,6.600618666426189e-61,asymptotic chi2,True
+PGE.WA,student_t,2590,loc=-0.000463563; scale=0.0150957; df=3.473,G,269.7310542706903,1.3119132800336204e-34,asymptotic chi2,True
+PGE.WA,student_t,2590,loc=-0.000463563; scale=0.0150957; df=3.473,KS,0.03264368686862312,0.005,parametric bootstrap B=199,True
+PGE.WA,student_t,2590,loc=-0.000463563; scale=0.0150957; df=3.473,Kuiper,0.06254826254826257,0.005,parametric bootstrap B=199,True
+PGE.WA,student_t,2590,loc=-0.000463563; scale=0.0150957; df=3.473,CvM,0.2722132553375116,0.005,parametric bootstrap B=199,True
+PGE.WA,student_t,2590,loc=-0.000463563; scale=0.0150957; df=3.473,AD,1.2066253902717108,0.005,parametric bootstrap B=199,True
+CPS.WA,normal,2590,mu=0.000267712; sigma=0.0181763,Pearson_chi2,565.5691119691123,9.859002497433846e-92,asymptotic chi2,True
+CPS.WA,normal,2590,mu=0.000267712; sigma=0.0181763,G,360.5209923543781,2.709362807967025e-51,asymptotic chi2,True
+CPS.WA,normal,2590,mu=0.000267712; sigma=0.0181763,KS,0.041091870340132286,0.001,parametric bootstrap B=999,True
+CPS.WA,normal,2590,mu=0.000267712; sigma=0.0181763,Kuiper,0.08062099299313691,0.001,parametric bootstrap B=999,True
+CPS.WA,normal,2590,mu=0.000267712; sigma=0.0181763,CvM,2.0785366930670635,0.001,parametric bootstrap B=999,True
+CPS.WA,normal,2590,mu=0.000267712; sigma=0.0181763,AD,10.925982894845674,0.001,parametric bootstrap B=999,True
+CPS.WA,student_t,2590,loc=0.000241023; scale=0.0145749; df=5.377,Pearson_chi2,478.35598455598466,7.659229791174825e-75,asymptotic chi2,True
+CPS.WA,student_t,2590,loc=0.000241023; scale=0.0145749; df=5.377,G,309.7280706268204,4.507380343497194e-42,asymptotic chi2,True
+CPS.WA,student_t,2590,loc=0.000241023; scale=0.0145749; df=5.377,KS,0.0383451409108026,0.005,parametric bootstrap B=199,True
+CPS.WA,student_t,2590,loc=0.000241023; scale=0.0145749; df=5.377,Kuiper,0.07220077220077215,0.005,parametric bootstrap B=199,True
+CPS.WA,student_t,2590,loc=0.000241023; scale=0.0145749; df=5.377,CvM,0.4737450450573202,0.005,parametric bootstrap B=199,True
+CPS.WA,student_t,2590,loc=0.000241023; scale=0.0145749; df=5.377,AD,2.1441539802744956,0.005,parametric bootstrap B=199,True
+AAPL,normal,2516,mu=0.00111348; sigma=0.018716,Pearson_chi2,214.16216216216213,1.4153872361377797e-24,asymptotic chi2,True
+AAPL,normal,2516,mu=0.00111348; sigma=0.018716,G,219.0715566010574,1.9247036658291847e-25,asymptotic chi2,True
+AAPL,normal,2516,mu=0.00111348; sigma=0.018716,KS,0.06768831154284657,0.001,parametric bootstrap B=999,True
+AAPL,normal,2516,mu=0.00111348; sigma=0.018716,Kuiper,0.12098219605503643,0.001,parametric bootstrap B=999,True
+AAPL,normal,2516,mu=0.00111348; sigma=0.018716,CvM,4.023650139004214,0.001,parametric bootstrap B=999,True
+AAPL,normal,2516,mu=0.00111348; sigma=0.018716,AD,24.90791821481116,0.001,parametric bootstrap B=999,True
+AAPL,student_t,2516,loc=0.00132867; scale=0.0127873; df=3.599,Pearson_chi2,39.66931637519873,0.5737774172011502,asymptotic chi2,False
+AAPL,student_t,2516,loc=0.00132867; scale=0.0127873; df=3.599,G,40.29125710935025,0.5461579030638634,asymptotic chi2,False
+AAPL,student_t,2516,loc=0.00132867; scale=0.0127873; df=3.599,KS,0.009351820298751812,0.68,parametric bootstrap B=199,False
+AAPL,student_t,2516,loc=0.00132867; scale=0.0127873; df=3.599,Kuiper,0.01867075271144003,0.51,parametric bootstrap B=199,False
+AAPL,student_t,2516,loc=0.00132867; scale=0.0127873; df=3.599,CvM,0.03906396890036381,0.4,parametric bootstrap B=199,False
+AAPL,student_t,2516,loc=0.00132867; scale=0.0127873; df=3.599,AD,0.2670743974431389,0.455,parametric bootstrap B=199,False
+MSFT,normal,2516,mu=0.00100705; sigma=0.0172006,Pearson_chi2,241.5866454689984,1.8082738356216454e-29,asymptotic chi2,True
+MSFT,normal,2516,mu=0.00100705; sigma=0.0172006,G,249.3790913476713,6.999861762120546e-31,asymptotic chi2,True
+MSFT,normal,2516,mu=0.00100705; sigma=0.0172006,KS,0.06992845780905924,0.001,parametric bootstrap B=999,True
+MSFT,normal,2516,mu=0.00100705; sigma=0.0172006,Kuiper,0.13481330603576538,0.001,parametric bootstrap B=999,True
+MSFT,normal,2516,mu=0.00100705; sigma=0.0172006,CvM,4.824141561114888,0.001,parametric bootstrap B=999,True
+MSFT,normal,2516,mu=0.00100705; sigma=0.0172006,AD,29.807752052714932,0.001,parametric bootstrap B=999,True
+MSFT,student_t,2516,loc=0.000970243; scale=0.0113749; df=3.498,Pearson_chi2,26.54213036565978,0.9698427505975923,asymptotic chi2,False
+MSFT,student_t,2516,loc=0.000970243; scale=0.0113749; df=3.498,G,27.026365008661223,0.964607893801526,asymptotic chi2,False
+MSFT,student_t,2516,loc=0.000970243; scale=0.0113749; df=3.498,KS,0.009034423108362777,0.785,parametric bootstrap B=199,False
+MSFT,student_t,2516,loc=0.000970243; scale=0.0113749; df=3.498,Kuiper,0.015557167070218425,0.88,parametric bootstrap B=199,False
+MSFT,student_t,2516,loc=0.000970243; scale=0.0113749; df=3.498,CvM,0.016236004764440967,0.985,parametric bootstrap B=199,False
+MSFT,student_t,2516,loc=0.000970243; scale=0.0113749; df=3.498,AD,0.13722392064209998,0.965,parametric bootstrap B=199,False
+NVDA,normal,2516,mu=0.00151515; sigma=0.0269887,Pearson_chi2,301.55484896661363,1.5573766459073932e-40,asymptotic chi2,True
+NVDA,normal,2516,mu=0.00151515; sigma=0.0269887,G,308.8340571623978,6.645231430000023e-42,asymptotic chi2,True
+NVDA,normal,2516,mu=0.00151515; sigma=0.0269887,KS,0.08030664498250095,0.001,parametric bootstrap B=999,True
+NVDA,normal,2516,mu=0.00151515; sigma=0.0269887,Kuiper,0.15102256951488566,0.001,parametric bootstrap B=999,True
+NVDA,normal,2516,mu=0.00151515; sigma=0.0269887,CvM,5.783833006009246,0.001,parametric bootstrap B=999,True
+NVDA,normal,2516,mu=0.00151515; sigma=0.0269887,AD,34.12738268744761,0.001,parametric bootstrap B=999,True
+NVDA,student_t,2516,loc=0.00129286; scale=0.0172352; df=3.212,Pearson_chi2,38.93799682034976,0.606152186002194,asymptotic chi2,False
+NVDA,student_t,2516,loc=0.00129286; scale=0.0172352; df=3.212,G,39.106303151839235,0.5987218073234704,asymptotic chi2,False
+NVDA,student_t,2516,loc=0.00129286; scale=0.0172352; df=3.212,KS,0.010530247612289212,0.52,parametric bootstrap B=199,False
+NVDA,student_t,2516,loc=0.00129286; scale=0.0172352; df=3.212,Kuiper,0.020143299946014215,0.34,parametric bootstrap B=199,False
+NVDA,student_t,2516,loc=0.00129286; scale=0.0172352; df=3.212,CvM,0.029752262915108033,0.64,parametric bootstrap B=199,False
+NVDA,student_t,2516,loc=0.00129286; scale=0.0172352; df=3.212,AD,0.2108326202715034,0.725,parametric bootstrap B=199,False
+AMZN,normal,2516,mu=0.0012336; sigma=0.0204707,Pearson_chi2,216.68521462639106,5.08290561213797e-25,asymptotic chi2,True
+AMZN,normal,2516,mu=0.0012336; sigma=0.0204707,G,230.5134174704573,1.771110011432221e-27,asymptotic chi2,True
+AMZN,normal,2516,mu=0.0012336; sigma=0.0204707,KS,0.065932991272065,0.001,parametric bootstrap B=999,True
+AMZN,normal,2516,mu=0.0012336; sigma=0.0204707,Kuiper,0.12845440536029765,0.001,parametric bootstrap B=999,True
+AMZN,normal,2516,mu=0.0012336; sigma=0.0204707,CvM,4.111658605554052,0.001,parametric bootstrap B=999,True
+AMZN,normal,2516,mu=0.0012336; sigma=0.0204707,AD,26.58368254571087,0.001,parametric bootstrap B=999,True
+AMZN,student_t,2516,loc=0.00136276; scale=0.0138651; df=3.602,Pearson_chi2,44.24006359300477,0.3772540950746069,asymptotic chi2,False
+AMZN,student_t,2516,loc=0.00136276; scale=0.0138651; df=3.602,G,44.40381607280177,0.370731538997162,asymptotic chi2,False
+AMZN,student_t,2516,loc=0.00136276; scale=0.0138651; df=3.602,KS,0.0095383099613221,0.735,parametric bootstrap B=199,False
+AMZN,student_t,2516,loc=0.00136276; scale=0.0138651; df=3.602,Kuiper,0.018575686435603034,0.625,parametric bootstrap B=199,False
+AMZN,student_t,2516,loc=0.00136276; scale=0.0138651; df=3.602,CvM,0.04676664783698713,0.365,parametric bootstrap B=199,False
+AMZN,student_t,2516,loc=0.00136276; scale=0.0138651; df=3.602,AD,0.40092996879866405,0.265,parametric bootstrap B=199,False
+GOOGL,normal,2516,mu=0.000790224; sigma=0.0171507,Pearson_chi2,254.01907790143085,1.0003092459244858e-31,asymptotic chi2,True
+GOOGL,normal,2516,mu=0.000790224; sigma=0.0171507,G,262.35628803712586,2.983014072184857e-33,asymptotic chi2,True
+GOOGL,normal,2516,mu=0.000790224; sigma=0.0171507,KS,0.07422452699432783,0.001,parametric bootstrap B=999,True
+GOOGL,normal,2516,mu=0.000790224; sigma=0.0171507,Kuiper,0.1356882851958409,0.001,parametric bootstrap B=999,True
+GOOGL,normal,2516,mu=0.000790224; sigma=0.0171507,CvM,4.732368942824621,0.001,parametric bootstrap B=999,True
+GOOGL,normal,2516,mu=0.000790224; sigma=0.0171507,AD,29.616844260124708,0.001,parametric bootstrap B=999,True
+GOOGL,student_t,2516,loc=0.000918547; scale=0.0113872; df=3.524,Pearson_chi2,57.806041335453095,0.052958523166844074,asymptotic chi2,False
+GOOGL,student_t,2516,loc=0.000918547; scale=0.0113872; df=3.524,G,58.32885238682435,0.04817057610860232,asymptotic chi2,True
+GOOGL,student_t,2516,loc=0.000918547; scale=0.0113872; df=3.524,KS,0.013146273655063712,0.13,parametric bootstrap B=199,False
+GOOGL,student_t,2516,loc=0.000918547; scale=0.0113872; df=3.524,Kuiper,0.023192137139874558,0.11,parametric bootstrap B=199,False
+GOOGL,student_t,2516,loc=0.000918547; scale=0.0113872; df=3.524,CvM,0.0624030782176663,0.095,parametric bootstrap B=199,False
+GOOGL,student_t,2516,loc=0.000918547; scale=0.0113872; df=3.524,AD,0.4565853159801918,0.125,parametric bootstrap B=199,False
+JPM,normal,2516,mu=0.000625546; sigma=0.0189804,Pearson_chi2,333.18441971383146,1.6062430900192386e-46,asymptotic chi2,True
+JPM,normal,2516,mu=0.000625546; sigma=0.0189804,G,336.666610347813,3.4802285033216554e-47,asymptotic chi2,True
+JPM,normal,2516,mu=0.000625546; sigma=0.0189804,KS,0.07323857033954823,0.001,parametric bootstrap B=999,True
+JPM,normal,2516,mu=0.000625546; sigma=0.0189804,Kuiper,0.1449851075897653,0.001,parametric bootstrap B=999,True
+JPM,normal,2516,mu=0.000625546; sigma=0.0189804,CvM,6.439142040374322,0.001,parametric bootstrap B=999,True
+JPM,normal,2516,mu=0.000625546; sigma=0.0189804,AD,38.315640711366086,0.001,parametric bootstrap B=999,True
+JPM,student_t,2516,loc=0.000621311; scale=0.0118149; df=3.103,Pearson_chi2,45.51987281399047,0.32774630846898384,asymptotic chi2,False
+JPM,student_t,2516,loc=0.000621311; scale=0.0118149; df=3.103,G,46.82426577192047,0.28108554462024116,asymptotic chi2,False
+JPM,student_t,2516,loc=0.000621311; scale=0.0118149; df=3.103,KS,0.014858061721351234,0.035,parametric bootstrap B=199,True
+JPM,student_t,2516,loc=0.000621311; scale=0.0118149; df=3.103,Kuiper,0.026599845493810392,0.015,parametric bootstrap B=199,True
+JPM,student_t,2516,loc=0.000621311; scale=0.0118149; df=3.103,CvM,0.05818671867986327,0.125,parametric bootstrap B=199,False
+JPM,student_t,2516,loc=0.000621311; scale=0.0118149; df=3.103,AD,0.3081523488544917,0.39,parametric bootstrap B=199,False
+JNJ,normal,2516,mu=0.000573601; sigma=0.0125308,Pearson_chi2,171.4531001589825,2.953448847565678e-17,asymptotic chi2,True
+JNJ,normal,2516,mu=0.000573601; sigma=0.0125308,G,183.47086023922725,2.8531180306841975e-19,asymptotic chi2,True
+JNJ,normal,2516,mu=0.000573601; sigma=0.0125308,KS,0.05388346866881624,0.001,parametric bootstrap B=999,True
+JNJ,normal,2516,mu=0.000573601; sigma=0.0125308,Kuiper,0.10408138833019046,0.001,parametric bootstrap B=999,True
+JNJ,normal,2516,mu=0.000573601; sigma=0.0125308,CvM,3.0693122477843024,0.001,parametric bootstrap B=999,True
+JNJ,normal,2516,mu=0.000573601; sigma=0.0125308,AD,20.297303387911597,0.001,parametric bootstrap B=999,True
+JNJ,student_t,2516,loc=0.000579815; scale=0.00891748; df=4.126,Pearson_chi2,41.05882352941177,0.5121703132516064,asymptotic chi2,False
+JNJ,student_t,2516,loc=0.000579815; scale=0.00891748; df=4.126,G,42.791661927688935,0.4370123515355561,asymptotic chi2,False
+JNJ,student_t,2516,loc=0.000579815; scale=0.00891748; df=4.126,KS,0.011623070164250682,0.3,parametric bootstrap B=199,False
+JNJ,student_t,2516,loc=0.000579815; scale=0.00891748; df=4.126,Kuiper,0.022210676728561196,0.245,parametric bootstrap B=199,False
+JNJ,student_t,2516,loc=0.000579815; scale=0.00891748; df=4.126,CvM,0.04986602889270616,0.26,parametric bootstrap B=199,False
+JNJ,student_t,2516,loc=0.000579815; scale=0.00891748; df=4.126,AD,0.3480009447962402,0.3,parametric bootstrap B=199,False
+XOM,normal,2516,mu=4.8406e-06; sigma=0.0163907,Pearson_chi2,317.4610492845787,1.5584655696981915e-43,asymptotic chi2,True
+XOM,normal,2516,mu=4.8406e-06; sigma=0.0163907,G,333.71508180242785,1.272484817556256e-46,asymptotic chi2,True
+XOM,normal,2516,mu=4.8406e-06; sigma=0.0163907,KS,0.07872417025915163,0.001,parametric bootstrap B=999,True
+XOM,normal,2516,mu=4.8406e-06; sigma=0.0163907,Kuiper,0.1523577116148685,0.001,parametric bootstrap B=999,True
+XOM,normal,2516,mu=4.8406e-06; sigma=0.0163907,CvM,6.281592691289722,0.001,parametric bootstrap B=999,True
+XOM,normal,2516,mu=4.8406e-06; sigma=0.0163907,AD,38.41270890195574,0.001,parametric bootstrap B=999,True
+XOM,student_t,2516,loc=-7.76107e-06; scale=0.0102169; df=3.106,Pearson_chi2,50.01748807631161,0.1850387312728598,asymptotic chi2,False
+XOM,student_t,2516,loc=-7.76107e-06; scale=0.0102169; df=3.106,G,49.1532998135087,0.20840632504078652,asymptotic chi2,False
+XOM,student_t,2516,loc=-7.76107e-06; scale=0.0102169; df=3.106,KS,0.007190227278956227,0.97,parametric bootstrap B=199,False
+XOM,student_t,2516,loc=-7.76107e-06; scale=0.0102169; df=3.106,Kuiper,0.014122444019310829,0.95,parametric bootstrap B=199,False
+XOM,student_t,2516,loc=-7.76107e-06; scale=0.0102169; df=3.106,CvM,0.020651818617040553,0.92,parametric bootstrap B=199,False
+XOM,student_t,2516,loc=-7.76107e-06; scale=0.0102169; df=3.106,AD,0.1464906309674916,0.935,parametric bootstrap B=199,False
+PG,normal,2516,mu=0.000518654; sigma=0.0127297,Pearson_chi2,219.42766295707466,1.6647106452776028e-25,asymptotic chi2,True
+PG,normal,2516,mu=0.000518654; sigma=0.0127297,G,225.53460181085777,1.3709028609463225e-26,asymptotic chi2,True
+PG,normal,2516,mu=0.000518654; sigma=0.0127297,KS,0.06454093118837459,0.001,parametric bootstrap B=999,True
+PG,normal,2516,mu=0.000518654; sigma=0.0127297,Kuiper,0.12481313111381734,0.001,parametric bootstrap B=999,True
+PG,normal,2516,mu=0.000518654; sigma=0.0127297,CvM,4.131925995673242,0.001,parametric bootstrap B=999,True
+PG,normal,2516,mu=0.000518654; sigma=0.0127297,AD,25.85221238362965,0.001,parametric bootstrap B=999,True
+PG,student_t,2516,loc=0.000385521; scale=0.00869807; df=3.803,Pearson_chi2,53.19872813990461,0.11528402208305406,asymptotic chi2,False
+PG,student_t,2516,loc=0.000385521; scale=0.00869807; df=3.803,G,53.84027063792781,0.10411109632193348,asymptotic chi2,False
+PG,student_t,2516,loc=0.000385521; scale=0.00869807; df=3.803,KS,0.01372236210857758,0.07,parametric bootstrap B=199,False
+PG,student_t,2516,loc=0.000385521; scale=0.00869807; df=3.803,Kuiper,0.022333974938862078,0.18,parametric bootstrap B=199,False
+PG,student_t,2516,loc=0.000385521; scale=0.00869807; df=3.803,CvM,0.05601598842972932,0.2,parametric bootstrap B=199,False
+PG,student_t,2516,loc=0.000385521; scale=0.00869807; df=3.803,AD,0.39871318770155995,0.24,parametric bootstrap B=199,False
+WMT,normal,2516,mu=0.000574289; sigma=0.0139165,Pearson_chi2,223.3036565977742,3.418889750409069e-26,asymptotic chi2,True
+WMT,normal,2516,mu=0.000574289; sigma=0.0139165,G,233.83670909461154,4.495096732511998e-28,asymptotic chi2,True
+WMT,normal,2516,mu=0.000574289; sigma=0.0139165,KS,0.0657108756969349,0.001,parametric bootstrap B=999,True
+WMT,normal,2516,mu=0.000574289; sigma=0.0139165,Kuiper,0.12889385072067722,0.001,parametric bootstrap B=999,True
+WMT,normal,2516,mu=0.000574289; sigma=0.0139165,CvM,4.499907066540226,0.001,parametric bootstrap B=999,True
+WMT,normal,2516,mu=0.000574289; sigma=0.0139165,AD,28.02112484245299,0.001,parametric bootstrap B=999,True
+WMT,student_t,2516,loc=0.000425713; scale=0.00938027; df=3.768,Pearson_chi2,44.42289348171701,0.3699750564012481,asymptotic chi2,False
+WMT,student_t,2516,loc=0.000425713; scale=0.00938027; df=3.768,G,44.06573240134456,0.38425445623892307,asymptotic chi2,False
+WMT,student_t,2516,loc=0.000425713; scale=0.00938027; df=3.768,KS,0.011386752490608387,0.285,parametric bootstrap B=199,False
+WMT,student_t,2516,loc=0.000425713; scale=0.00938027; df=3.768,Kuiper,0.018759607144963497,0.46,parametric bootstrap B=199,False
+WMT,student_t,2516,loc=0.000425713; scale=0.00938027; df=3.768,CvM,0.02886622459799152,0.645,parametric bootstrap B=199,False
+WMT,student_t,2516,loc=0.000425713; scale=0.00938027; df=3.768,AD,0.21890578450893372,0.69,parametric bootstrap B=199,False
+SHY,normal,2516,mu=0.000138214; sigma=0.00697046,Pearson_chi2,171.5993640699523,2.792855778743722e-17,asymptotic chi2,True
+SHY,normal,2516,mu=0.000138214; sigma=0.00697046,G,167.24480669919507,1.4662700960695365e-16,asymptotic chi2,True
+SHY,normal,2516,mu=0.000138214; sigma=0.00697046,KS,0.0620052960334998,0.001,parametric bootstrap B=999,True
+SHY,normal,2516,mu=0.000138214; sigma=0.00697046,Kuiper,0.09975953852298525,0.001,parametric bootstrap B=999,True
+SHY,normal,2516,mu=0.000138214; sigma=0.00697046,CvM,2.8508743116712205,0.001,parametric bootstrap B=999,True
+SHY,normal,2516,mu=0.000138214; sigma=0.00697046,AD,16.31008988678832,0.001,parametric bootstrap B=999,True
+SHY,student_t,2516,loc=-8.67595e-05; scale=0.00520278; df=4.302,Pearson_chi2,66.91096979332274,0.008582071202336578,asymptotic chi2,True
+SHY,student_t,2516,loc=-8.67595e-05; scale=0.00520278; df=4.302,G,67.18253350385808,0.008086959426414606,asymptotic chi2,True
+SHY,student_t,2516,loc=-8.67595e-05; scale=0.00520278; df=4.302,KS,0.01718106390596924,0.015,parametric bootstrap B=199,True
+SHY,student_t,2516,loc=-8.67595e-05; scale=0.00520278; df=4.302,Kuiper,0.031915931702669875,0.01,parametric bootstrap B=199,True
+SHY,student_t,2516,loc=-8.67595e-05; scale=0.00520278; df=4.302,CvM,0.14570869273975642,0.005,parametric bootstrap B=199,True
+SHY,student_t,2516,loc=-8.67595e-05; scale=0.00520278; df=4.302,AD,1.2324823462290624,0.005,parametric bootstrap B=199,True
+IEI,normal,2516,mu=0.000205766; sigma=0.00729635,Pearson_chi2,119.82193958664547,3.56292484327787e-09,asymptotic chi2,True
+IEI,normal,2516,mu=0.000205766; sigma=0.00729635,G,120.47285756165522,2.8678668996352557e-09,asymptotic chi2,True
+IEI,normal,2516,mu=0.000205766; sigma=0.00729635,KS,0.05268304979500571,0.001,parametric bootstrap B=999,True
+IEI,normal,2516,mu=0.000205766; sigma=0.00729635,Kuiper,0.08552292017481378,0.001,parametric bootstrap B=999,True
+IEI,normal,2516,mu=0.000205766; sigma=0.00729635,CvM,2.172356806621306,0.001,parametric bootstrap B=999,True
+IEI,normal,2516,mu=0.000205766; sigma=0.00729635,AD,12.88178509288673,0.001,parametric bootstrap B=999,True
+IEI,student_t,2516,loc=-1.25476e-05; scale=0.00562576; df=4.787,Pearson_chi2,37.84101748807632,0.6540409070107264,asymptotic chi2,False
+IEI,student_t,2516,loc=-1.25476e-05; scale=0.00562576; df=4.787,G,37.28327101182163,0.6778695869186456,asymptotic chi2,False
+IEI,student_t,2516,loc=-1.25476e-05; scale=0.00562576; df=4.787,KS,0.012753950654239898,0.275,parametric bootstrap B=199,False
+IEI,student_t,2516,loc=-1.25476e-05; scale=0.00562576; df=4.787,Kuiper,0.022977237765753222,0.255,parametric bootstrap B=199,False
+IEI,student_t,2516,loc=-1.25476e-05; scale=0.00562576; df=4.787,CvM,0.059097762301039754,0.21,parametric bootstrap B=199,False
+IEI,student_t,2516,loc=-1.25476e-05; scale=0.00562576; df=4.787,AD,0.7657760911902187,0.025,parametric bootstrap B=199,True
+IEF,normal,2516,mu=0.00026723; sigma=0.00808088,Pearson_chi2,107.93799682034975,1.6832194893075804e-07,asymptotic chi2,True
+IEF,normal,2516,mu=0.00026723; sigma=0.00808088,G,112.42405371603346,4.0261613805543936e-08,asymptotic chi2,True
+IEF,normal,2516,mu=0.00026723; sigma=0.00808088,KS,0.04437076178615362,0.001,parametric bootstrap B=999,True
+IEF,normal,2516,mu=0.00026723; sigma=0.00808088,Kuiper,0.07603219982104725,0.001,parametric bootstrap B=999,True
+IEF,normal,2516,mu=0.00026723; sigma=0.00808088,CvM,1.5119666800971974,0.001,parametric bootstrap B=999,True
+IEF,normal,2516,mu=0.00026723; sigma=0.00808088,AD,9.72603353086788,0.001,parametric bootstrap B=999,True
+IEF,student_t,2516,loc=8.2863e-05; scale=0.00641598; df=5.339,Pearson_chi2,50.09062003179651,0.18315057344537247,asymptotic chi2,False
+IEF,student_t,2516,loc=8.2863e-05; scale=0.00641598; df=5.339,G,50.59469680948609,0.17051171290398562,asymptotic chi2,False
+IEF,student_t,2516,loc=8.2863e-05; scale=0.00641598; df=5.339,KS,0.01017850503130796,0.52,parametric bootstrap B=199,False
+IEF,student_t,2516,loc=8.2863e-05; scale=0.00641598; df=5.339,Kuiper,0.017100205688851233,0.71,parametric bootstrap B=199,False
+IEF,student_t,2516,loc=8.2863e-05; scale=0.00641598; df=5.339,CvM,0.027452955345219583,0.68,parametric bootstrap B=199,False
+IEF,student_t,2516,loc=8.2863e-05; scale=0.00641598; df=5.339,AD,0.4399246834504993,0.14,parametric bootstrap B=199,False
+TLT,normal,2516,mu=0.000404288; sigma=0.0118744,Pearson_chi2,82.23211446740859,0.00029399847616250126,asymptotic chi2,True
+TLT,normal,2516,mu=0.000404288; sigma=0.0118744,G,85.18354094751088,0.00013449969875895245,asymptotic chi2,True
+TLT,normal,2516,mu=0.000404288; sigma=0.0118744,KS,0.03820753782494535,0.001,parametric bootstrap B=999,True
+TLT,normal,2516,mu=0.000404288; sigma=0.0118744,Kuiper,0.07011217272292475,0.001,parametric bootstrap B=999,True
+TLT,normal,2516,mu=0.000404288; sigma=0.0118744,CvM,1.1532485210314836,0.001,parametric bootstrap B=999,True
+TLT,normal,2516,mu=0.000404288; sigma=0.0118744,AD,7.916173408463692,0.001,parametric bootstrap B=999,True
+TLT,student_t,2516,loc=0.000305273; scale=0.00953823; df=5.715,Pearson_chi2,35.75675675675675,0.7403592981270889,asymptotic chi2,False
+TLT,student_t,2516,loc=0.000305273; scale=0.00953823; df=5.715,G,35.64318621990472,0.7448129412284149,asymptotic chi2,False
+TLT,student_t,2516,loc=0.000305273; scale=0.00953823; df=5.715,KS,0.010706024706103823,0.525,parametric bootstrap B=199,False
+TLT,student_t,2516,loc=0.000305273; scale=0.00953823; df=5.715,Kuiper,0.019156790508299215,0.57,parametric bootstrap B=199,False
+TLT,student_t,2516,loc=0.000305273; scale=0.00953823; df=5.715,CvM,0.035969255953520185,0.555,parametric bootstrap B=199,False
+TLT,student_t,2516,loc=0.000305273; scale=0.00953823; df=5.715,AD,0.3229911148428073,0.365,parametric bootstrap B=199,False
+GOVT,normal,2228,mu=0.000184508; sigma=0.00683648,Pearson_chi2,79.74865350089765,0.00027409580546188314,asymptotic chi2,True
+GOVT,normal,2228,mu=0.000184508; sigma=0.00683648,G,79.63923179552138,0.00028217894917385617,asymptotic chi2,True
+GOVT,normal,2228,mu=0.000184508; sigma=0.00683648,KS,0.04060456170048832,0.001,parametric bootstrap B=999,True
+GOVT,normal,2228,mu=0.000184508; sigma=0.00683648,Kuiper,0.06991854231385752,0.001,parametric bootstrap B=999,True
+GOVT,normal,2228,mu=0.000184508; sigma=0.00683648,CvM,1.0805427733678508,0.001,parametric bootstrap B=999,True
+GOVT,normal,2228,mu=0.000184508; sigma=0.00683648,AD,6.386762131019168,0.001,parametric bootstrap B=999,True
+GOVT,student_t,2228,loc=8.11925e-05; scale=0.00560448; df=6.097,Pearson_chi2,44.95152603231598,0.2722041017212331,asymptotic chi2,False
+GOVT,student_t,2228,loc=8.11925e-05; scale=0.00560448; df=6.097,G,45.60743224749791,0.2502791614509419,asymptotic chi2,False
+GOVT,student_t,2228,loc=8.11925e-05; scale=0.00560448; df=6.097,KS,0.01238744509751255,0.39,parametric bootstrap B=199,False
+GOVT,student_t,2228,loc=8.11925e-05; scale=0.00560448; df=6.097,Kuiper,0.023375606428601592,0.295,parametric bootstrap B=199,False
+GOVT,student_t,2228,loc=8.11925e-05; scale=0.00560448; df=6.097,CvM,0.04229669194749701,0.42,parametric bootstrap B=199,False
+GOVT,student_t,2228,loc=8.11925e-05; scale=0.00560448; df=6.097,AD,0.3922211970675562,0.225,parametric bootstrap B=199,False
+VGSH,normal,2516,mu=0.000140453; sigma=0.00696359,Pearson_chi2,169.9538950715421,5.234149477459511e-17,asymptotic chi2,True
+VGSH,normal,2516,mu=0.000140453; sigma=0.00696359,G,167.54602369221695,1.30792364662907e-16,asymptotic chi2,True
+VGSH,normal,2516,mu=0.000140453; sigma=0.00696359,KS,0.06201447573860264,0.001,parametric bootstrap B=999,True
+VGSH,normal,2516,mu=0.000140453; sigma=0.00696359,Kuiper,0.09818007616313806,0.001,parametric bootstrap B=999,True
+VGSH,normal,2516,mu=0.000140453; sigma=0.00696359,CvM,2.7858726171151056,0.001,parametric bootstrap B=999,True
+VGSH,normal,2516,mu=0.000140453; sigma=0.00696359,AD,16.02933993572242,0.001,parametric bootstrap B=999,True
+VGSH,student_t,2516,loc=-7.40366e-05; scale=0.00520594; df=4.319,Pearson_chi2,64.35135135135135,0.014818732061382645,asymptotic chi2,True
+VGSH,student_t,2516,loc=-7.40366e-05; scale=0.00520594; df=4.319,G,64.69327308695581,0.013796393409817566,asymptotic chi2,True
+VGSH,student_t,2516,loc=-7.40366e-05; scale=0.00520594; df=4.319,KS,0.01626368263089989,0.04,parametric bootstrap B=199,True
+VGSH,student_t,2516,loc=-7.40366e-05; scale=0.00520594; df=4.319,Kuiper,0.03112034454018625,0.01,parametric bootstrap B=199,True
+VGSH,student_t,2516,loc=-7.40366e-05; scale=0.00520594; df=4.319,CvM,0.13397175417584264,0.02,parametric bootstrap B=199,True
+VGSH,student_t,2516,loc=-7.40366e-05; scale=0.00520594; df=4.319,AD,1.1022552514041308,0.01,parametric bootstrap B=199,True
+VGIT,normal,2516,mu=0.00022035; sigma=0.00746817,Pearson_chi2,113.7154213036566,2.651844561392608e-08,asymptotic chi2,True
+VGIT,normal,2516,mu=0.00022035; sigma=0.00746817,G,115.88728005909579,1.3065965175184934e-08,asymptotic chi2,True
+VGIT,normal,2516,mu=0.00022035; sigma=0.00746817,KS,0.05135726282276376,0.001,parametric bootstrap B=999,True
+VGIT,normal,2516,mu=0.00022035; sigma=0.00746817,Kuiper,0.08492500208083764,0.001,parametric bootstrap B=999,True
+VGIT,normal,2516,mu=0.00022035; sigma=0.00746817,CvM,1.946648038831226,0.001,parametric bootstrap B=999,True
+VGIT,normal,2516,mu=0.00022035; sigma=0.00746817,AD,11.788206659914522,0.001,parametric bootstrap B=999,True
+VGIT,student_t,2516,loc=1.75707e-05; scale=0.00581184; df=4.955,Pearson_chi2,47.71383147853735,0.2516702164127775,asymptotic chi2,False
+VGIT,student_t,2516,loc=1.75707e-05; scale=0.00581184; df=4.955,G,48.59524523393473,0.22453557229106524,asymptotic chi2,False
+VGIT,student_t,2516,loc=1.75707e-05; scale=0.00581184; df=4.955,KS,0.010599091424267959,0.57,parametric bootstrap B=199,False
+VGIT,student_t,2516,loc=1.75707e-05; scale=0.00581184; df=4.955,Kuiper,0.019505849048002566,0.565,parametric bootstrap B=199,False
+VGIT,student_t,2516,loc=1.75707e-05; scale=0.00581184; df=4.955,CvM,0.04036126769259845,0.47,parametric bootstrap B=199,False
+VGIT,student_t,2516,loc=1.75707e-05; scale=0.00581184; df=4.955,AD,0.5897765003519453,0.07,parametric bootstrap B=199,False
+VGLT,normal,2516,mu=0.000387577; sigma=0.0110505,Pearson_chi2,77.00317965023848,0.0011079223699901122,asymptotic chi2,True
+VGLT,normal,2516,mu=0.000387577; sigma=0.0110505,G,80.25981815587174,0.0004893723663632918,asymptotic chi2,True
+VGLT,normal,2516,mu=0.000387577; sigma=0.0110505,KS,0.03807027180186495,0.001,parametric bootstrap B=999,True
+VGLT,normal,2516,mu=0.000387577; sigma=0.0110505,Kuiper,0.06621316600250596,0.001,parametric bootstrap B=999,True
+VGLT,normal,2516,mu=0.000387577; sigma=0.0110505,CvM,0.9447519082063286,0.001,parametric bootstrap B=999,True
+VGLT,normal,2516,mu=0.000387577; sigma=0.0110505,AD,6.4897812676144895,0.001,parametric bootstrap B=999,True
+VGLT,student_t,2516,loc=0.000256068; scale=0.00907056; df=6.181,Pearson_chi2,31.588235294117645,0.8793834557027594,asymptotic chi2,False
+VGLT,student_t,2516,loc=0.000256068; scale=0.00907056; df=6.181,G,31.65484117041511,0.8776097241565254,asymptotic chi2,False
+VGLT,student_t,2516,loc=0.000256068; scale=0.00907056; df=6.181,KS,0.00899866313071529,0.79,parametric bootstrap B=199,False
+VGLT,student_t,2516,loc=0.000256068; scale=0.00907056; df=6.181,Kuiper,0.015350423177350914,0.895,parametric bootstrap B=199,False
+VGLT,student_t,2516,loc=0.000256068; scale=0.00907056; df=6.181,CvM,0.03291116409283693,0.6,parametric bootstrap B=199,False
+VGLT,student_t,2516,loc=0.000256068; scale=0.00907056; df=6.181,AD,0.32411685867828055,0.385,parametric bootstrap B=199,False
+SCHO,normal,2516,mu=0.0001393; sigma=0.00696104,Pearson_chi2,164.17647058823528,4.679271672128438e-16,asymptotic chi2,True
+SCHO,normal,2516,mu=0.0001393; sigma=0.00696104,G,161.82031889251002,1.1353710303615128e-15,asymptotic chi2,True
+SCHO,normal,2516,mu=0.0001393; sigma=0.00696104,KS,0.06282775794988726,0.001,parametric bootstrap B=999,True
+SCHO,normal,2516,mu=0.0001393; sigma=0.00696104,Kuiper,0.09879564575539468,0.001,parametric bootstrap B=999,True
+SCHO,normal,2516,mu=0.0001393; sigma=0.00696104,CvM,2.8044754007742836,0.001,parametric bootstrap B=999,True
+SCHO,normal,2516,mu=0.0001393; sigma=0.00696104,AD,16.12731435115711,0.001,parametric bootstrap B=999,True
+SCHO,student_t,2516,loc=-9.0685e-05; scale=0.00520409; df=4.324,Pearson_chi2,50.12718600953895,0.18221169236749263,asymptotic chi2,False
+SCHO,student_t,2516,loc=-9.0685e-05; scale=0.00520409; df=4.324,G,50.984882776927435,0.16117503389517063,asymptotic chi2,False
+SCHO,student_t,2516,loc=-9.0685e-05; scale=0.00520409; df=4.324,KS,0.015138680282677064,0.05,parametric bootstrap B=199,False
+SCHO,student_t,2516,loc=-9.0685e-05; scale=0.00520409; df=4.324,Kuiper,0.028514153483266136,0.03,parametric bootstrap B=199,True
+SCHO,student_t,2516,loc=-9.0685e-05; scale=0.00520409; df=4.324,CvM,0.13247358037675291,0.015,parametric bootstrap B=199,True
+SCHO,student_t,2516,loc=-9.0685e-05; scale=0.00520409; df=4.324,AD,1.1801825416855536,0.005,parametric bootstrap B=199,True
+SCHR,normal,2516,mu=0.000219778; sigma=0.00744843,Pearson_chi2,121.72337042925277,1.887159238102351e-09,asymptotic chi2,True
+SCHR,normal,2516,mu=0.000219778; sigma=0.00744843,G,121.5273253933479,2.015398848461509e-09,asymptotic chi2,True
+SCHR,normal,2516,mu=0.000219778; sigma=0.00744843,KS,0.05148900216112451,0.001,parametric bootstrap B=999,True
+SCHR,normal,2516,mu=0.000219778; sigma=0.00744843,Kuiper,0.08455701779122016,0.001,parametric bootstrap B=999,True
+SCHR,normal,2516,mu=0.000219778; sigma=0.00744843,CvM,1.9759148895439884,0.001,parametric bootstrap B=999,True
+SCHR,normal,2516,mu=0.000219778; sigma=0.00744843,AD,11.975279758900342,0.001,parametric bootstrap B=999,True
+SCHR,student_t,2516,loc=5.88498e-06; scale=0.00579002; df=4.929,Pearson_chi2,44.75198728139904,0.35704019387036184,asymptotic chi2,False
+SCHR,student_t,2516,loc=5.88498e-06; scale=0.00579002; df=4.929,G,45.38269985522774,0.3328845446229818,asymptotic chi2,False
+SCHR,student_t,2516,loc=5.88498e-06; scale=0.00579002; df=4.929,KS,0.010560290138992956,0.54,parametric bootstrap B=199,False
+SCHR,student_t,2516,loc=5.88498e-06; scale=0.00579002; df=4.929,Kuiper,0.021084305679255788,0.39,parametric bootstrap B=199,False
+SCHR,student_t,2516,loc=5.88498e-06; scale=0.00579002; df=4.929,CvM,0.04663520110438191,0.34,parametric bootstrap B=199,False
+SCHR,student_t,2516,loc=5.88498e-06; scale=0.00579002; df=4.929,AD,0.6569126876001974,0.06,parametric bootstrap B=199,False
+LQD,normal,2516,mu=0.000325117; sigma=0.00802207,Pearson_chi2,119.12718600953893,4.4887747814980565e-09,asymptotic chi2,True
+LQD,normal,2516,mu=0.000325117; sigma=0.00802207,G,121.79513917339634,1.8422582892252002e-09,asymptotic chi2,True
+LQD,normal,2516,mu=0.000325117; sigma=0.00802207,KS,0.05357204459055054,0.001,parametric bootstrap B=999,True
+LQD,normal,2516,mu=0.000325117; sigma=0.00802207,Kuiper,0.092928949738762,0.001,parametric bootstrap B=999,True
+LQD,normal,2516,mu=0.000325117; sigma=0.00802207,CvM,2.1675472470292774,0.001,parametric bootstrap B=999,True
+LQD,normal,2516,mu=0.000325117; sigma=0.00802207,AD,13.731134917067266,0.001,parametric bootstrap B=999,True
+LQD,student_t,2516,loc=0.000173884; scale=0.00606904; df=4.812,Pearson_chi2,40.62003179650238,0.5315740960132465,asymptotic chi2,False
+LQD,student_t,2516,loc=0.000173884; scale=0.00606904; df=4.812,G,40.79614359452147,0.5237759332570109,asymptotic chi2,False
+LQD,student_t,2516,loc=0.000173884; scale=0.00606904; df=4.812,KS,0.009121798661515197,0.84,parametric bootstrap B=199,False
+LQD,student_t,2516,loc=0.000173884; scale=0.00606904; df=4.812,Kuiper,0.016641203871937356,0.845,parametric bootstrap B=199,False
+LQD,student_t,2516,loc=0.000173884; scale=0.00606904; df=4.812,CvM,0.030341275095113293,0.67,parametric bootstrap B=199,False
+LQD,student_t,2516,loc=0.000173884; scale=0.00606904; df=4.812,AD,0.3334266997994746,0.37,parametric bootstrap B=199,False
+VCIT,normal,2516,mu=0.000312659; sigma=0.00753691,Pearson_chi2,124.10015898251193,8.470929162206959e-10,asymptotic chi2,True
+VCIT,normal,2516,mu=0.000312659; sigma=0.00753691,G,126.08430910729007,4.316676401040943e-10,asymptotic chi2,True
+VCIT,normal,2516,mu=0.000312659; sigma=0.00753691,KS,0.05185455734250666,0.001,parametric bootstrap B=999,True
+VCIT,normal,2516,mu=0.000312659; sigma=0.00753691,Kuiper,0.08713948353640952,0.001,parametric bootstrap B=999,True
+VCIT,normal,2516,mu=0.000312659; sigma=0.00753691,CvM,2.000238503827013,0.001,parametric bootstrap B=999,True
+VCIT,normal,2516,mu=0.000312659; sigma=0.00753691,AD,12.576511309110629,0.001,parametric bootstrap B=999,True
+VCIT,student_t,2516,loc=0.000125548; scale=0.00578907; df=4.835,Pearson_chi2,47.8966613672496,0.2458755923307887,asymptotic chi2,False
+VCIT,student_t,2516,loc=0.000125548; scale=0.00578907; df=4.835,G,47.76561331908056,0.2500202631833665,asymptotic chi2,False
+VCIT,student_t,2516,loc=0.000125548; scale=0.00578907; df=4.835,KS,0.008449574379465197,0.88,parametric bootstrap B=199,False
+VCIT,student_t,2516,loc=0.000125548; scale=0.00578907; df=4.835,Kuiper,0.016671677403772678,0.795,parametric bootstrap B=199,False
+VCIT,student_t,2516,loc=0.000125548; scale=0.00578907; df=4.835,CvM,0.032471637863887466,0.625,parametric bootstrap B=199,False
+VCIT,student_t,2516,loc=0.000125548; scale=0.00578907; df=4.835,AD,0.4446384619222954,0.16,parametric bootstrap B=199,False
+VCSH,normal,2516,mu=0.000211638; sigma=0.00701277,Pearson_chi2,151.9268680445151,4.4780469326597676e-14,asymptotic chi2,True
+VCSH,normal,2516,mu=0.000211638; sigma=0.00701277,G,149.81430970653827,9.712329269426692e-14,asymptotic chi2,True
+VCSH,normal,2516,mu=0.000211638; sigma=0.00701277,KS,0.05576144534604166,0.001,parametric bootstrap B=999,True
+VCSH,normal,2516,mu=0.000211638; sigma=0.00701277,Kuiper,0.09300155826705056,0.001,parametric bootstrap B=999,True
+VCSH,normal,2516,mu=0.000211638; sigma=0.00701277,CvM,2.568088582568285,0.001,parametric bootstrap B=999,True
+VCSH,normal,2516,mu=0.000211638; sigma=0.00701277,AD,14.980057641178973,0.001,parametric bootstrap B=999,True
+VCSH,student_t,2516,loc=3.44156e-06; scale=0.00528604; df=4.436,Pearson_chi2,42.74085850556438,0.4391680501905173,asymptotic chi2,False
+VCSH,student_t,2516,loc=3.44156e-06; scale=0.00528604; df=4.436,G,43.21757909781499,0.41908538409738927,asymptotic chi2,False
+VCSH,student_t,2516,loc=3.44156e-06; scale=0.00528604; df=4.436,KS,0.014477287895553803,0.11,parametric bootstrap B=199,False
+VCSH,student_t,2516,loc=3.44156e-06; scale=0.00528604; df=4.436,Kuiper,0.028228004085057212,0.035,parametric bootstrap B=199,True
+VCSH,student_t,2516,loc=3.44156e-06; scale=0.00528604; df=4.436,CvM,0.09251710591435035,0.05,parametric bootstrap B=199,False
+VCSH,student_t,2516,loc=3.44156e-06; scale=0.00528604; df=4.436,AD,0.8595249232448623,0.025,parametric bootstrap B=199,True
+IGSB,normal,2516,mu=0.000184679; sigma=0.00700353,Pearson_chi2,171.9284578696343,2.4625980894751084e-17,asymptotic chi2,True
+IGSB,normal,2516,mu=0.000184679; sigma=0.00700353,G,168.4414305699639,9.308556083565022e-17,asymptotic chi2,True
+IGSB,normal,2516,mu=0.000184679; sigma=0.00700353,KS,0.06013303368832634,0.001,parametric bootstrap B=999,True
+IGSB,normal,2516,mu=0.000184679; sigma=0.00700353,Kuiper,0.0978870482974139,0.001,parametric bootstrap B=999,True
+IGSB,normal,2516,mu=0.000184679; sigma=0.00700353,CvM,2.7854846794937416,0.001,parametric bootstrap B=999,True
+IGSB,normal,2516,mu=0.000184679; sigma=0.00700353,AD,15.997786177812486,0.001,parametric bootstrap B=999,True
+IGSB,student_t,2516,loc=-3.33877e-05; scale=0.0052361; df=4.334,Pearson_chi2,58.53736089030207,0.04636765861638847,asymptotic chi2,True
+IGSB,student_t,2516,loc=-3.33877e-05; scale=0.0052361; df=4.334,G,59.92902880930431,0.03576334460136365,asymptotic chi2,True
+IGSB,student_t,2516,loc=-3.33877e-05; scale=0.0052361; df=4.334,KS,0.01527150080414924,0.035,parametric bootstrap B=199,True
+IGSB,student_t,2516,loc=-3.33877e-05; scale=0.0052361; df=4.334,Kuiper,0.028454273693753473,0.025,parametric bootstrap B=199,True
+IGSB,student_t,2516,loc=-3.33877e-05; scale=0.0052361; df=4.334,CvM,0.13788890006727145,0.01,parametric bootstrap B=199,True
+IGSB,student_t,2516,loc=-3.33877e-05; scale=0.0052361; df=4.334,AD,1.1282635914089951,0.005,parametric bootstrap B=199,True
+IGIB,normal,2516,mu=0.000270894; sigma=0.00732491,Pearson_chi2,144.577106518283,6.508001757125904e-13,asymptotic chi2,True
+IGIB,normal,2516,mu=0.000270894; sigma=0.00732491,G,144.5402009798226,6.59523690199759e-13,asymptotic chi2,True
+IGIB,normal,2516,mu=0.000270894; sigma=0.00732491,KS,0.053243394068975936,0.001,parametric bootstrap B=999,True
+IGIB,normal,2516,mu=0.000270894; sigma=0.00732491,Kuiper,0.0917679683550075,0.001,parametric bootstrap B=999,True
+IGIB,normal,2516,mu=0.000270894; sigma=0.00732491,CvM,2.346680200949781,0.001,parametric bootstrap B=999,True
+IGIB,normal,2516,mu=0.000270894; sigma=0.00732491,AD,14.34907698748384,0.001,parametric bootstrap B=999,True
+IGIB,student_t,2516,loc=7.49501e-05; scale=0.00552631; df=4.538,Pearson_chi2,49.505564387917325,0.19864546010377776,asymptotic chi2,False
+IGIB,student_t,2516,loc=7.49501e-05; scale=0.00552631; df=4.538,G,47.83969759243395,0.24767172838407447,asymptotic chi2,False
+IGIB,student_t,2516,loc=7.49501e-05; scale=0.00552631; df=4.538,KS,0.00992625973320349,0.665,parametric bootstrap B=199,False
+IGIB,student_t,2516,loc=7.49501e-05; scale=0.00552631; df=4.538,Kuiper,0.018547962525375827,0.655,parametric bootstrap B=199,False
+IGIB,student_t,2516,loc=7.49501e-05; scale=0.00552631; df=4.538,CvM,0.04169037246074399,0.43,parametric bootstrap B=199,False
+IGIB,student_t,2516,loc=7.49501e-05; scale=0.00552631; df=4.538,AD,0.5370148386759865,0.09,parametric bootstrap B=199,False
+USIG,normal,2516,mu=0.000293318; sigma=0.00761244,Pearson_chi2,125.89189189189187,4.6093016919243516e-10,asymptotic chi2,True
+USIG,normal,2516,mu=0.000293318; sigma=0.00761244,G,129.30197300123427,1.4319729942898942e-10,asymptotic chi2,True
+USIG,normal,2516,mu=0.000293318; sigma=0.00761244,KS,0.04836921496601432,0.001,parametric bootstrap B=999,True
+USIG,normal,2516,mu=0.000293318; sigma=0.00761244,Kuiper,0.08888748699468274,0.001,parametric bootstrap B=999,True
+USIG,normal,2516,mu=0.000293318; sigma=0.00761244,CvM,2.1053441396080994,0.001,parametric bootstrap B=999,True
+USIG,normal,2516,mu=0.000293318; sigma=0.00761244,AD,13.237719898096657,0.001,parametric bootstrap B=999,True
+USIG,student_t,2516,loc=0.000128793; scale=0.00578965; df=4.696,Pearson_chi2,30.45468998410175,0.9071619289236886,asymptotic chi2,False
+USIG,student_t,2516,loc=0.000128793; scale=0.00578965; df=4.696,G,30.83670743868457,0.8983088245896448,asymptotic chi2,False
+USIG,student_t,2516,loc=0.000128793; scale=0.00578965; df=4.696,KS,0.009645128557950522,0.69,parametric bootstrap B=199,False
+USIG,student_t,2516,loc=0.000128793; scale=0.00578965; df=4.696,Kuiper,0.015758354394372176,0.86,parametric bootstrap B=199,False
+USIG,student_t,2516,loc=0.000128793; scale=0.00578965; df=4.696,CvM,0.02125680976429453,0.885,parametric bootstrap B=199,False
+USIG,student_t,2516,loc=0.000128793; scale=0.00578965; df=4.696,AD,0.2886194072793842,0.48,parametric bootstrap B=199,False
+HYG,normal,2516,mu=0.000303606; sigma=0.0081408,Pearson_chi2,205.49602543720187,4.668558572601935e-23,asymptotic chi2,True
+HYG,normal,2516,mu=0.000303606; sigma=0.0081408,G,206.45948757671684,3.170468554465725e-23,asymptotic chi2,True
+HYG,normal,2516,mu=0.000303606; sigma=0.0081408,KS,0.06377895458712812,0.001,parametric bootstrap B=999,True
+HYG,normal,2516,mu=0.000303606; sigma=0.0081408,Kuiper,0.11820139698924373,0.001,parametric bootstrap B=999,True
+HYG,normal,2516,mu=0.000303606; sigma=0.0081408,CvM,3.57814188378804,0.001,parametric bootstrap B=999,True
+HYG,normal,2516,mu=0.000303606; sigma=0.0081408,AD,21.452149939176707,0.001,parametric bootstrap B=999,True
+HYG,student_t,2516,loc=0.000149452; scale=0.00573094; df=3.894,Pearson_chi2,41.13195548489665,0.5089458078695345,asymptotic chi2,False
+HYG,student_t,2516,loc=0.000149452; scale=0.00573094; df=3.894,G,41.79631999781427,0.47982582304394283,asymptotic chi2,False
+HYG,student_t,2516,loc=0.000149452; scale=0.00573094; df=3.894,KS,0.010423398049756782,0.595,parametric bootstrap B=199,False
+HYG,student_t,2516,loc=0.000149452; scale=0.00573094; df=3.894,Kuiper,0.019808129280498132,0.485,parametric bootstrap B=199,False
+HYG,student_t,2516,loc=0.000149452; scale=0.00573094; df=3.894,CvM,0.04102623070734087,0.445,parametric bootstrap B=199,False
+HYG,student_t,2516,loc=0.000149452; scale=0.00573094; df=3.894,AD,0.4000429600955613,0.285,parametric bootstrap B=199,False
+JNK,normal,2516,mu=0.000297593; sigma=0.00812498,Pearson_chi2,202.1685214626391,1.7706446484174399e-22,asymptotic chi2,True
+JNK,normal,2516,mu=0.000297593; sigma=0.00812498,G,204.74064139040362,6.321400720397786e-23,asymptotic chi2,True
+JNK,normal,2516,mu=0.000297593; sigma=0.00812498,KS,0.06513543147455181,0.001,parametric bootstrap B=999,True
+JNK,normal,2516,mu=0.000297593; sigma=0.00812498,Kuiper,0.11920475953410636,0.001,parametric bootstrap B=999,True
+JNK,normal,2516,mu=0.000297593; sigma=0.00812498,CvM,3.8150581469586693,0.001,parametric bootstrap B=999,True
+JNK,normal,2516,mu=0.000297593; sigma=0.00812498,AD,22.589749668406057,0.001,parametric bootstrap B=999,True
+JNK,student_t,2516,loc=0.00015933; scale=0.00566167; df=3.791,Pearson_chi2,35.098569157392696,0.7657300731047085,asymptotic chi2,False
+JNK,student_t,2516,loc=0.00015933; scale=0.00566167; df=3.791,G,34.99657382873249,0.7695627197889247,asymptotic chi2,False
+JNK,student_t,2516,loc=0.00015933; scale=0.00566167; df=3.791,KS,0.010301557254336235,0.62,parametric bootstrap B=199,False
+JNK,student_t,2516,loc=0.00015933; scale=0.00566167; df=3.791,Kuiper,0.01691416309531965,0.75,parametric bootstrap B=199,False
+JNK,student_t,2516,loc=0.00015933; scale=0.00566167; df=3.791,CvM,0.04460179449176876,0.38,parametric bootstrap B=199,False
+JNK,student_t,2516,loc=0.00015933; scale=0.00566167; df=3.791,AD,0.40427440989151364,0.265,parametric bootstrap B=199,False
+ANGL,normal,2196,mu=0.00041262; sigma=0.00843981,Pearson_chi2,212.05828779599273,6.341449701028668e-25,asymptotic chi2,True
+ANGL,normal,2196,mu=0.00041262; sigma=0.00843981,G,215.5102540426681,1.5410901707792877e-25,asymptotic chi2,True
+ANGL,normal,2196,mu=0.00041262; sigma=0.00843981,KS,0.06345095584828478,0.001,parametric bootstrap B=999,True
+ANGL,normal,2196,mu=0.00041262; sigma=0.00843981,Kuiper,0.12654641126829871,0.001,parametric bootstrap B=999,True
+ANGL,normal,2196,mu=0.00041262; sigma=0.00843981,CvM,4.154957742382032,0.001,parametric bootstrap B=999,True
+ANGL,normal,2196,mu=0.00041262; sigma=0.00843981,AD,25.826807315241695,0.001,parametric bootstrap B=999,True
+ANGL,student_t,2196,loc=0.000439054; scale=0.00565742; df=3.851,Pearson_chi2,51.0856102003643,0.11246689936150975,asymptotic chi2,False
+ANGL,student_t,2196,loc=0.000439054; scale=0.00565742; df=3.851,G,51.478248816886335,0.10551796214217073,asymptotic chi2,False
+ANGL,student_t,2196,loc=0.000439054; scale=0.00565742; df=3.851,KS,0.010869583083148338,0.545,parametric bootstrap B=199,False
+ANGL,student_t,2196,loc=0.000439054; scale=0.00565742; df=3.851,Kuiper,0.021011449292659745,0.41,parametric bootstrap B=199,False
+ANGL,student_t,2196,loc=0.000439054; scale=0.00565742; df=3.851,CvM,0.049468711928273304,0.18,parametric bootstrap B=199,False
+ANGL,student_t,2196,loc=0.000439054; scale=0.00565742; df=3.851,AD,0.3195105671725287,0.35,parametric bootstrap B=199,False
+FALN,normal,1141,mu=0.00034266; sigma=0.00818053,Pearson_chi2,158.59859772129707,4.587511309774597e-19,asymptotic chi2,True
+FALN,normal,1141,mu=0.00034266; sigma=0.00818053,G,161.10363136694406,1.640013507796042e-19,asymptotic chi2,True
+FALN,normal,1141,mu=0.00034266; sigma=0.00818053,KS,0.08428049278476979,0.001,parametric bootstrap B=999,True
+FALN,normal,1141,mu=0.00034266; sigma=0.00818053,Kuiper,0.16762849305497315,0.001,parametric bootstrap B=999,True
+FALN,normal,1141,mu=0.00034266; sigma=0.00818053,CvM,3.2829595123236626,0.001,parametric bootstrap B=999,True
+FALN,normal,1141,mu=0.00034266; sigma=0.00818053,AD,20.399901181444648,0.001,parametric bootstrap B=999,True
+FALN,student_t,1141,loc=0.00033129; scale=0.00504487; df=3.458,Pearson_chi2,31.299737072743202,0.40078055952832525,asymptotic chi2,False
+FALN,student_t,1141,loc=0.00033129; scale=0.00504487; df=3.458,G,32.074426080876,0.36407401702650044,asymptotic chi2,False
+FALN,student_t,1141,loc=0.00033129; scale=0.00504487; df=3.458,KS,0.016288312308509967,0.41,parametric bootstrap B=199,False
+FALN,student_t,1141,loc=0.00033129; scale=0.00504487; df=3.458,Kuiper,0.03175946540371183,0.27,parametric bootstrap B=199,False
+FALN,student_t,1141,loc=0.00033129; scale=0.00504487; df=3.458,CvM,0.0376077216189826,0.46,parametric bootstrap B=199,False
+FALN,student_t,1141,loc=0.00033129; scale=0.00504487; df=3.458,AD,0.26595852531590936,0.55,parametric bootstrap B=199,False
+EFA,normal,2516,mu=0.000296509; sigma=0.0126176,Pearson_chi2,271.4976152623211,6.193327231406972e-35,asymptotic chi2,True
+EFA,normal,2516,mu=0.000296509; sigma=0.0126176,G,275.1934069116784,1.28455669784934e-35,asymptotic chi2,True
+EFA,normal,2516,mu=0.000296509; sigma=0.0126176,KS,0.07415496682406347,0.001,parametric bootstrap B=999,True
+EFA,normal,2516,mu=0.000296509; sigma=0.0126176,Kuiper,0.13804556950926955,0.001,parametric bootstrap B=999,True
+EFA,normal,2516,mu=0.000296509; sigma=0.0126176,CvM,5.138908566113093,0.001,parametric bootstrap B=999,True
+EFA,normal,2516,mu=0.000296509; sigma=0.0126176,AD,31.12101281425703,0.001,parametric bootstrap B=999,True
+EFA,student_t,2516,loc=0.000683333; scale=0.00833488; df=3.543,Pearson_chi2,45.92209856915739,0.3129271140267771,asymptotic chi2,False
+EFA,student_t,2516,loc=0.000683333; scale=0.00833488; df=3.543,G,45.51746814613838,0.32783601792771466,asymptotic chi2,False
+EFA,student_t,2516,loc=0.000683333; scale=0.00833488; df=3.543,KS,0.014531905756695718,0.05,parametric bootstrap B=199,False
+EFA,student_t,2516,loc=0.000683333; scale=0.00833488; df=3.543,Kuiper,0.021794257993551946,0.29,parametric bootstrap B=199,False
+EFA,student_t,2516,loc=0.000683333; scale=0.00833488; df=3.543,CvM,0.08190350461843582,0.03,parametric bootstrap B=199,True
+EFA,student_t,2516,loc=0.000683333; scale=0.00833488; df=3.543,AD,0.9483668190323442,0.005,parametric bootstrap B=199,True
+EWJ,normal,2516,mu=0.000325038; sigma=0.0124756,Pearson_chi2,173.79332273449918,1.2052849488684853e-17,asymptotic chi2,True
+EWJ,normal,2516,mu=0.000325038; sigma=0.0124756,G,182.7435381236972,3.787673437138735e-19,asymptotic chi2,True
+EWJ,normal,2516,mu=0.000325038; sigma=0.0124756,KS,0.058327853508869626,0.001,parametric bootstrap B=999,True
+EWJ,normal,2516,mu=0.000325038; sigma=0.0124756,Kuiper,0.10937243018526957,0.001,parametric bootstrap B=999,True
+EWJ,normal,2516,mu=0.000325038; sigma=0.0124756,CvM,3.1522699070256324,0.001,parametric bootstrap B=999,True
+EWJ,normal,2516,mu=0.000325038; sigma=0.0124756,AD,21.224353457973393,0.001,parametric bootstrap B=999,True
+EWJ,student_t,2516,loc=0.000507548; scale=0.00882886; df=3.988,Pearson_chi2,42.19236883942766,0.4626537106489146,asymptotic chi2,False
+EWJ,student_t,2516,loc=0.000507548; scale=0.00882886; df=3.988,G,41.657293898706655,0.4858901134720468,asymptotic chi2,False
+EWJ,student_t,2516,loc=0.000507548; scale=0.00882886; df=3.988,KS,0.011765210212989152,0.325,parametric bootstrap B=199,False
+EWJ,student_t,2516,loc=0.000507548; scale=0.00882886; df=3.988,Kuiper,0.0234906773716671,0.175,parametric bootstrap B=199,False
+EWJ,student_t,2516,loc=0.000507548; scale=0.00882886; df=3.988,CvM,0.07191968665922249,0.1,parametric bootstrap B=199,False
+EWJ,student_t,2516,loc=0.000507548; scale=0.00882886; df=3.988,AD,0.5447185332191111,0.11,parametric bootstrap B=199,False
+EWU,normal,2516,mu=0.000182328; sigma=0.0135859,Pearson_chi2,266.74403815580285,4.6584327590932385e-34,asymptotic chi2,True
+EWU,normal,2516,mu=0.000182328; sigma=0.0135859,G,274.4803816663128,1.7405270392843337e-35,asymptotic chi2,True
+EWU,normal,2516,mu=0.000182328; sigma=0.0135859,KS,0.07675038779873353,0.001,parametric bootstrap B=999,True
+EWU,normal,2516,mu=0.000182328; sigma=0.0135859,Kuiper,0.1400376331839934,0.001,parametric bootstrap B=999,True
+EWU,normal,2516,mu=0.000182328; sigma=0.0135859,CvM,5.51407969950985,0.001,parametric bootstrap B=999,True
+EWU,normal,2516,mu=0.000182328; sigma=0.0135859,AD,33.27781675793949,0.001,parametric bootstrap B=999,True
+EWU,student_t,2516,loc=0.000526527; scale=0.00883632; df=3.479,Pearson_chi2,57.513513513513516,0.05581109966385726,asymptotic chi2,False
+EWU,student_t,2516,loc=0.000526527; scale=0.00883632; df=3.479,G,58.034703026918535,0.050816452713448555,asymptotic chi2,False
+EWU,student_t,2516,loc=0.000526527; scale=0.00883632; df=3.479,KS,0.014163332517149602,0.09,parametric bootstrap B=199,False
+EWU,student_t,2516,loc=0.000526527; scale=0.00883632; df=3.479,Kuiper,0.020397591883712013,0.355,parametric bootstrap B=199,False
+EWU,student_t,2516,loc=0.000526527; scale=0.00883632; df=3.479,CvM,0.04266825660277263,0.355,parametric bootstrap B=199,False
+EWU,student_t,2516,loc=0.000526527; scale=0.00883632; df=3.479,AD,0.5484511247400405,0.085,parametric bootstrap B=199,False
+EWG,normal,2516,mu=0.000291153; sigma=0.0151394,Pearson_chi2,264.9523052464229,9.950128237652113e-34,asymptotic chi2,True
+EWG,normal,2516,mu=0.000291153; sigma=0.0151394,G,270.80441970320055,8.315394146141445e-35,asymptotic chi2,True
+EWG,normal,2516,mu=0.000291153; sigma=0.0151394,KS,0.07285268411544188,0.001,parametric bootstrap B=999,True
+EWG,normal,2516,mu=0.000291153; sigma=0.0151394,Kuiper,0.13756778923793445,0.001,parametric bootstrap B=999,True
+EWG,normal,2516,mu=0.000291153; sigma=0.0151394,CvM,5.117786795148337,0.001,parametric bootstrap B=999,True
+EWG,normal,2516,mu=0.000291153; sigma=0.0151394,AD,31.02269183966837,0.001,parametric bootstrap B=999,True
+EWG,student_t,2516,loc=0.000738771; scale=0.00997355; df=3.465,Pearson_chi2,41.60731319554849,0.4880744337116466,asymptotic chi2,False
+EWG,student_t,2516,loc=0.000738771; scale=0.00997355; df=3.465,G,41.687750610484585,0.4845601160052875,asymptotic chi2,False
+EWG,student_t,2516,loc=0.000738771; scale=0.00997355; df=3.465,KS,0.013332371902773449,0.105,parametric bootstrap B=199,False
+EWG,student_t,2516,loc=0.000738771; scale=0.00997355; df=3.465,Kuiper,0.022795793336625486,0.16,parametric bootstrap B=199,False
+EWG,student_t,2516,loc=0.000738771; scale=0.00997355; df=3.465,CvM,0.0798477634372004,0.06,parametric bootstrap B=199,False
+EWG,student_t,2516,loc=0.000738771; scale=0.00997355; df=3.465,AD,0.7940174947766536,0.01,parametric bootstrap B=199,True
+EWQ,normal,2516,mu=0.000309376; sigma=0.0151898,Pearson_chi2,274.31319554848966,1.8689851863212053e-35,asymptotic chi2,True
+EWQ,normal,2516,mu=0.000309376; sigma=0.0151898,G,280.3939526729833,1.3956159458548194e-36,asymptotic chi2,True
+EWQ,normal,2516,mu=0.000309376; sigma=0.0151898,KS,0.07990048486565193,0.001,parametric bootstrap B=999,True
+EWQ,normal,2516,mu=0.000309376; sigma=0.0151898,Kuiper,0.14837639409684578,0.001,parametric bootstrap B=999,True
+EWQ,normal,2516,mu=0.000309376; sigma=0.0151898,CvM,5.702634863850867,0.001,parametric bootstrap B=999,True
+EWQ,normal,2516,mu=0.000309376; sigma=0.0151898,AD,34.040439601411435,0.001,parametric bootstrap B=999,True
+EWQ,student_t,2516,loc=0.000779399; scale=0.00979253; df=3.323,Pearson_chi2,35.7933227344992,0.7389189293656081,asymptotic chi2,False
+EWQ,student_t,2516,loc=0.000779399; scale=0.00979253; df=3.323,G,36.20735428717576,0.7223993826455868,asymptotic chi2,False
+EWQ,student_t,2516,loc=0.000779399; scale=0.00979253; df=3.323,KS,0.014968966919201993,0.035,parametric bootstrap B=199,True
+EWQ,student_t,2516,loc=0.000779399; scale=0.00979253; df=3.323,Kuiper,0.023111443645670554,0.155,parametric bootstrap B=199,False
+EWQ,student_t,2516,loc=0.000779399; scale=0.00979253; df=3.323,CvM,0.08061448450780298,0.05,parametric bootstrap B=199,False
+EWQ,student_t,2516,loc=0.000779399; scale=0.00979253; df=3.323,AD,0.8345099628813841,0.025,parametric bootstrap B=199,True
+EWL,normal,2516,mu=0.000409963; sigma=0.0118205,Pearson_chi2,199.20667726550076,5.774130030595021e-22,asymptotic chi2,True
+EWL,normal,2516,mu=0.000409963; sigma=0.0118205,G,205.43005733956633,4.7938325188992287e-23,asymptotic chi2,True
+EWL,normal,2516,mu=0.000409963; sigma=0.0118205,KS,0.05906336450201219,0.001,parametric bootstrap B=999,True
+EWL,normal,2516,mu=0.000409963; sigma=0.0118205,Kuiper,0.11618470140488588,0.001,parametric bootstrap B=999,True
+EWL,normal,2516,mu=0.000409963; sigma=0.0118205,CvM,3.930750041683344,0.001,parametric bootstrap B=999,True
+EWL,normal,2516,mu=0.000409963; sigma=0.0118205,AD,24.63124417379504,0.001,parametric bootstrap B=999,True
+EWL,student_t,2516,loc=0.000590883; scale=0.00816666; df=3.96,Pearson_chi2,42.887122416534176,0.4329714552666539,asymptotic chi2,False
+EWL,student_t,2516,loc=0.000590883; scale=0.00816666; df=3.96,G,43.3143156032245,0.4150519259436879,asymptotic chi2,False
+EWL,student_t,2516,loc=0.000590883; scale=0.00816666; df=3.96,KS,0.010466650914616404,0.57,parametric bootstrap B=199,False
+EWL,student_t,2516,loc=0.000590883; scale=0.00816666; df=3.96,Kuiper,0.020129970060483726,0.44,parametric bootstrap B=199,False
+EWL,student_t,2516,loc=0.000590883; scale=0.00816666; df=3.96,CvM,0.04942041640544058,0.28,parametric bootstrap B=199,False
+EWL,student_t,2516,loc=0.000590883; scale=0.00816666; df=3.96,AD,0.43851542943593813,0.175,parametric bootstrap B=199,False
+EWC,normal,2516,mu=0.000173354; sigma=0.0132358,Pearson_chi2,256.322734499205,3.7978986785019656e-32,asymptotic chi2,True
+EWC,normal,2516,mu=0.000173354; sigma=0.0132358,G,261.05935397048404,5.158839113705185e-33,asymptotic chi2,True
+EWC,normal,2516,mu=0.000173354; sigma=0.0132358,KS,0.06743496262037207,0.001,parametric bootstrap B=999,True
+EWC,normal,2516,mu=0.000173354; sigma=0.0132358,Kuiper,0.13399341932023406,0.001,parametric bootstrap B=999,True
+EWC,normal,2516,mu=0.000173354; sigma=0.0132358,CvM,5.150444246846966,0.001,parametric bootstrap B=999,True
+EWC,normal,2516,mu=0.000173354; sigma=0.0132358,AD,31.84663727272482,0.001,parametric bootstrap B=999,True
+EWC,student_t,2516,loc=0.000504566; scale=0.00879255; df=3.797,Pearson_chi2,54.186009538950714,0.09845913132005107,asymptotic chi2,False
+EWC,student_t,2516,loc=0.000504566; scale=0.00879255; df=3.797,G,53.25650785616011,0.11424042796575885,asymptotic chi2,False
+EWC,student_t,2516,loc=0.000504566; scale=0.00879255; df=3.797,KS,0.015646618979234528,0.025,parametric bootstrap B=199,True
+EWC,student_t,2516,loc=0.000504566; scale=0.00879255; df=3.797,Kuiper,0.029973921334515097,0.02,parametric bootstrap B=199,True
+EWC,student_t,2516,loc=0.000504566; scale=0.00879255; df=3.797,CvM,0.13828518208206406,0.005,parametric bootstrap B=199,True
+EWC,student_t,2516,loc=0.000504566; scale=0.00879255; df=3.797,AD,1.1389689714010274,0.005,parametric bootstrap B=199,True
+EWA,normal,2516,mu=0.000248075; sigma=0.0161043,Pearson_chi2,313.54848966613673,8.564115309159236e-43,asymptotic chi2,True
+EWA,normal,2516,mu=0.000248075; sigma=0.0161043,G,318.5666991409501,9.623699461851475e-44,asymptotic chi2,True
+EWA,normal,2516,mu=0.000248075; sigma=0.0161043,KS,0.08327432607940563,0.001,parametric bootstrap B=999,True
+EWA,normal,2516,mu=0.000248075; sigma=0.0161043,Kuiper,0.16145843818722824,0.001,parametric bootstrap B=999,True
+EWA,normal,2516,mu=0.000248075; sigma=0.0161043,CvM,6.924638502187342,0.001,parametric bootstrap B=999,True
+EWA,normal,2516,mu=0.000248075; sigma=0.0161043,AD,41.90645950397038,0.001,parametric bootstrap B=999,True
+EWA,student_t,2516,loc=0.000640209; scale=0.0100172; df=3.368,Pearson_chi2,45.117647058823536,0.3429312663502089,asymptotic chi2,False
+EWA,student_t,2516,loc=0.000640209; scale=0.0100172; df=3.368,G,44.52975919029756,0.3657508134442438,asymptotic chi2,False
+EWA,student_t,2516,loc=0.000640209; scale=0.0100172; df=3.368,KS,0.013036047713781432,0.17,parametric bootstrap B=199,False
+EWA,student_t,2516,loc=0.000640209; scale=0.0100172; df=3.368,Kuiper,0.021191358687604592,0.3,parametric bootstrap B=199,False
+EWA,student_t,2516,loc=0.000640209; scale=0.0100172; df=3.368,CvM,0.06592684212586361,0.125,parametric bootstrap B=199,False
+EWA,student_t,2516,loc=0.000640209; scale=0.0100172; df=3.368,AD,0.7777545292310606,0.025,parametric bootstrap B=199,True
+EWN,normal,2516,mu=0.000446281; sigma=0.0136418,Pearson_chi2,220.74403815580285,9.731131401492971e-26,asymptotic chi2,True
+EWN,normal,2516,mu=0.000446281; sigma=0.0136418,G,231.0353566403818,1.4283570351124752e-27,asymptotic chi2,True
+EWN,normal,2516,mu=0.000446281; sigma=0.0136418,KS,0.06621721743060249,0.001,parametric bootstrap B=999,True
+EWN,normal,2516,mu=0.000446281; sigma=0.0136418,Kuiper,0.1262021819329262,0.001,parametric bootstrap B=999,True
+EWN,normal,2516,mu=0.000446281; sigma=0.0136418,CvM,4.315971623093732,0.001,parametric bootstrap B=999,True
+EWN,normal,2516,mu=0.000446281; sigma=0.0136418,AD,26.23491296214297,0.001,parametric bootstrap B=999,True
+EWN,student_t,2516,loc=0.00085779; scale=0.00929417; df=3.652,Pearson_chi2,50.71224165341811,0.16765824696883566,asymptotic chi2,False
+EWN,student_t,2516,loc=0.00085779; scale=0.00929417; df=3.652,G,49.98879828907069,0.18578324780697025,asymptotic chi2,False
+EWN,student_t,2516,loc=0.00085779; scale=0.00929417; df=3.652,KS,0.01800466862976416,0.01,parametric bootstrap B=199,True
+EWN,student_t,2516,loc=0.00085779; scale=0.00929417; df=3.652,Kuiper,0.024657790592432366,0.065,parametric bootstrap B=199,False
+EWN,student_t,2516,loc=0.00085779; scale=0.00929417; df=3.652,CvM,0.08223117889349633,0.03,parametric bootstrap B=199,True
+EWN,student_t,2516,loc=0.00085779; scale=0.00929417; df=3.652,AD,0.9165577710687103,0.005,parametric bootstrap B=199,True
+EWS,normal,2516,mu=0.000139492; sigma=0.0122855,Pearson_chi2,207.9459459459459,1.743679065064212e-23,asymptotic chi2,True
+EWS,normal,2516,mu=0.000139492; sigma=0.0122855,G,213.01439002796542,2.2532385324545394e-24,asymptotic chi2,True
+EWS,normal,2516,mu=0.000139492; sigma=0.0122855,KS,0.05944749784297368,0.001,parametric bootstrap B=999,True
+EWS,normal,2516,mu=0.000139492; sigma=0.0122855,Kuiper,0.11437765678806658,0.001,parametric bootstrap B=999,True
+EWS,normal,2516,mu=0.000139492; sigma=0.0122855,CvM,3.617864403527619,0.001,parametric bootstrap B=999,True
+EWS,normal,2516,mu=0.000139492; sigma=0.0122855,AD,23.04510142059098,0.001,parametric bootstrap B=999,True
+EWS,student_t,2516,loc=0.000354253; scale=0.00857072; df=3.93,Pearson_chi2,50.78537360890302,0.1659007026290787,asymptotic chi2,False
+EWS,student_t,2516,loc=0.000354253; scale=0.00857072; df=3.93,G,50.06467926690061,0.18381873821417238,asymptotic chi2,False
+EWS,student_t,2516,loc=0.000354253; scale=0.00857072; df=3.93,KS,0.011010962642184527,0.45,parametric bootstrap B=199,False
+EWS,student_t,2516,loc=0.000354253; scale=0.00857072; df=3.93,Kuiper,0.021379619573507466,0.33,parametric bootstrap B=199,False
+EWS,student_t,2516,loc=0.000354253; scale=0.00857072; df=3.93,CvM,0.06707423710932903,0.11,parametric bootstrap B=199,False
+EWS,student_t,2516,loc=0.000354253; scale=0.00857072; df=3.93,AD,0.5528617536610909,0.08,parametric bootstrap B=199,False
+EEM,normal,2516,mu=0.000203836; sigma=0.0145419,Pearson_chi2,149.73290937996822,1.0005651524872323e-13,asymptotic chi2,True
+EEM,normal,2516,mu=0.000203836; sigma=0.0145419,G,155.32061594774942,1.280844278333479e-14,asymptotic chi2,True
+EEM,normal,2516,mu=0.000203836; sigma=0.0145419,KS,0.05110829075019241,0.001,parametric bootstrap B=999,True
+EEM,normal,2516,mu=0.000203836; sigma=0.0145419,Kuiper,0.09221832423222326,0.001,parametric bootstrap B=999,True
+EEM,normal,2516,mu=0.000203836; sigma=0.0145419,CvM,2.5556703211971743,0.001,parametric bootstrap B=999,True
+EEM,normal,2516,mu=0.000203836; sigma=0.0145419,AD,17.124450223971053,0.001,parametric bootstrap B=999,True
+EEM,student_t,2516,loc=0.000454306; scale=0.0107144; df=4.611,Pearson_chi2,39.81558028616852,0.567283494420511,asymptotic chi2,False
+EEM,student_t,2516,loc=0.000454306; scale=0.0107144; df=4.611,G,39.59518372008447,0.5770674073720525,asymptotic chi2,False
+EEM,student_t,2516,loc=0.000454306; scale=0.0107144; df=4.611,KS,0.018213698653129273,0.01,parametric bootstrap B=199,True
+EEM,student_t,2516,loc=0.000454306; scale=0.0107144; df=4.611,Kuiper,0.035202414125801385,0.005,parametric bootstrap B=199,True
+EEM,student_t,2516,loc=0.000454306; scale=0.0107144; df=4.611,CvM,0.2124383606817776,0.005,parametric bootstrap B=199,True
+EEM,student_t,2516,loc=0.000454306; scale=0.0107144; df=4.611,AD,1.3724805546626158,0.005,parametric bootstrap B=199,True
+MCHI,normal,2455,mu=0.000377251; sigma=0.0156165,Pearson_chi2,94.78655804480653,9.122500525183119e-06,asymptotic chi2,True
+MCHI,normal,2455,mu=0.000377251; sigma=0.0156165,G,94.69714157141107,9.36283239019566e-06,asymptotic chi2,True
+MCHI,normal,2455,mu=0.000377251; sigma=0.0156165,KS,0.04181874972871946,0.001,parametric bootstrap B=999,True
+MCHI,normal,2455,mu=0.000377251; sigma=0.0156165,Kuiper,0.07619364040092527,0.001,parametric bootstrap B=999,True
+MCHI,normal,2455,mu=0.000377251; sigma=0.0156165,CvM,1.4408976442396069,0.001,parametric bootstrap B=999,True
+MCHI,normal,2455,mu=0.000377251; sigma=0.0156165,AD,9.25679050231247,0.001,parametric bootstrap B=999,True
+MCHI,student_t,2455,loc=0.000522398; scale=0.0123563; df=5.364,Pearson_chi2,57.04969450101832,0.06060203172281228,asymptotic chi2,False
+MCHI,student_t,2455,loc=0.000522398; scale=0.0123563; df=5.364,G,57.27154083540321,0.058268680095847326,asymptotic chi2,False
+MCHI,student_t,2455,loc=0.000522398; scale=0.0123563; df=5.364,KS,0.012507403286587282,0.285,parametric bootstrap B=199,False
+MCHI,student_t,2455,loc=0.000522398; scale=0.0123563; df=5.364,Kuiper,0.022923208464509348,0.255,parametric bootstrap B=199,False
+MCHI,student_t,2455,loc=0.000522398; scale=0.0123563; df=5.364,CvM,0.09130602457855584,0.03,parametric bootstrap B=199,True
+MCHI,student_t,2455,loc=0.000522398; scale=0.0123563; df=5.364,AD,0.6313980394343162,0.04,parametric bootstrap B=199,True
+INDA,normal,2242,mu=0.000287253; sigma=0.0161149,Pearson_chi2,181.80731489741305,1.2126704843721614e-19,asymptotic chi2,True
+INDA,normal,2242,mu=0.000287253; sigma=0.0161149,G,187.80718593913983,1.1277307394209452e-20,asymptotic chi2,True
+INDA,normal,2242,mu=0.000287253; sigma=0.0161149,KS,0.06513972216936068,0.001,parametric bootstrap B=999,True
+INDA,normal,2242,mu=0.000287253; sigma=0.0161149,Kuiper,0.12447641288477693,0.001,parametric bootstrap B=999,True
+INDA,normal,2242,mu=0.000287253; sigma=0.0161149,CvM,3.7973297133840296,0.001,parametric bootstrap B=999,True
+INDA,normal,2242,mu=0.000287253; sigma=0.0161149,AD,23.33456757443946,0.001,parametric bootstrap B=999,True
+INDA,student_t,2242,loc=0.000534232; scale=0.011027; df=3.931,Pearson_chi2,38.89562890276539,0.5198719714933339,asymptotic chi2,False
+INDA,student_t,2242,loc=0.000534232; scale=0.011027; df=3.931,G,39.610921077477464,0.4876183255638413,asymptotic chi2,False
+INDA,student_t,2242,loc=0.000534232; scale=0.011027; df=3.931,KS,0.010354097489438968,0.655,parametric bootstrap B=199,False
+INDA,student_t,2242,loc=0.000534232; scale=0.011027; df=3.931,Kuiper,0.01661086582695462,0.85,parametric bootstrap B=199,False
+INDA,student_t,2242,loc=0.000534232; scale=0.011027; df=3.931,CvM,0.02497924283061454,0.8,parametric bootstrap B=199,False
+INDA,student_t,2242,loc=0.000534232; scale=0.011027; df=3.931,AD,0.2759576803659911,0.57,parametric bootstrap B=199,False
+EWZ,normal,2516,mu=-9.97475e-05; sigma=0.0227809,Pearson_chi2,189.80922098569152,2.3841084176816338e-20,asymptotic chi2,True
+EWZ,normal,2516,mu=-9.97475e-05; sigma=0.0227809,G,193.7525614360424,5.032196049324212e-21,asymptotic chi2,True
+EWZ,normal,2516,mu=-9.97475e-05; sigma=0.0227809,KS,0.055411198857118205,0.001,parametric bootstrap B=999,True
+EWZ,normal,2516,mu=-9.97475e-05; sigma=0.0227809,Kuiper,0.11029446391160824,0.001,parametric bootstrap B=999,True
+EWZ,normal,2516,mu=-9.97475e-05; sigma=0.0227809,CvM,3.5250337523526376,0.001,parametric bootstrap B=999,True
+EWZ,normal,2516,mu=-9.97475e-05; sigma=0.0227809,AD,22.07462775400836,0.001,parametric bootstrap B=999,True
+EWZ,student_t,2516,loc=0.000257034; scale=0.016153; df=4.338,Pearson_chi2,57.00158982511923,0.06111830099194107,asymptotic chi2,False
+EWZ,student_t,2516,loc=0.000257034; scale=0.016153; df=4.338,G,56.54437600208292,0.06621350471287207,asymptotic chi2,False
+EWZ,student_t,2516,loc=0.000257034; scale=0.016153; df=4.338,KS,0.013164015665138085,0.16,parametric bootstrap B=199,False
+EWZ,student_t,2516,loc=0.000257034; scale=0.016153; df=4.338,Kuiper,0.024846678113985166,0.105,parametric bootstrap B=199,False
+EWZ,student_t,2516,loc=0.000257034; scale=0.016153; df=4.338,CvM,0.08147405016699241,0.05,parametric bootstrap B=199,False
+EWZ,student_t,2516,loc=0.000257034; scale=0.016153; df=4.338,AD,0.6356948771381212,0.05,parametric bootstrap B=199,False
+EWW,normal,2516,mu=1.71814e-05; sigma=0.016458,Pearson_chi2,188.74880763116053,3.617131997727959e-20,asymptotic chi2,True
+EWW,normal,2516,mu=1.71814e-05; sigma=0.016458,G,189.70824934627458,2.4807099370383566e-20,asymptotic chi2,True
+EWW,normal,2516,mu=1.71814e-05; sigma=0.016458,KS,0.0565918978699263,0.001,parametric bootstrap B=999,True
+EWW,normal,2516,mu=1.71814e-05; sigma=0.016458,Kuiper,0.11067271627972958,0.001,parametric bootstrap B=999,True
+EWW,normal,2516,mu=1.71814e-05; sigma=0.016458,CvM,3.0169463671089596,0.001,parametric bootstrap B=999,True
+EWW,normal,2516,mu=1.71814e-05; sigma=0.016458,AD,19.355792799392475,0.001,parametric bootstrap B=999,True
+EWW,student_t,2516,loc=0.000222995; scale=0.0118231; df=4.258,Pearson_chi2,56.34340222575517,0.0685636764407778,asymptotic chi2,False
+EWW,student_t,2516,loc=0.000222995; scale=0.0118231; df=4.258,G,56.60055273449752,0.06556881577715497,asymptotic chi2,False
+EWW,student_t,2516,loc=0.000222995; scale=0.0118231; df=4.258,KS,0.01183546938748914,0.365,parametric bootstrap B=199,False
+EWW,student_t,2516,loc=0.000222995; scale=0.0118231; df=4.258,Kuiper,0.02164568721207316,0.32,parametric bootstrap B=199,False
+EWW,student_t,2516,loc=0.000222995; scale=0.0118231; df=4.258,CvM,0.03784476468954511,0.53,parametric bootstrap B=199,False
+EWW,student_t,2516,loc=0.000222995; scale=0.0118231; df=4.258,AD,0.2703557218969763,0.605,parametric bootstrap B=199,False
+EWT,normal,2516,mu=0.000402408; sigma=0.0134235,Pearson_chi2,109.5834658187599,9.997179345465775e-08,asymptotic chi2,True
+EWT,normal,2516,mu=0.000402408; sigma=0.0134235,G,110.85705234098964,6.659776181892149e-08,asymptotic chi2,True
+EWT,normal,2516,mu=0.000402408; sigma=0.0134235,KS,0.04324440727469239,0.001,parametric bootstrap B=999,True
+EWT,normal,2516,mu=0.000402408; sigma=0.0134235,Kuiper,0.08619912595194237,0.001,parametric bootstrap B=999,True
+EWT,normal,2516,mu=0.000402408; sigma=0.0134235,CvM,1.8645349290592192,0.001,parametric bootstrap B=999,True
+EWT,normal,2516,mu=0.000402408; sigma=0.0134235,AD,12.012630376359539,0.001,parametric bootstrap B=999,True
+EWT,student_t,2516,loc=0.00062507; scale=0.0103312; df=5.05,Pearson_chi2,41.93640699523053,0.4737335564495971,asymptotic chi2,False
+EWT,student_t,2516,loc=0.00062507; scale=0.0103312; df=5.05,G,42.28341503668777,0.45872989399473474,asymptotic chi2,False
+EWT,student_t,2516,loc=0.00062507; scale=0.0103312; df=5.05,KS,0.01405560827905783,0.12,parametric bootstrap B=199,False
+EWT,student_t,2516,loc=0.00062507; scale=0.0103312; df=5.05,Kuiper,0.02415135678045699,0.165,parametric bootstrap B=199,False
+EWT,student_t,2516,loc=0.00062507; scale=0.0103312; df=5.05,CvM,0.07635175378644801,0.105,parametric bootstrap B=199,False
+EWT,student_t,2516,loc=0.00062507; scale=0.0103312; df=5.05,AD,0.6145123360138314,0.07,parametric bootstrap B=199,False
+THD,normal,2516,mu=0.00025752; sigma=0.0159589,Pearson_chi2,250.50874403815578,4.361644759171675e-31,asymptotic chi2,True
+THD,normal,2516,mu=0.00025752; sigma=0.0159589,G,262.5291522817185,2.7728772271428984e-33,asymptotic chi2,True
+THD,normal,2516,mu=0.00025752; sigma=0.0159589,KS,0.0676826521027093,0.001,parametric bootstrap B=999,True
+THD,normal,2516,mu=0.00025752; sigma=0.0159589,Kuiper,0.1334405087721147,0.001,parametric bootstrap B=999,True
+THD,normal,2516,mu=0.00025752; sigma=0.0159589,CvM,4.771145628592568,0.001,parametric bootstrap B=999,True
+THD,normal,2516,mu=0.00025752; sigma=0.0159589,AD,30.02277132666086,0.001,parametric bootstrap B=999,True
+THD,student_t,2516,loc=0.000349603; scale=0.0106129; df=3.648,Pearson_chi2,34.62321144674085,0.7833516302161815,asymptotic chi2,False
+THD,student_t,2516,loc=0.000349603; scale=0.0106129; df=3.648,G,34.10271786059914,0.8019125866422011,asymptotic chi2,False
+THD,student_t,2516,loc=0.000349603; scale=0.0106129; df=3.648,KS,0.010518844282224715,0.545,parametric bootstrap B=199,False
+THD,student_t,2516,loc=0.000349603; scale=0.0106129; df=3.648,Kuiper,0.020236057938872343,0.435,parametric bootstrap B=199,False
+THD,student_t,2516,loc=0.000349603; scale=0.0106129; df=3.648,CvM,0.030655855461482605,0.685,parametric bootstrap B=199,False
+THD,student_t,2516,loc=0.000349603; scale=0.0106129; df=3.648,AD,0.23940066795421444,0.67,parametric bootstrap B=199,False
+IDX,normal,2516,mu=3.08332e-05; sigma=0.0181018,Pearson_chi2,218.44038155802858,2.4889448735952973e-25,asymptotic chi2,True
+IDX,normal,2516,mu=3.08332e-05; sigma=0.0181018,G,223.7422913730523,2.857072773864301e-26,asymptotic chi2,True
+IDX,normal,2516,mu=3.08332e-05; sigma=0.0181018,KS,0.06220124491059942,0.001,parametric bootstrap B=999,True
+IDX,normal,2516,mu=3.08332e-05; sigma=0.0181018,Kuiper,0.11783846560930356,0.001,parametric bootstrap B=999,True
+IDX,normal,2516,mu=3.08332e-05; sigma=0.0181018,CvM,3.841480670248302,0.001,parametric bootstrap B=999,True
+IDX,normal,2516,mu=3.08332e-05; sigma=0.0181018,AD,24.034710442404503,0.001,parametric bootstrap B=999,True
+IDX,student_t,2516,loc=0.000131504; scale=0.0124717; df=3.716,Pearson_chi2,27.2368839427663,0.962133216931913,asymptotic chi2,False
+IDX,student_t,2516,loc=0.000131504; scale=0.0124717; df=3.716,G,27.231402989818804,0.9621992188974002,asymptotic chi2,False
+IDX,student_t,2516,loc=0.000131504; scale=0.0124717; df=3.716,KS,0.00932418661741885,0.72,parametric bootstrap B=199,False
+IDX,student_t,2516,loc=0.000131504; scale=0.0124717; df=3.716,Kuiper,0.01728261340975462,0.65,parametric bootstrap B=199,False
+IDX,student_t,2516,loc=0.000131504; scale=0.0124717; df=3.716,CvM,0.03375205349367338,0.525,parametric bootstrap B=199,False
+IDX,student_t,2516,loc=0.000131504; scale=0.0124717; df=3.716,AD,0.23032778426568257,0.63,parametric bootstrap B=199,False
+TUR,normal,2516,mu=-0.000182093; sigma=0.021279,Pearson_chi2,155.510333863275,1.1939497444414407e-14,asymptotic chi2,True
+TUR,normal,2516,mu=-0.000182093; sigma=0.021279,G,155.23563048845386,1.3217809423213271e-14,asymptotic chi2,True
+TUR,normal,2516,mu=-0.000182093; sigma=0.021279,KS,0.04813042202447099,0.001,parametric bootstrap B=999,True
+TUR,normal,2516,mu=-0.000182093; sigma=0.021279,Kuiper,0.0867946142468054,0.001,parametric bootstrap B=999,True
+TUR,normal,2516,mu=-0.000182093; sigma=0.021279,CvM,2.031470293543008,0.001,parametric bootstrap B=999,True
+TUR,normal,2516,mu=-0.000182093; sigma=0.021279,AD,12.738579775581456,0.001,parametric bootstrap B=999,True
+TUR,student_t,2516,loc=0.000249581; scale=0.0162558; df=4.753,Pearson_chi2,42.30206677265501,0.45792723827781556,asymptotic chi2,False
+TUR,student_t,2516,loc=0.000249581; scale=0.0162558; df=4.753,G,42.352542645324114,0.4557571185821011,asymptotic chi2,False
+TUR,student_t,2516,loc=0.000249581; scale=0.0162558; df=4.753,KS,0.01240974142322776,0.23,parametric bootstrap B=199,False
+TUR,student_t,2516,loc=0.000249581; scale=0.0162558; df=4.753,Kuiper,0.02152998973290604,0.29,parametric bootstrap B=199,False
+TUR,student_t,2516,loc=0.000249581; scale=0.0162558; df=4.753,CvM,0.04455472944354325,0.325,parametric bootstrap B=199,False
+TUR,student_t,2516,loc=0.000249581; scale=0.0162558; df=4.753,AD,0.45650139035751636,0.125,parametric bootstrap B=199,False
+EZA,normal,2516,mu=4.40749e-05; sigma=0.0201627,Pearson_chi2,121.65023847376789,1.934025572521767e-09,asymptotic chi2,True
+EZA,normal,2516,mu=4.40749e-05; sigma=0.0201627,G,129.74475829520338,1.229062860874799e-10,asymptotic chi2,True
+EZA,normal,2516,mu=4.40749e-05; sigma=0.0201627,KS,0.04605632146694549,0.001,parametric bootstrap B=999,True
+EZA,normal,2516,mu=4.40749e-05; sigma=0.0201627,Kuiper,0.08647565007199454,0.001,parametric bootstrap B=999,True
+EZA,normal,2516,mu=4.40749e-05; sigma=0.0201627,CvM,1.8393652625847343,0.001,parametric bootstrap B=999,True
+EZA,normal,2516,mu=4.40749e-05; sigma=0.0201627,AD,12.343287940273513,0.001,parametric bootstrap B=999,True
+EZA,student_t,2516,loc=0.00040739; scale=0.015471; df=5.015,Pearson_chi2,57.07472178060413,0.060334897386326906,asymptotic chi2,False
+EZA,student_t,2516,loc=0.00040739; scale=0.015471; df=5.015,G,57.2839675926624,0.05814026482546186,asymptotic chi2,False
+EZA,student_t,2516,loc=0.00040739; scale=0.015471; df=5.015,KS,0.013212633086946035,0.205,parametric bootstrap B=199,False
+EZA,student_t,2516,loc=0.00040739; scale=0.015471; df=5.015,Kuiper,0.02431719701081031,0.16,parametric bootstrap B=199,False
+EZA,student_t,2516,loc=0.00040739; scale=0.015471; df=5.015,CvM,0.08999343791741929,0.06,parametric bootstrap B=199,False
+EZA,student_t,2516,loc=0.00040739; scale=0.015471; df=5.015,AD,0.7228688636951119,0.04,parametric bootstrap B=199,True
+GLD,normal,2516,mu=0.000193912; sigma=0.0115985,Pearson_chi2,133.35135135135133,3.511048263240156e-11,asymptotic chi2,True
+GLD,normal,2516,mu=0.000193912; sigma=0.0115985,G,129.9562962176115,1.1424464517101846e-10,asymptotic chi2,True
+GLD,normal,2516,mu=0.000193912; sigma=0.0115985,KS,0.04886073414133213,0.001,parametric bootstrap B=999,True
+GLD,normal,2516,mu=0.000193912; sigma=0.0115985,Kuiper,0.09566026774208031,0.001,parametric bootstrap B=999,True
+GLD,normal,2516,mu=0.000193912; sigma=0.0115985,CvM,2.1125788217601595,0.001,parametric bootstrap B=999,True
+GLD,normal,2516,mu=0.000193912; sigma=0.0115985,AD,12.076850714532156,0.001,parametric bootstrap B=999,True
+GLD,student_t,2516,loc=0.000163394; scale=0.0089375; df=4.893,Pearson_chi2,53.78378378378378,0.10505874473323304,asymptotic chi2,False
+GLD,student_t,2516,loc=0.000163394; scale=0.0089375; df=4.893,G,54.137117286300835,0.09924305854419435,asymptotic chi2,False
+GLD,student_t,2516,loc=0.000163394; scale=0.0089375; df=4.893,KS,0.015670529721773352,0.035,parametric bootstrap B=199,True
+GLD,student_t,2516,loc=0.000163394; scale=0.0089375; df=4.893,Kuiper,0.029432463630309325,0.02,parametric bootstrap B=199,True
+GLD,student_t,2516,loc=0.000163394; scale=0.0089375; df=4.893,CvM,0.09785051891994068,0.03,parametric bootstrap B=199,True
+GLD,student_t,2516,loc=0.000163394; scale=0.0089375; df=4.893,AD,0.5659851698333114,0.05,parametric bootstrap B=199,False
+IAU,normal,2516,mu=0.000199834; sigma=0.0116029,Pearson_chi2,139.12877583465817,4.581253169980753e-12,asymptotic chi2,True
+IAU,normal,2516,mu=0.000199834; sigma=0.0116029,G,136.40172270874265,1.2032725843325649e-11,asymptotic chi2,True
+IAU,normal,2516,mu=0.000199834; sigma=0.0116029,KS,0.048937351770933196,0.001,parametric bootstrap B=999,True
+IAU,normal,2516,mu=0.000199834; sigma=0.0116029,Kuiper,0.09537035726786905,0.001,parametric bootstrap B=999,True
+IAU,normal,2516,mu=0.000199834; sigma=0.0116029,CvM,2.144487785141135,0.001,parametric bootstrap B=999,True
+IAU,normal,2516,mu=0.000199834; sigma=0.0116029,AD,12.289740724317198,0.001,parametric bootstrap B=999,True
+IAU,student_t,2516,loc=0.000156895; scale=0.00892196; df=4.86,Pearson_chi2,43.80127186009538,0.3949813378848594,asymptotic chi2,False
+IAU,student_t,2516,loc=0.000156895; scale=0.00892196; df=4.86,G,43.75639697549819,0.39681398687687003,asymptotic chi2,False
+IAU,student_t,2516,loc=0.000156895; scale=0.00892196; df=4.86,KS,0.01846227513716381,0.005,parametric bootstrap B=199,True
+IAU,student_t,2516,loc=0.000156895; scale=0.00892196; df=4.86,Kuiper,0.03101770391403122,0.01,parametric bootstrap B=199,True
+IAU,student_t,2516,loc=0.000156895; scale=0.00892196; df=4.86,CvM,0.1087041910607777,0.025,parametric bootstrap B=199,True
+IAU,student_t,2516,loc=0.000156895; scale=0.00892196; df=4.86,AD,0.5908066632464397,0.095,parametric bootstrap B=199,False
+SGOL,normal,2516,mu=0.000196181; sigma=0.0115993,Pearson_chi2,133.3879173290938,3.466471831497824e-11,asymptotic chi2,True
+SGOL,normal,2516,mu=0.000196181; sigma=0.0115993,G,131.80508509094432,6.018733261296296e-11,asymptotic chi2,True
+SGOL,normal,2516,mu=0.000196181; sigma=0.0115993,KS,0.04769615642124844,0.001,parametric bootstrap B=999,True
+SGOL,normal,2516,mu=0.000196181; sigma=0.0115993,Kuiper,0.09516689490171668,0.001,parametric bootstrap B=999,True
+SGOL,normal,2516,mu=0.000196181; sigma=0.0115993,CvM,2.0028514066647944,0.001,parametric bootstrap B=999,True
+SGOL,normal,2516,mu=0.000196181; sigma=0.0115993,AD,11.630626653134641,0.001,parametric bootstrap B=999,True
+SGOL,student_t,2516,loc=0.000165034; scale=0.00897125; df=4.96,Pearson_chi2,52.723370429252775,0.12415729761373692,asymptotic chi2,False
+SGOL,student_t,2516,loc=0.000165034; scale=0.00897125; df=4.96,G,54.049625279083344,0.10065842829684687,asymptotic chi2,False
+SGOL,student_t,2516,loc=0.000165034; scale=0.00897125; df=4.96,KS,0.014155529049822535,0.07,parametric bootstrap B=199,False
+SGOL,student_t,2516,loc=0.000165034; scale=0.00897125; df=4.96,Kuiper,0.026526978226802833,0.065,parametric bootstrap B=199,False
+SGOL,student_t,2516,loc=0.000165034; scale=0.00897125; df=4.96,CvM,0.07840917407435971,0.065,parametric bootstrap B=199,False
+SGOL,student_t,2516,loc=0.000165034; scale=0.00897125; df=4.96,AD,0.4603463833227579,0.125,parametric bootstrap B=199,False
+GDX,normal,2516,mu=-8.96794e-05; sigma=0.0257281,Pearson_chi2,141.39586645468998,2.041020474062076e-12,asymptotic chi2,True
+GDX,normal,2516,mu=-8.96794e-05; sigma=0.0257281,G,142.84780315994976,1.2128611404847126e-12,asymptotic chi2,True
+GDX,normal,2516,mu=-8.96794e-05; sigma=0.0257281,KS,0.047401577489368796,0.001,parametric bootstrap B=999,True
+GDX,normal,2516,mu=-8.96794e-05; sigma=0.0257281,Kuiper,0.09150848061628825,0.001,parametric bootstrap B=999,True
+GDX,normal,2516,mu=-8.96794e-05; sigma=0.0257281,CvM,2.109856226447871,0.001,parametric bootstrap B=999,True
+GDX,normal,2516,mu=-8.96794e-05; sigma=0.0257281,AD,12.899125622664542,0.001,parametric bootstrap B=999,True
+GDX,student_t,2516,loc=-0.000113604; scale=0.0195742; df=4.838,Pearson_chi2,41.168521462639106,0.5073347588231012,asymptotic chi2,False
+GDX,student_t,2516,loc=-0.000113604; scale=0.0195742; df=4.838,G,41.816632303829124,0.4789412882416095,asymptotic chi2,False
+GDX,student_t,2516,loc=-0.000113604; scale=0.0195742; df=4.838,KS,0.012591394675595335,0.24,parametric bootstrap B=199,False
+GDX,student_t,2516,loc=-0.000113604; scale=0.0195742; df=4.838,Kuiper,0.02149695730942358,0.32,parametric bootstrap B=199,False
+GDX,student_t,2516,loc=-0.000113604; scale=0.0195742; df=4.838,CvM,0.026614877440272067,0.76,parametric bootstrap B=199,False
+GDX,student_t,2516,loc=-0.000113604; scale=0.0195742; df=4.838,AD,0.1706256156926429,0.83,parametric bootstrap B=199,False
+GDXJ,normal,2516,mu=-0.000260677; sigma=0.0311413,Pearson_chi2,132.18124006359295,5.280443310291088e-11,asymptotic chi2,True
+GDXJ,normal,2516,mu=-0.000260677; sigma=0.0311413,G,134.80793223252283,2.1081511351428972e-11,asymptotic chi2,True
+GDXJ,normal,2516,mu=-0.000260677; sigma=0.0311413,KS,0.047756404037021916,0.001,parametric bootstrap B=999,True
+GDXJ,normal,2516,mu=-0.000260677; sigma=0.0311413,Kuiper,0.09152283608975148,0.001,parametric bootstrap B=999,True
+GDXJ,normal,2516,mu=-0.000260677; sigma=0.0311413,CvM,2.1698085728700183,0.001,parametric bootstrap B=999,True
+GDXJ,normal,2516,mu=-0.000260677; sigma=0.0311413,AD,13.27556472190463,0.001,parametric bootstrap B=999,True
+GDXJ,student_t,2516,loc=-0.000270864; scale=0.0236951; df=4.949,Pearson_chi2,35.20826709062003,0.7615774274873176,asymptotic chi2,False
+GDXJ,student_t,2516,loc=-0.000270864; scale=0.0236951; df=4.949,G,35.39053125315209,0.7546092548045135,asymptotic chi2,False
+GDXJ,student_t,2516,loc=-0.000270864; scale=0.0236951; df=4.949,KS,0.014064194432601318,0.115,parametric bootstrap B=199,False
+GDXJ,student_t,2516,loc=-0.000270864; scale=0.0236951; df=4.949,Kuiper,0.022582956622688943,0.205,parametric bootstrap B=199,False
+GDXJ,student_t,2516,loc=-0.000270864; scale=0.0236951; df=4.949,CvM,0.04473095235218489,0.315,parametric bootstrap B=199,False
+GDXJ,student_t,2516,loc=-0.000270864; scale=0.0236951; df=4.949,AD,0.2756053534644707,0.465,parametric bootstrap B=199,False
+NEM,normal,2516,mu=0.000156091; sigma=0.0235394,Pearson_chi2,189.48012718600953,2.7135594048214287e-20,asymptotic chi2,True
+NEM,normal,2516,mu=0.000156091; sigma=0.0235394,G,193.32415711270872,5.961113717592335e-21,asymptotic chi2,True
+NEM,normal,2516,mu=0.000156091; sigma=0.0235394,KS,0.05608997578399921,0.001,parametric bootstrap B=999,True
+NEM,normal,2516,mu=0.000156091; sigma=0.0235394,Kuiper,0.10319265800162125,0.001,parametric bootstrap B=999,True
+NEM,normal,2516,mu=0.000156091; sigma=0.0235394,CvM,2.7540792112472996,0.001,parametric bootstrap B=999,True
+NEM,normal,2516,mu=0.000156091; sigma=0.0235394,AD,16.882131256468256,0.001,parametric bootstrap B=999,True
+NEM,student_t,2516,loc=0.000320543; scale=0.0172087; df=4.08,Pearson_chi2,43.10651828298887,0.42373401914848163,asymptotic chi2,False
+NEM,student_t,2516,loc=0.000320543; scale=0.0172087; df=4.08,G,41.97464235274745,0.47207409545755485,asymptotic chi2,False
+NEM,student_t,2516,loc=0.000320543; scale=0.0172087; df=4.08,KS,0.012072089708252354,0.285,parametric bootstrap B=199,False
+NEM,student_t,2516,loc=0.000320543; scale=0.0172087; df=4.08,Kuiper,0.021443646127949134,0.335,parametric bootstrap B=199,False
+NEM,student_t,2516,loc=0.000320543; scale=0.0172087; df=4.08,CvM,0.04568932906449013,0.345,parametric bootstrap B=199,False
+NEM,student_t,2516,loc=0.000320543; scale=0.0172087; df=4.08,AD,0.28991885379264204,0.485,parametric bootstrap B=199,False
+AEM,normal,2516,mu=0.000128913; sigma=0.027912,Pearson_chi2,169.18600953895069,7.012560229447625e-17,asymptotic chi2,True
+AEM,normal,2516,mu=0.000128913; sigma=0.027912,G,170.53704756183942,4.1904282679009426e-17,asymptotic chi2,True
+AEM,normal,2516,mu=0.000128913; sigma=0.027912,KS,0.05070683849831881,0.001,parametric bootstrap B=999,True
+AEM,normal,2516,mu=0.000128913; sigma=0.027912,Kuiper,0.09902275558185475,0.001,parametric bootstrap B=999,True
+AEM,normal,2516,mu=0.000128913; sigma=0.027912,CvM,2.4527632907887633,0.001,parametric bootstrap B=999,True
+AEM,normal,2516,mu=0.000128913; sigma=0.027912,AD,14.810008544694938,0.001,parametric bootstrap B=999,True
+AEM,student_t,2516,loc=4.88108e-05; scale=0.0208134; df=4.382,Pearson_chi2,55.42925278219396,0.08015200536580397,asymptotic chi2,False
+AEM,student_t,2516,loc=4.88108e-05; scale=0.0208134; df=4.382,G,56.235787281270014,0.06985060183560306,asymptotic chi2,False
+AEM,student_t,2516,loc=4.88108e-05; scale=0.0208134; df=4.382,KS,0.011047877745729351,0.435,parametric bootstrap B=199,False
+AEM,student_t,2516,loc=4.88108e-05; scale=0.0208134; df=4.382,Kuiper,0.021002189443105057,0.355,parametric bootstrap B=199,False
+AEM,student_t,2516,loc=4.88108e-05; scale=0.0208134; df=4.382,CvM,0.03433426611134698,0.575,parametric bootstrap B=199,False
+AEM,student_t,2516,loc=4.88108e-05; scale=0.0208134; df=4.382,AD,0.21633748637032113,0.735,parametric bootstrap B=199,False
+KGC,normal,2516,mu=-0.000264216; sigma=0.0331235,Pearson_chi2,216.02702702702703,6.641281375280288e-25,asymptotic chi2,True
+KGC,normal,2516,mu=-0.000264216; sigma=0.0331235,G,220.0305051574065,1.301946745826371e-25,asymptotic chi2,True
+KGC,normal,2516,mu=-0.000264216; sigma=0.0331235,KS,0.057370276762855554,0.001,parametric bootstrap B=999,True
+KGC,normal,2516,mu=-0.000264216; sigma=0.0331235,Kuiper,0.11372231747888434,0.001,parametric bootstrap B=999,True
+KGC,normal,2516,mu=-0.000264216; sigma=0.0331235,CvM,3.388809195851662,0.001,parametric bootstrap B=999,True
+KGC,normal,2516,mu=-0.000264216; sigma=0.0331235,AD,20.11594728356249,0.001,parametric bootstrap B=999,True
+KGC,student_t,2516,loc=-0.000735901; scale=0.0235546; df=3.758,Pearson_chi2,34.111287758346585,0.8016134630389428,asymptotic chi2,False
+KGC,student_t,2516,loc=-0.000735901; scale=0.0235546; df=3.758,G,33.66822632570043,0.8167832088444862,asymptotic chi2,False
+KGC,student_t,2516,loc=-0.000735901; scale=0.0235546; df=3.758,KS,0.011592425054249289,0.265,parametric bootstrap B=199,False
+KGC,student_t,2516,loc=-0.000735901; scale=0.0235546; df=3.758,Kuiper,0.021940376700073427,0.22,parametric bootstrap B=199,False
+KGC,student_t,2516,loc=-0.000735901; scale=0.0235546; df=3.758,CvM,0.06350976363461776,0.13,parametric bootstrap B=199,False
+KGC,student_t,2516,loc=-0.000735901; scale=0.0235546; df=3.758,AD,0.5899765234007646,0.06,parametric bootstrap B=199,False
+WPM,normal,2516,mu=0.000175841; sigma=0.0267219,Pearson_chi2,150.93958664546898,6.433286400131531e-14,asymptotic chi2,True
+WPM,normal,2516,mu=0.000175841; sigma=0.0267219,G,150.93616173938767,6.441367586568317e-14,asymptotic chi2,True
+WPM,normal,2516,mu=0.000175841; sigma=0.0267219,KS,0.04943760935839697,0.001,parametric bootstrap B=999,True
+WPM,normal,2516,mu=0.000175841; sigma=0.0267219,Kuiper,0.09267065522732093,0.001,parametric bootstrap B=999,True
+WPM,normal,2516,mu=0.000175841; sigma=0.0267219,CvM,1.9117482545416136,0.001,parametric bootstrap B=999,True
+WPM,normal,2516,mu=0.000175841; sigma=0.0267219,AD,11.34203247831374,0.001,parametric bootstrap B=999,True
+WPM,student_t,2516,loc=0.000387309; scale=0.0208073; df=4.858,Pearson_chi2,44.13036565977742,0.38165238757495695,asymptotic chi2,False
+WPM,student_t,2516,loc=0.000387309; scale=0.0208073; df=4.858,G,45.19689994987275,0.33991105914298303,asymptotic chi2,False
+WPM,student_t,2516,loc=0.000387309; scale=0.0208073; df=4.858,KS,0.013869777881523049,0.13,parametric bootstrap B=199,False
+WPM,student_t,2516,loc=0.000387309; scale=0.0208073; df=4.858,Kuiper,0.02676683600777502,0.065,parametric bootstrap B=199,False
+WPM,student_t,2516,loc=0.000387309; scale=0.0208073; df=4.858,CvM,0.05512886469853479,0.205,parametric bootstrap B=199,False
+WPM,student_t,2516,loc=0.000387309; scale=0.0208073; df=4.858,AD,0.3458201367584479,0.305,parametric bootstrap B=199,False
+FNV,normal,2516,mu=0.000652635; sigma=0.0223482,Pearson_chi2,126.87917329093798,3.290556371356742e-10,asymptotic chi2,True
+FNV,normal,2516,mu=0.000652635; sigma=0.0223482,G,125.81118938157057,4.737798143170423e-10,asymptotic chi2,True
+FNV,normal,2516,mu=0.000652635; sigma=0.0223482,KS,0.0448491374184784,0.001,parametric bootstrap B=999,True
+FNV,normal,2516,mu=0.000652635; sigma=0.0223482,Kuiper,0.0870196536358635,0.001,parametric bootstrap B=999,True
+FNV,normal,2516,mu=0.000652635; sigma=0.0223482,CvM,1.970553098619674,0.001,parametric bootstrap B=999,True
+FNV,normal,2516,mu=0.000652635; sigma=0.0223482,AD,11.967011316325625,0.001,parametric bootstrap B=999,True
+FNV,student_t,2516,loc=0.000689484; scale=0.0171744; df=4.71,Pearson_chi2,41.168521462639106,0.5073347588231012,asymptotic chi2,False
+FNV,student_t,2516,loc=0.000689484; scale=0.0171744; df=4.71,G,40.98299122819499,0.5155170910864757,asymptotic chi2,False
+FNV,student_t,2516,loc=0.000689484; scale=0.0171744; df=4.71,KS,0.011097990374607458,0.395,parametric bootstrap B=199,False
+FNV,student_t,2516,loc=0.000689484; scale=0.0171744; df=4.71,Kuiper,0.01800956707925594,0.62,parametric bootstrap B=199,False
+FNV,student_t,2516,loc=0.000689484; scale=0.0171744; df=4.71,CvM,0.03836765876091242,0.455,parametric bootstrap B=199,False
+FNV,student_t,2516,loc=0.000689484; scale=0.0171744; df=4.71,AD,0.21780743265344427,0.695,parametric bootstrap B=199,False
+PLD,normal,2516,mu=0.000665442; sigma=0.0176929,Pearson_chi2,288.90302066772654,3.6396636960272835e-38,asymptotic chi2,True
+PLD,normal,2516,mu=0.000665442; sigma=0.0176929,G,295.7971166239575,1.87216677754995e-39,asymptotic chi2,True
+PLD,normal,2516,mu=0.000665442; sigma=0.0176929,KS,0.06832800505672854,0.001,parametric bootstrap B=999,True
+PLD,normal,2516,mu=0.000665442; sigma=0.0176929,Kuiper,0.1326127635127149,0.001,parametric bootstrap B=999,True
+PLD,normal,2516,mu=0.000665442; sigma=0.0176929,CvM,5.139840325007775,0.001,parametric bootstrap B=999,True
+PLD,normal,2516,mu=0.000665442; sigma=0.0176929,AD,31.584982005927486,0.001,parametric bootstrap B=999,True
+PLD,student_t,2516,loc=0.00103181; scale=0.0116202; df=3.488,Pearson_chi2,61.46263910969793,0.026596709752275616,asymptotic chi2,True
+PLD,student_t,2516,loc=0.00103181; scale=0.0116202; df=3.488,G,61.82520236005186,0.02476149115803723,asymptotic chi2,True
+PLD,student_t,2516,loc=0.00103181; scale=0.0116202; df=3.488,KS,0.011415380775178563,0.365,parametric bootstrap B=199,False
+PLD,student_t,2516,loc=0.00103181; scale=0.0116202; df=3.488,Kuiper,0.020068330109753618,0.395,parametric bootstrap B=199,False
+PLD,student_t,2516,loc=0.00103181; scale=0.0116202; df=3.488,CvM,0.055138599280897614,0.22,parametric bootstrap B=199,False
+PLD,student_t,2516,loc=0.00103181; scale=0.0116202; df=3.488,AD,0.5623979341471568,0.105,parametric bootstrap B=199,False
+AMT,normal,2516,mu=0.000742148; sigma=0.0160753,Pearson_chi2,210.1399046104928,7.20135519258903e-24,asymptotic chi2,True
+AMT,normal,2516,mu=0.000742148; sigma=0.0160753,G,216.1971530896856,6.197837190087219e-25,asymptotic chi2,True
+AMT,normal,2516,mu=0.000742148; sigma=0.0160753,KS,0.0585367573880497,0.001,parametric bootstrap B=999,True
+AMT,normal,2516,mu=0.000742148; sigma=0.0160753,Kuiper,0.11677772966210992,0.001,parametric bootstrap B=999,True
+AMT,normal,2516,mu=0.000742148; sigma=0.0160753,CvM,3.8158996961339304,0.001,parametric bootstrap B=999,True
+AMT,normal,2516,mu=0.000742148; sigma=0.0160753,AD,23.66373323478865,0.001,parametric bootstrap B=999,True
+AMT,student_t,2516,loc=0.000959172; scale=0.0111722; df=3.93,Pearson_chi2,43.5818759936407,0.40397456185980485,asymptotic chi2,False
+AMT,student_t,2516,loc=0.000959172; scale=0.0111722; df=3.93,G,43.77691700746139,0.39597552728464874,asymptotic chi2,False
+AMT,student_t,2516,loc=0.000959172; scale=0.0111722; df=3.93,KS,0.01597848527023349,0.02,parametric bootstrap B=199,True
+AMT,student_t,2516,loc=0.000959172; scale=0.0111722; df=3.93,Kuiper,0.02565278833408491,0.045,parametric bootstrap B=199,True
+AMT,student_t,2516,loc=0.000959172; scale=0.0111722; df=3.93,CvM,0.07009917973340529,0.085,parametric bootstrap B=199,False
+AMT,student_t,2516,loc=0.000959172; scale=0.0111722; df=3.93,AD,0.5417974962006156,0.085,parametric bootstrap B=199,False
+EQIX,normal,2516,mu=0.00102492; sigma=0.0182404,Pearson_chi2,212.11446740858506,3.2430810585639175e-24,asymptotic chi2,True
+EQIX,normal,2516,mu=0.00102492; sigma=0.0182404,G,217.90745876242647,3.0919319828660287e-25,asymptotic chi2,True
+EQIX,normal,2516,mu=0.00102492; sigma=0.0182404,KS,0.06289581487154494,0.001,parametric bootstrap B=999,True
+EQIX,normal,2516,mu=0.00102492; sigma=0.0182404,Kuiper,0.11889178413981777,0.001,parametric bootstrap B=999,True
+EQIX,normal,2516,mu=0.00102492; sigma=0.0182404,CvM,4.169336496768163,0.001,parametric bootstrap B=999,True
+EQIX,normal,2516,mu=0.00102492; sigma=0.0182404,AD,26.07600463325298,0.001,parametric bootstrap B=999,True
+EQIX,student_t,2516,loc=0.000985849; scale=0.0123678; df=3.6,Pearson_chi2,34.25755166931637,0.7964743206733399,asymptotic chi2,False
+EQIX,student_t,2516,loc=0.000985849; scale=0.0123678; df=3.6,G,33.99247030618749,0.8057408321453896,asymptotic chi2,False
+EQIX,student_t,2516,loc=0.000985849; scale=0.0123678; df=3.6,KS,0.012063067169869601,0.295,parametric bootstrap B=199,False
+EQIX,student_t,2516,loc=0.000985849; scale=0.0123678; df=3.6,Kuiper,0.020819017955253427,0.345,parametric bootstrap B=199,False
+EQIX,student_t,2516,loc=0.000985849; scale=0.0123678; df=3.6,CvM,0.04526762199877069,0.39,parametric bootstrap B=199,False
+EQIX,student_t,2516,loc=0.000985849; scale=0.0123678; df=3.6,AD,0.32651039658685477,0.375,parametric bootstrap B=199,False
+O,normal,2516,mu=0.000507029; sigma=0.0180159,Pearson_chi2,372.12718600953895,5.338187431727228e-54,asymptotic chi2,True
+O,normal,2516,mu=0.000507029; sigma=0.0180159,G,379.88776851728943,1.6783486405094615e-55,asymptotic chi2,True
+O,normal,2516,mu=0.000507029; sigma=0.0180159,KS,0.08674884820615614,0.001,parametric bootstrap B=999,True
+O,normal,2516,mu=0.000507029; sigma=0.0180159,Kuiper,0.17190931985740748,0.001,parametric bootstrap B=999,True
+O,normal,2516,mu=0.000507029; sigma=0.0180159,CvM,8.048115707946662,0.001,parametric bootstrap B=999,True
+O,normal,2516,mu=0.000507029; sigma=0.0180159,AD,48.66662658471387,0.001,parametric bootstrap B=999,True
+O,student_t,2516,loc=0.000957565; scale=0.010977; df=3.476,Pearson_chi2,57.69634340222575,0.05401328590769007,asymptotic chi2,False
+O,student_t,2516,loc=0.000957565; scale=0.010977; df=3.476,G,57.38487721028814,0.057106365332624566,asymptotic chi2,False
+O,student_t,2516,loc=0.000957565; scale=0.010977; df=3.476,KS,0.015134450320761939,0.035,parametric bootstrap B=199,True
+O,student_t,2516,loc=0.000957565; scale=0.010977; df=3.476,Kuiper,0.025874445169197624,0.055,parametric bootstrap B=199,False
+O,student_t,2516,loc=0.000957565; scale=0.010977; df=3.476,CvM,0.1260559166031552,0.005,parametric bootstrap B=199,True
+O,student_t,2516,loc=0.000957565; scale=0.010977; df=3.476,AD,1.1117339619354425,0.01,parametric bootstrap B=199,True
+SPG,normal,2516,mu=0.000205502; sigma=0.0225903,Pearson_chi2,768.0635930047695,1.4988064683348028e-133,asymptotic chi2,True
+SPG,normal,2516,mu=0.000205502; sigma=0.0225903,G,795.498962762531,3.3873623039271524e-139,asymptotic chi2,True
+SPG,normal,2516,mu=0.000205502; sigma=0.0225903,KS,0.12786954513139037,0.001,parametric bootstrap B=999,True
+SPG,normal,2516,mu=0.000205502; sigma=0.0225903,Kuiper,0.2440265783701305,0.001,parametric bootstrap B=999,True
+SPG,normal,2516,mu=0.000205502; sigma=0.0225903,CvM,17.34469339581153,0.001,parametric bootstrap B=999,True
+SPG,normal,2516,mu=0.000205502; sigma=0.0225903,AD,102.63616147948687,0.001,parametric bootstrap B=999,True
+SPG,student_t,2516,loc=0.00066393; scale=0.010776; df=2.556,Pearson_chi2,64.20508744038155,0.015276698177354822,asymptotic chi2,True
+SPG,student_t,2516,loc=0.00066393; scale=0.010776; df=2.556,G,65.1450779833115,0.012543959008231855,asymptotic chi2,True
+SPG,student_t,2516,loc=0.00066393; scale=0.010776; df=2.556,KS,0.01714696391254135,0.025,parametric bootstrap B=199,True
+SPG,student_t,2516,loc=0.00066393; scale=0.010776; df=2.556,Kuiper,0.027707121140338256,0.04,parametric bootstrap B=199,True
+SPG,student_t,2516,loc=0.00066393; scale=0.010776; df=2.556,CvM,0.1565735688433075,0.01,parametric bootstrap B=199,True
+SPG,student_t,2516,loc=0.00066393; scale=0.010776; df=2.556,AD,1.3595935341991208,0.01,parametric bootstrap B=199,True
+PSA,normal,2516,mu=0.000546665; sigma=0.0149768,Pearson_chi2,192.51510333863274,8.206352091805864e-21,asymptotic chi2,True
+PSA,normal,2516,mu=0.000546665; sigma=0.0149768,G,200.48935178710633,3.46259441198974e-22,asymptotic chi2,True
+PSA,normal,2516,mu=0.000546665; sigma=0.0149768,KS,0.059958903506964006,0.001,parametric bootstrap B=999,True
+PSA,normal,2516,mu=0.000546665; sigma=0.0149768,Kuiper,0.11415275273497585,0.001,parametric bootstrap B=999,True
+PSA,normal,2516,mu=0.000546665; sigma=0.0149768,CvM,3.434148478998718,0.001,parametric bootstrap B=999,True
+PSA,normal,2516,mu=0.000546665; sigma=0.0149768,AD,21.68126364839827,0.001,parametric bootstrap B=999,True
+PSA,student_t,2516,loc=0.00085506; scale=0.010565; df=3.96,Pearson_chi2,39.632750397456284,0.5754003482337833,asymptotic chi2,False
+PSA,student_t,2516,loc=0.00085506; scale=0.010565; df=3.96,G,40.08343010953553,0.5553868677825,asymptotic chi2,False
+PSA,student_t,2516,loc=0.00085506; scale=0.010565; df=3.96,KS,0.012682357861656168,0.205,parametric bootstrap B=199,False
+PSA,student_t,2516,loc=0.00085506; scale=0.010565; df=3.96,Kuiper,0.025085994418361734,0.095,parametric bootstrap B=199,False
+PSA,student_t,2516,loc=0.00085506; scale=0.010565; df=3.96,CvM,0.07562837375215646,0.1,parametric bootstrap B=199,False
+PSA,student_t,2516,loc=0.00085506; scale=0.010565; df=3.96,AD,0.6182747820075747,0.035,parametric bootstrap B=199,True
+WELL,normal,2516,mu=0.000404867; sigma=0.0206689,Pearson_chi2,528.7392686804452,6.781407997260623e-85,asymptotic chi2,True
+WELL,normal,2516,mu=0.000404867; sigma=0.0206689,G,536.9674580393319,1.5188618516700502e-86,asymptotic chi2,True
+WELL,normal,2516,mu=0.000404867; sigma=0.0206689,KS,0.10328898705752868,0.001,parametric bootstrap B=999,True
+WELL,normal,2516,mu=0.000404867; sigma=0.0206689,Kuiper,0.2002648310791624,0.001,parametric bootstrap B=999,True
+WELL,normal,2516,mu=0.000404867; sigma=0.0206689,CvM,12.14812476304726,0.001,parametric bootstrap B=999,True
+WELL,normal,2516,mu=0.000404867; sigma=0.0206689,AD,71.97038046743728,0.001,parametric bootstrap B=999,True
+WELL,student_t,2516,loc=0.00111138; scale=0.0110924; df=2.823,Pearson_chi2,46.14149443561208,0.30500300725956786,asymptotic chi2,False
+WELL,student_t,2516,loc=0.00111138; scale=0.0110924; df=2.823,G,47.92825214431149,0.2448831237598774,asymptotic chi2,False
+WELL,student_t,2516,loc=0.00111138; scale=0.0110924; df=2.823,KS,0.017314658773467995,0.015,parametric bootstrap B=199,True
+WELL,student_t,2516,loc=0.00111138; scale=0.0110924; df=2.823,Kuiper,0.02307590954605504,0.195,parametric bootstrap B=199,False
+WELL,student_t,2516,loc=0.00111138; scale=0.0110924; df=2.823,CvM,0.13563077343888796,0.005,parametric bootstrap B=199,True
+WELL,student_t,2516,loc=0.00111138; scale=0.0110924; df=2.823,AD,1.4543678775266926,0.005,parametric bootstrap B=199,True
+DLR,normal,2516,mu=0.00065242; sigma=0.0174333,Pearson_chi2,203.77742448330682,9.300123892362169e-23,asymptotic chi2,True
+DLR,normal,2516,mu=0.00065242; sigma=0.0174333,G,205.38949684326323,4.87251537332357e-23,asymptotic chi2,True
+DLR,normal,2516,mu=0.00065242; sigma=0.0174333,KS,0.06752646144715485,0.001,parametric bootstrap B=999,True
+DLR,normal,2516,mu=0.00065242; sigma=0.0174333,Kuiper,0.12145557872534835,0.001,parametric bootstrap B=999,True
+DLR,normal,2516,mu=0.00065242; sigma=0.0174333,CvM,3.893475484902633,0.001,parametric bootstrap B=999,True
+DLR,normal,2516,mu=0.00065242; sigma=0.0174333,AD,23.293318621376784,0.001,parametric bootstrap B=999,True
+DLR,student_t,2516,loc=0.00131006; scale=0.0122923; df=4.06,Pearson_chi2,67.42289348171701,0.007670858227534346,asymptotic chi2,True
+DLR,student_t,2516,loc=0.00131006; scale=0.0122923; df=4.06,G,69.25606241290524,0.0050915614681841595,asymptotic chi2,True
+DLR,student_t,2516,loc=0.00131006; scale=0.0122923; df=4.06,KS,0.019782430664354922,0.005,parametric bootstrap B=199,True
+DLR,student_t,2516,loc=0.00131006; scale=0.0122923; df=4.06,Kuiper,0.03475794156730061,0.005,parametric bootstrap B=199,True
+DLR,student_t,2516,loc=0.00131006; scale=0.0122923; df=4.06,CvM,0.19647962670998917,0.005,parametric bootstrap B=199,True
+DLR,student_t,2516,loc=0.00131006; scale=0.0122923; df=4.06,AD,2.0413814535231722,0.005,parametric bootstrap B=199,True
+EXR,normal,2516,mu=0.000967818; sigma=0.0164711,Pearson_chi2,211.56597774244827,4.0482912267375424e-24,asymptotic chi2,True
+EXR,normal,2516,mu=0.000967818; sigma=0.0164711,G,224.32568259657245,2.2499686009262107e-26,asymptotic chi2,True
+EXR,normal,2516,mu=0.000967818; sigma=0.0164711,KS,0.0668410316516728,0.001,parametric bootstrap B=999,True
+EXR,normal,2516,mu=0.000967818; sigma=0.0164711,Kuiper,0.12308386716153666,0.001,parametric bootstrap B=999,True
+EXR,normal,2516,mu=0.000967818; sigma=0.0164711,CvM,3.586519379410832,0.001,parametric bootstrap B=999,True
+EXR,normal,2516,mu=0.000967818; sigma=0.0164711,AD,23.002108089120156,0.001,parametric bootstrap B=999,True
+EXR,student_t,2516,loc=0.00136531; scale=0.0115382; df=3.927,Pearson_chi2,60.10969793322735,0.034555722389142764,asymptotic chi2,True
+EXR,student_t,2516,loc=0.00136531; scale=0.0115382; df=3.927,G,60.231508143801946,0.03376186576447522,asymptotic chi2,True
+EXR,student_t,2516,loc=0.00136531; scale=0.0115382; df=3.927,KS,0.013159885000536664,0.125,parametric bootstrap B=199,False
+EXR,student_t,2516,loc=0.00136531; scale=0.0115382; df=3.927,Kuiper,0.026054268391996427,0.06,parametric bootstrap B=199,False
+EXR,student_t,2516,loc=0.00136531; scale=0.0115382; df=3.927,CvM,0.09506303855998482,0.04,parametric bootstrap B=199,True
+EXR,student_t,2516,loc=0.00136531; scale=0.0115382; df=3.927,AD,0.8117386952621928,0.01,parametric bootstrap B=199,True
