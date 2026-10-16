@@ -1,0 +1,13 @@
+distribution,test,n_rejected,n_tickers,share_rejected
+normal,Pearson_chi2,79,79,1.0
+normal,G,79,79,1.0
+normal,KS,79,79,1.0
+normal,Kuiper,79,79,1.0
+normal,CvM,79,79,1.0
+normal,AD,79,79,1.0
+student_t,Pearson_chi2,17,79,0.21518987341772153
+student_t,G,18,79,0.22784810126582278
+student_t,KS,25,79,0.31645569620253167
+student_t,Kuiper,23,79,0.2911392405063291
+student_t,CvM,26,79,0.3291139240506329
+student_t,AD,31,79,0.3924050632911392
