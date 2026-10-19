@@ -5,6 +5,8 @@ Definicja: r_t = ln(P_t / P_{t-1}), gdzie P_t to cena zamknięcia skorygowana (A
 Stopy liczone są osobno dla każdego instrumentu na jego własnych dniach sesyjnych
 (szeroka tabela cen zawiera sumę kalendarzy GPW i giełd USA, więc różnicowanie
 bezpośrednio na niej gubiłoby stopy po dniach wolnych na jednej z giełd).
+Pomijane są dni z zerowym wolumenem (np. święta na GPW, które Yahoo wypełnia ceną
+z poprzedniej sesji), gdyż generowałyby sztuczne zerowe stopy zwrotu.
 
 Warianty:
     local – w walucie notowania (PLN dla GPW, USD dla USA),
@@ -50,10 +52,26 @@ TRADING_DAYS = 252
 log = logging.getLogger("data_manipulation")
 
 
+def load_ohlcv(ticker: str) -> pd.DataFrame:
+    df = pd.read_csv(RAW_DIR / "ohlcv" / f"{ticker}.csv", index_col="Date", parse_dates=True)
+    return df.sort_index().loc[START:END]
+
+
+def non_trading_days(ticker: str) -> pd.DatetimeIndex:
+    """Dni z zerowym wolumenem – Yahoo uzupełnia nimi m.in. święta na GPW (cena nieaktualna)."""
+    path = RAW_DIR / "ohlcv" / f"{ticker}.csv"
+    if not path.exists():
+        return pd.DatetimeIndex([])
+    df = load_ohlcv(ticker)
+    return df.index[df["Volume"] == 0]
+
+
 def load_prices(path: Path) -> pd.DataFrame:
     prices = pd.read_csv(path, index_col="Date", parse_dates=True).sort_index()
-    prices = prices.loc[START:END]
-    return prices.dropna(axis=1, how="all")
+    prices = prices.loc[START:END].dropna(axis=1, how="all")
+    for ticker in prices.columns:
+        prices.loc[prices.index.intersection(non_trading_days(ticker)), ticker] = np.nan
+    return prices
 
 
 def log_returns(prices: pd.DataFrame) -> pd.DataFrame:
