@@ -1,0 +1,77 @@
+# Konfiguracja modułu opcji (Etapy 1–2): dane zmienności, zrzuty łańcuchów opcji, powierzchnia.
+
+vol_indices:
+  start: "2005-01-01"
+  # Symbol Cboe -> symbol Yahoo (źródło zapasowe).
+  symbols:
+    VIX9D: "^VIX9D"
+    VIX: "^VIX"
+    VIX3M: "^VIX3M"
+    VIX6M: "^VIX6M"
+    VIX1Y: "^VIX1Y"
+    VVIX: "^VVIX"
+    SKEW: "^SKEW"
+    OVX: "^OVX"
+    GVZ: "^GVZ"
+  cboe_url: "https://cdn.cboe.com/api/global/us_indices/daily_prices/{symbol}_History.csv"
+
+underlyings:
+  start: "2005-01-01"
+  # Nazwa -> symbol Yahoo; stooq = symbol zapasowy w Stooq.
+  symbols:
+    SPY: {yahoo: "SPY", stooq: "spy.us"}
+    SPX: {yahoo: "^GSPC", stooq: "^spx"}
+    SPXTR: {yahoo: "^SP500TR", stooq: null}  # S&P 500 total return – replikacja PPUT
+    WIG20: {yahoo: "WIG20.WA", stooq: "wig20"}
+    GLD: {yahoo: "GLD", stooq: "gld.us"}
+    USO: {yahoo: "USO", stooq: "uso.us"}
+    IRX: {yahoo: "^IRX", stooq: null}  # 13-tygodniowe bony skarbowe USA, % p.a. – stopa r
+
+options_snapshot:
+  symbols: ["SPY"]          # opcjonalnie: "^SPX", "GLD", "USO"
+  min_interval_s: 1.5       # minimalny odstęp między zapytaniami do Yahoo
+  retries: 4
+  backoff_s: 2.0
+
+dolthub:
+  owner: "post-no-preference"
+  repo: "options"
+  branch: "master"
+  api_url: "https://www.dolthub.com/api/v1alpha1/{owner}/{repo}/{branch}"
+  table: "option_chain"
+  symbols: ["SPY"]
+  start: "2019-02-01"
+  # Kolumny wymagane przez kalibrację; schemat jest weryfikowany przed pobraniem.
+  required_columns: ["date", "act_symbol", "expiration", "strike", "call_put", "bid", "ask"]
+
+cboe_strategy:
+  # PPUT – S&P 500 z miesięcznym putem 5% OTM; PUT – sprzedaż putów ATM; BXM – buy-write.
+  symbols: ["PPUT", "PUT", "BXM"]
+  cboe_url: "https://cdn.cboe.com/api/global/us_indices/daily_prices/{symbol}_History.csv"
+  yahoo: {PPUT: "^PPUT", PUT: "^PUT", BXM: "^BXM"}
+
+iv_filters:
+  min_bid: 0.0              # odrzucane bid <= min_bid
+  max_rel_spread: 0.25      # (ask − bid) / mid
+  require_open_interest: true
+  max_stale_days: 3         # lastTradeDate starsza niż N dni roboczych względem daty zrzutu
+  min_days_to_expiry: 7
+  max_days_to_expiry: 400
+
+surface:
+  # Tenory indeksów zmienności Cboe w dniach kalendarzowych.
+  tenors_days: {VIX9D: 9, VIX: 30, VIX3M: 93, VIX6M: 186, VIX1Y: 365}
+  use_skew: false           # składnik e·k·SKEW/100
+  robust: true              # regresja Hubera (IRLS) zamiast OLS
+  huber_c: 1.345
+  min_sigma: 0.01
+  default_rate: 0.04        # gdy brak ^IRX
+  default_div_yield: 0.013  # gdy nie da się wyznaczyć forwardu z parytetu
+  oos_split: "2023-01-01"   # podział czasowy: kalibracja < split <= walidacja
+  buckets:                  # przedziały K/S dla raportu RMSE (puty)
+    ATM: [0.975, 1.025]
+    OTM5: [0.925, 0.975]
+    OTM10: [0.875, 0.925]
+
+wig20_proxy:
+  sensitivity_pp: 3.0       # ± p.p. zmienności implikowanej

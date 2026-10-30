@@ -1,4 +1,4 @@
-"""Zakresowe estymatory zmienności Garmana–Klassa i Yanga–Zhanga (2011-01-01 – 2020-12-31).
+"""Zakresowe estymatory zmienności Garmana–Klassa i Yanga–Zhanga (2005-01-01 – 2026-10-29).
 
 Oznaczenia (ceny skorygowane, logarytmy naturalne):
     o_t = ln(O_t / C_{t-1})   – stopa zwrotu z przerwy między sesjami (overnight),

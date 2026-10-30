@@ -1,4 +1,4 @@
-"""Pobieranie notowań dziennych (2011-01-01 – 2020-12-31) oraz kursów walut USD/PLN, EUR/PLN.
+"""Pobieranie notowań dziennych (2005-01-01 – 2026-10-29) oraz kursów walut USD/PLN, EUR/PLN.
 
 Źródła:
     * Yahoo Finance (biblioteka ``yfinance``) – źródło podstawowe dla wszystkich tickerów
@@ -34,8 +34,8 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-START = "2011-01-01"
-END = "2020-12-31"
+START = "2005-01-01"
+END = "2026-10-29"
 
 OUT_DIR = Path(__file__).resolve().parent / "data" / "raw"
 
