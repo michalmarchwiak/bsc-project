@@ -2,19 +2,35 @@
 
 Okres: 2014-02-03 – 2020-12-01 (82 miesięcy). Okno estymacji 1260 sesji, horyzont 21 sesji.
 Skład: max E[R] przy ES_0.975 ≤ ES portfela równych wag w sub-funduszu, waga tickera ≤ 30% (lub 1/n przy mniejszej liczbie aktywów).
-Opt – skład optymalizowany, EW – równe wagi; zwrot i zmienność roczne [%], Sharpe przy r_f = 0, obrót – średni miesięczny ½Σ|Δw| [%], VaR – liczba miesięcy ze stratą powyżej prognozowanego VaR_0.975 (oczekiwane 2.1).
+Opt – skład optymalizowany, EW – równe wagi; zwrot i zmienność roczne [%], Sharpe przy r_f = 0, obrót – średni miesięczny ½Σ|w_t − w̃_t| [%] (w̃_t – wagi z poprzedniego rebalansowania po dryfie cen), VaR – liczba miesięcy ze stratą powyżej prognozowanego VaR_0.975 (oczekiwane 2.1).
 
-| sub-fundusz | zwrot Opt | zwrot EW | zmienn. Opt | zmienn. EW | Sharpe Opt | Sharpe EW | max DD Opt | max DD EW | śr. liczba składników | obrót | VaR |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| SF1 Akcje polskie | 16.64 | 7.01 | 20.67 | 20.44 | 0.80 | 0.34 | -24.35 | -31.84 | 5.2 | 16.3 | 2 |
-| SF2 Akcje USA | 28.31 | 27.32 | 17.49 | 14.84 | 1.62 | 1.84 | -24.50 | -14.76 | 5.9 | 28.7 | 3 |
-| SF3 Akcje rynków rozwiniętych ex-USA | 8.85 | 7.31 | 12.36 | 12.36 | 0.72 | 0.59 | -15.26 | -18.26 | 4.3 | 22.2 | 1 |
-| SF4 Akcje rynków wschodzących | 7.16 | 6.71 | 13.87 | 15.19 | 0.52 | 0.44 | -22.09 | -26.48 | 4.1 | 18.7 | 0 |
-| SF5 Obligacje skarbowe USA | 6.74 | 6.61 | 11.90 | 11.65 | 0.57 | 0.57 | -20.12 | -19.39 | 4.3 | 31.0 | 2 |
-| SF6 Obligacje korporacyjne IG | 7.65 | 7.25 | 9.82 | 9.77 | 0.78 | 0.74 | -17.07 | -17.61 | 4.3 | 16.3 | 2 |
-| SF7 Obligacje high yield | 8.23 | 8.17 | 10.36 | 10.29 | 0.79 | 0.79 | -14.40 | -14.40 | 3.0 | 3.3 | 3 |
-| SF8 Złoto i spółki wydobywcze | 10.63 | 14.17 | 25.98 | 31.64 | 0.41 | 0.45 | -34.26 | -33.03 | 4.2 | 25.5 | 1 |
-| SF9 Nieruchomości (REIT) | 20.39 | 18.16 | 15.76 | 16.19 | 1.29 | 1.12 | -12.27 | -18.08 | 4.5 | 19.3 | 0 |
+| sub-fundusz | zwrot Opt | zwrot EW | zmienn. Opt | zmienn. EW | Sharpe Opt | Sharpe EW | max DD Opt | max DD EW | śr. liczba składników | obrót Opt | obrót EW | VaR |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| SF1 Akcje polskie | 16.64 | 7.01 | 20.67 | 20.44 | 0.80 | 0.34 | -24.35 | -31.84 | 5.2 | 16.8 | 2.8 | 2 |
+| SF2 Akcje USA | 28.31 | 27.32 | 17.49 | 14.84 | 1.62 | 1.84 | -24.50 | -14.76 | 5.9 | 28.7 | 2.0 | 3 |
+| SF3 Akcje rynków rozwiniętych ex-USA | 8.85 | 7.31 | 12.36 | 12.36 | 0.72 | 0.59 | -15.26 | -18.26 | 4.3 | 22.5 | 0.8 | 1 |
+| SF4 Akcje rynków wschodzących | 7.16 | 6.71 | 13.87 | 15.19 | 0.52 | 0.44 | -22.09 | -26.48 | 4.1 | 19.5 | 1.9 | 0 |
+| SF5 Obligacje skarbowe USA | 6.74 | 6.61 | 11.90 | 11.65 | 0.57 | 0.57 | -20.12 | -19.39 | 4.3 | 31.1 | 0.5 | 2 |
+| SF6 Obligacje korporacyjne IG | 7.65 | 7.25 | 9.82 | 9.77 | 0.78 | 0.74 | -17.07 | -17.61 | 4.3 | 16.3 | 0.2 | 2 |
+| SF7 Obligacje high yield | 8.23 | 8.17 | 10.36 | 10.29 | 0.79 | 0.79 | -14.40 | -14.40 | 3.0 | 3.4 | 0.9 | 3 |
+| SF8 Złoto i spółki wydobywcze | 10.63 | 14.17 | 25.98 | 31.64 | 0.41 | 0.45 | -34.26 | -33.03 | 4.2 | 26.2 | 2.0 | 1 |
+| SF9 Nieruchomości (REIT) | 20.39 | 18.16 | 15.76 | 16.19 | 1.29 | 1.12 | -12.27 | -18.08 | 4.5 | 19.7 | 1.7 | 0 |
+
+## Po kosztach transakcyjnych (0.10% wartości transakcji)
+
+Koszt w dniu rebalansowania c·Σ|w_t − w̃_t| (zakup początkowy: c); zwrot i koszt roczne [%].
+
+| sub-fundusz | zwrot netto Opt | zwrot netto EW | Sharpe netto Opt | Sharpe netto EW | koszt Opt | koszt EW |
+|---|---:|---:|---:|---:|---:|---:|
+| SF1 Akcje polskie | 16.16 | 6.92 | 0.78 | 0.34 | 0.408 | 0.081 |
+| SF2 Akcje USA | 27.42 | 27.24 | 1.57 | 1.83 | 0.700 | 0.063 |
+| SF3 Akcje rynków rozwiniętych ex-USA | 8.27 | 7.27 | 0.67 | 0.59 | 0.534 | 0.033 |
+| SF4 Akcje rynków wschodzących | 6.65 | 6.65 | 0.48 | 0.44 | 0.480 | 0.058 |
+| SF5 Obligacje skarbowe USA | 5.93 | 6.58 | 0.50 | 0.57 | 0.759 | 0.026 |
+| SF6 Obligacje korporacyjne IG | 7.22 | 7.23 | 0.74 | 0.74 | 0.398 | 0.019 |
+| SF7 Obligacje high yield | 8.13 | 8.13 | 0.78 | 0.79 | 0.095 | 0.035 |
+| SF8 Złoto i spółki wydobywcze | 9.94 | 14.10 | 0.38 | 0.45 | 0.626 | 0.061 |
+| SF9 Nieruchomości (REIT) | 19.80 | 18.09 | 1.26 | 1.12 | 0.487 | 0.054 |
 
 ## Skład na 2020-12-01
 

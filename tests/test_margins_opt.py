@@ -125,19 +125,45 @@ def test_optimize_subfund_constraints():
     assert w1.iloc[0] == 1.0
 
 
-def test_turnover():
-    from pipelines.monthly_rebalance import turnover
+def test_turnover_uses_drifted_weights():
+    from pipelines.monthly_rebalance import drifted_weights, turnover
+
+    d = pd.to_datetime(["2020-01-02", "2020-02-03", "2020-03-02"])
+    # okres 1: A +10%, B −10%; okres 2: brak zmian cen
+    returns = pd.DataFrame({"A": [np.log1p(0.1), 0.0, 0.0], "B": [np.log1p(-0.1), 0.0, 0.0]},
+                           index=pd.to_datetime(["2020-01-15", "2020-02-14", "2020-03-02"]))
+    comp = pd.DataFrame({"date": [d[0], d[0], d[1], d[1], d[2]], "subfund": "SF1",
+                         "ticker": ["A", "B", "A", "B", "C"],
+                         "weight": [0.5, 0.5, 0.5, 0.5, 1.0], "weight_ew": [0.5, 0.5, 0.5, 0.5, 1.0]})
+    np.testing.assert_allclose(drifted_weights(pd.Series([0.5, 0.5], index=["A", "B"]),
+                                               pd.Series({"A": 0.1, "B": -0.1})), [0.55, 0.45])
+    to = turnover(comp, returns)
+    # niezmienione wagi docelowe 50/50, ale po dryfie 55/45 → obrót 5%
+    assert to["turnover_opt"].tolist() == pytest.approx([0.05, 1.0])
+    assert to["turnover_ew"].tolist() == pytest.approx([0.05, 1.0])  # wymiana A, B → C: obrót 100%
+    assert list(to["date"]) == [d[1], d[2]]
+
+
+def test_apply_costs():
+    from pipelines.monthly_rebalance import apply_costs
 
     d = pd.to_datetime(["2020-01-02", "2020-02-03"])
-    comp = pd.DataFrame({"date": [d[0], d[0], d[1], d[1]], "subfund": "SF1", "ticker": ["A", "B", "A", "B"],
-                         "weight": [0.5, 0.5, 0.8, 0.2]})
-    assert turnover(comp)["turnover"].tolist() == pytest.approx([0.3])
+    realized = pd.DataFrame({"date": d, "end": d + pd.Timedelta(days=28), "subfund": "SF1",
+                             "r_opt": [0.02, -0.01], "r_ew": [0.01, 0.0]})
+    to = pd.DataFrame({"date": [d[1]], "subfund": ["SF1"], "turnover_opt": [0.25], "turnover_ew": [0.05]})
+    out = apply_costs(realized, to, 0.001)
+    # zakup początkowy: koszt c; później c·Σ|Δw| = 2c·TO
+    np.testing.assert_allclose(out["cost_opt"], [0.001, 0.0005])
+    np.testing.assert_allclose(out["cost_ew"], [0.001, 0.0001])
+    np.testing.assert_allclose(out["r_opt_net"], [(1 - 0.001) * 1.02 - 1, (1 - 0.0005) * 0.99 - 1])
+    zero = apply_costs(realized, to, 0.0)
+    np.testing.assert_allclose(zero["r_opt_net"], realized["r_opt"])
 
 
 def test_rebalance_one_smoke():
     """Pełny krok: GARCH → R-vine → scenariusze → LP w każdym sub-funduszu (6 aktywów / 2 SF)."""
     from pf import config
-    from pipelines.monthly_rebalance import realized_table, rebalance_one, summary_report
+    from pipelines.monthly_rebalance import apply_costs, realized_table, rebalance_one, summary_report, turnover
 
     rng = np.random.default_rng(7)
     idx = pd.bdate_range("2015-01-01", periods=900)
@@ -163,4 +189,8 @@ def test_rebalance_one_smoke():
     comp, stats = pd.concat([comp1, comp2]), pd.concat([stats1, stats2])
     realized = realized_table(returns, comp, stats)
     assert len(realized) == 2 and set(realized["subfund"]) == {"SF1", "SF2"}
-    assert "SF1 akcje" in summary_report(comp, stats, realized, subfunds, cfg["rebalance"])
+    to = turnover(comp, returns)
+    assert len(to) == 2 and (to[["turnover_opt", "turnover_ew"]] >= 0).all().all()
+    report = summary_report(comp, stats, apply_costs(realized, to, 0.001), to, subfunds,
+                            {**cfg["rebalance"], "transaction_cost": 0.001})
+    assert "SF1 akcje" in report and "Po kosztach transakcyjnych (0.10%" in report

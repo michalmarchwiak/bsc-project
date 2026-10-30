@@ -27,3 +27,5 @@ rebalance:
   es_alpha: 0.975
   # Skład każdego sub-funduszu: max E[R] przy ES_α ≤ ES_α portfela równych wag tego sub-funduszu.
   asset_max_weight: 0.30            # limit wagi tickera w sub-funduszu (min. 1/n przy n < 4 aktywach)
+  # Koszt transakcyjny jako ułamek wartości transakcji (kupna + sprzedaże); 0 = bez kosztów.
+  transaction_cost: 0.001
