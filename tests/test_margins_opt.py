@@ -144,10 +144,26 @@ def test_turnover_uses_drifted_weights():
     assert list(to["date"]) == [d[1], d[2]]
 
 
+def test_apply_costs():
+    from pipelines.monthly_rebalance import apply_costs
+
+    d = pd.to_datetime(["2020-01-02", "2020-02-03"])
+    realized = pd.DataFrame({"date": d, "end": d + pd.Timedelta(days=28), "subfund": "SF1",
+                             "r_opt": [0.02, -0.01], "r_ew": [0.01, 0.0]})
+    to = pd.DataFrame({"date": [d[1]], "subfund": ["SF1"], "turnover_opt": [0.25], "turnover_ew": [0.05]})
+    out = apply_costs(realized, to, 0.001)
+    # zakup początkowy: koszt c; później c·Σ|Δw| = 2c·TO
+    np.testing.assert_allclose(out["cost_opt"], [0.001, 0.0005])
+    np.testing.assert_allclose(out["cost_ew"], [0.001, 0.0001])
+    np.testing.assert_allclose(out["r_opt_net"], [(1 - 0.001) * 1.02 - 1, (1 - 0.0005) * 0.99 - 1])
+    zero = apply_costs(realized, to, 0.0)
+    np.testing.assert_allclose(zero["r_opt_net"], realized["r_opt"])
+
+
 def test_rebalance_one_smoke():
     """Pełny krok: GARCH → R-vine → scenariusze → LP w każdym sub-funduszu (6 aktywów / 2 SF)."""
     from pf import config
-    from pipelines.monthly_rebalance import realized_table, rebalance_one, summary_report, turnover
+    from pipelines.monthly_rebalance import apply_costs, realized_table, rebalance_one, summary_report, turnover
 
     rng = np.random.default_rng(7)
     idx = pd.bdate_range("2015-01-01", periods=900)
@@ -175,4 +191,6 @@ def test_rebalance_one_smoke():
     assert len(realized) == 2 and set(realized["subfund"]) == {"SF1", "SF2"}
     to = turnover(comp, returns)
     assert len(to) == 2 and (to[["turnover_opt", "turnover_ew"]] >= 0).all().all()
-    assert "SF1 akcje" in summary_report(comp, stats, realized, to, subfunds, cfg["rebalance"])
+    report = summary_report(comp, stats, apply_costs(realized, to, 0.001), to, subfunds,
+                            {**cfg["rebalance"], "transaction_cost": 0.001})
+    assert "SF1 akcje" in report and "Po kosztach transakcyjnych (0.10%" in report

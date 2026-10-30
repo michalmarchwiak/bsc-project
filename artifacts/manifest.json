@@ -44,7 +44,7 @@
     }
   },
   "rebalance/composition": {
-    "updated_utc": "2026-10-30T13:21:06+00:00",
+    "updated_utc": "2026-10-30T13:25:23+00:00",
     "versions": {
       "python": "3.13.17",
       "numpy": "2.5.3",
@@ -66,7 +66,8 @@
         "backtest_scenarios": 2000,
         "seed": 20110101,
         "es_alpha": 0.975,
-        "asset_max_weight": 0.3
+        "asset_max_weight": 0.3,
+        "transaction_cost": 0.001
       },
       "rvine": {
         "truncation": 3,

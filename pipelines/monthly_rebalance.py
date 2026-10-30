@@ -14,7 +14,8 @@ Dla każdej daty rebalansowania t (pierwsza sesja miesiąca w danych):
            0 ≤ w_i ≤ max(w_max, 1/|I_k|),
        gdzie w_EW – wagi równe; portfel równych wag jest zawsze dopuszczalny;
     5. (dla dat historycznych) zrealizowane stopy zwrotu sub-funduszy (skład optymalny i równe
-       wagi, kupno i trzymanie do następnego rebalansowania).
+       wagi, kupno i trzymanie do następnego rebalansowania), opcjonalnie netto po kosztach
+       transakcyjnych c·Σ|w_t − w̃_t| (``transaction_cost``, w̃ – wagi po dryfie cen).
 
 Przebieg jest przyrostowy: daty już policzone są pomijane (``--force`` liczy ponownie).
 Daty historyczne używają ``backtest_scenarios``, najnowsza – ``n_scenarios`` scenariuszy.
@@ -23,7 +24,7 @@ Wyjście (artifacts/rebalance/):
     composition.parquet        – skład: date, subfund, ticker, weight, weight_ew
     subfunds.parquet           – E[R], ES, VaR sub-funduszy (skład optymalny i równe wagi)
     models.parquet             – okno estymacji, liczba aktywów, AIC i rodziny kopuł R-vine
-    realized.parquet           – zrealizowane stopy zwrotu sub-funduszy
+    realized.parquet           – zrealizowane stopy zwrotu sub-funduszy (brutto; netto i koszty, gdy c > 0)
     turnover.parquet           – obrót ½Σ|w_t − w̃_t| względem wag po dryfie cen (Opt i EW)
     vines/<data>.json.gz       – R-vine dla daty; margins/<data>.parquet – parametry GARCH
     scenarios_latest.parquet   – scenariusze stóp zwrotu sub-funduszy (skład optymalny), ostatnia data
@@ -33,6 +34,7 @@ Uruchomienie:
     python -m pipelines.monthly_rebalance                 # wszystkie brakujące daty
     python -m pipelines.monthly_rebalance --date 2020-12-01
     python -m pipelines.monthly_rebalance --start 2019-01-01 --scenarios 1000 --jobs 4 --force
+    python -m pipelines.monthly_rebalance --cost 0           # raport bez kosztów transakcyjnych
 """
 
 from __future__ import annotations
@@ -154,6 +156,24 @@ def realized_table(returns: pd.DataFrame, comp: pd.DataFrame, stats: pd.DataFram
     return out.merge(stats[["date", "subfund", "var"]], on=["date", "subfund"], how="left")
 
 
+def apply_costs(realized: pd.DataFrame, to: pd.DataFrame, cost: float) -> pd.DataFrame:
+    """Stopy zwrotu netto po kosztach transakcyjnych w dniu rebalansowania t:
+
+        k_t = c · Σ_i |w_{i,t} − w̃_{i,t}| = 2c · TO_t,    r_net = (1 − k_t)(1 + r) − 1,
+
+    c – koszt jako ułamek wartości transakcji (kupna i sprzedaży). Przy zakupie początkowym
+    (brak pozycji z poprzedniej daty, w̃ = 0) Σ|w_t| = 1, więc k_t = c.
+    """
+    out = realized.copy()
+    key = pd.MultiIndex.from_frame(out[["date", "subfund"]])
+    traded = 2.0 * to.set_index(["date", "subfund"])[["turnover_opt", "turnover_ew"]]
+    for v in ("opt", "ew"):
+        tr = traded[f"turnover_{v}"].reindex(key).to_numpy()
+        out[f"cost_{v}"] = cost * np.where(np.isnan(tr), 1.0, tr)
+        out[f"r_{v}_net"] = (1.0 - out[f"cost_{v}"]) * (1.0 + out[f"r_{v}"]) - 1.0
+    return out
+
+
 def drifted_weights(w_prev: pd.Series, r: pd.Series) -> pd.Series:
     """Wagi po okresie kupna i trzymania: w̃_i = w_i (1 + r_i) / Σ_j w_j (1 + r_j)."""
     g = w_prev * (1.0 + r.reindex(w_prev.index).fillna(0.0))
@@ -226,6 +246,20 @@ def summary_report(comp: pd.DataFrame, stats: pd.DataFrame, realized: pd.DataFra
                      f"{s_e:.2f} | {d_o:.2f} | {d_e:.2f} | {holdings.get(sf, np.nan):.1f} | "
                      f"{100 * t_sf['turnover_opt'].mean():.1f} | {100 * t_sf['turnover_ew'].mean():.1f} | "
                      f"{breaches} |")
+    cost = rcfg.get("transaction_cost") or 0.0
+    if cost > 0 and "r_opt_net" in realized:
+        lines += ["", f"## Po kosztach transakcyjnych ({100 * cost:.2f}% wartości transakcji)", "",
+                  "Koszt w dniu rebalansowania c·Σ|w_t − w̃_t| (zakup początkowy: c); zwrot i koszt roczne [%].",
+                  "", "| sub-fundusz | zwrot netto Opt | zwrot netto EW | Sharpe netto Opt | Sharpe netto EW | "
+                  "koszt Opt | koszt EW |", "|---|" + "---:|" * 6]
+        for sf, spec in subfunds.items():
+            g = realized[realized["subfund"] == sf]
+            if g.empty:
+                continue
+            a_o, _, s_o, _ = perf(g["r_opt_net"])
+            a_e, _, s_e, _ = perf(g["r_ew_net"])
+            lines.append(f"| {sf} {spec['name']} | {a_o:.2f} | {a_e:.2f} | {s_o:.2f} | {s_e:.2f} | "
+                         f"{1200 * g['cost_opt'].mean():.3f} | {1200 * g['cost_ew'].mean():.3f} |")
     last = comp[comp["date"] == comp["date"].max()]
     lines += ["", f"## Skład na {last['date'].max().date()}", "",
               "| sub-fundusz | skład (waga > 0,1%) |", "|---|---|"]
@@ -257,7 +291,11 @@ def main() -> None:
     parser.add_argument("--jobs", type=int, default=None, help="procesy do estymacji GARCH")
     parser.add_argument("--force", action="store_true", help="przelicz daty już obecne w wynikach")
     parser.add_argument("--refit", action="store_true", help="estymuj modele od nowa zamiast wczytywać zapisane")
+    parser.add_argument("--cost", type=float, default=None,
+                        help="koszt transakcyjny jako ułamek wartości transakcji (np. 0.001; 0 = bez kosztów)")
     args = parser.parse_args()
+    if args.cost is not None:
+        rcfg = {**rcfg, "transaction_cost": args.cost}
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     returns = pd.read_csv(ROOT / cfg["returns"]["path"], index_col=0, parse_dates=True).sort_index()
@@ -307,6 +345,8 @@ def main() -> None:
     realized = realized_table(returns, comp, stats)
     if not realized.empty:
         to = turnover(comp, returns)
+        if rcfg.get("transaction_cost"):
+            realized = apply_costs(realized, to, rcfg["transaction_cost"])
         write_parquet(realized, OUT_DIR / "realized.parquet")
         write_parquet(to, OUT_DIR / "turnover.parquet")
         REPORT_DIR.mkdir(parents=True, exist_ok=True)

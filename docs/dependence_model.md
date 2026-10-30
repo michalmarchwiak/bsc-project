@@ -69,5 +69,8 @@ Parametry: `config/models.yaml`.
   limit 1/n wymusza równe wagi.
 - Obrót w dniu t: TO_t = ½ Σ_i |w_{i,t} − w̃_{i,t}|, gdzie w̃_{i,t} = w_{i,t−1}(1 + r_i) / Σ_j w_{j,t−1}(1 + r_j)
   – wagi z poprzedniego rebalansowania po dryfie cen w okresie kupna i trzymania (także dla równych
-  wag, które po dryfie trzeba przywracać). Dryf nie zmienia zrealizowanych stóp zwrotu; koszty
-  transakcyjne nie są uwzględniane.
+  wag, które po dryfie trzeba przywracać). Dryf nie zmienia zrealizowanych stóp zwrotu brutto.
+- Koszty transakcyjne (opcjonalne, `transaction_cost`, domyślnie 0,1% wartości transakcji;
+  `--cost 0` wyłącza): k_t = c·Σ_i |w_{i,t} − w̃_{i,t}| = 2c·TO_t, stopa netto okresu
+  r_net = (1 − k_t)(1 + r) − 1; przy zakupie początkowym k = c. Koszty nie wchodzą do
+  optymalizacji (LP nie karze obrotu) – obniżają jedynie zrealizowane stopy zwrotu.

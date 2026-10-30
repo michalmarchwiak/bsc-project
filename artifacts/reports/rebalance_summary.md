@@ -16,6 +16,22 @@ Opt – skład optymalizowany, EW – równe wagi; zwrot i zmienność roczne [%
 | SF8 Złoto i spółki wydobywcze | 10.63 | 14.17 | 25.98 | 31.64 | 0.41 | 0.45 | -34.26 | -33.03 | 4.2 | 26.2 | 2.0 | 1 |
 | SF9 Nieruchomości (REIT) | 20.39 | 18.16 | 15.76 | 16.19 | 1.29 | 1.12 | -12.27 | -18.08 | 4.5 | 19.7 | 1.7 | 0 |
 
+## Po kosztach transakcyjnych (0.10% wartości transakcji)
+
+Koszt w dniu rebalansowania c·Σ|w_t − w̃_t| (zakup początkowy: c); zwrot i koszt roczne [%].
+
+| sub-fundusz | zwrot netto Opt | zwrot netto EW | Sharpe netto Opt | Sharpe netto EW | koszt Opt | koszt EW |
+|---|---:|---:|---:|---:|---:|---:|
+| SF1 Akcje polskie | 16.16 | 6.92 | 0.78 | 0.34 | 0.408 | 0.081 |
+| SF2 Akcje USA | 27.42 | 27.24 | 1.57 | 1.83 | 0.700 | 0.063 |
+| SF3 Akcje rynków rozwiniętych ex-USA | 8.27 | 7.27 | 0.67 | 0.59 | 0.534 | 0.033 |
+| SF4 Akcje rynków wschodzących | 6.65 | 6.65 | 0.48 | 0.44 | 0.480 | 0.058 |
+| SF5 Obligacje skarbowe USA | 5.93 | 6.58 | 0.50 | 0.57 | 0.759 | 0.026 |
+| SF6 Obligacje korporacyjne IG | 7.22 | 7.23 | 0.74 | 0.74 | 0.398 | 0.019 |
+| SF7 Obligacje high yield | 8.13 | 8.13 | 0.78 | 0.79 | 0.095 | 0.035 |
+| SF8 Złoto i spółki wydobywcze | 9.94 | 14.10 | 0.38 | 0.45 | 0.626 | 0.061 |
+| SF9 Nieruchomości (REIT) | 19.80 | 18.09 | 1.26 | 1.12 | 0.487 | 0.054 |
+
 ## Skład na 2020-12-01
 
 | sub-fundusz | skład (waga > 0,1%) |
