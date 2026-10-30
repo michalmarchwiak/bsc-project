@@ -1,0 +1,32 @@
+# Sub-fundusze (SF) i ich skład. Wewnątrz SF wagi równe między tickerami dostępnymi
+# w dniu rebalansowania (macierz A, look-through x = AᵀW). Grupy odpowiadają listom
+# tickerów w data_import.py.
+
+subfunds:
+  SF1:
+    name: "Akcje polskie"
+    tickers: [PKO.WA, PZU.WA, KGH.WA, PKN.WA, PEO.WA, LPP.WA, CDR.WA, DNP.WA, PGE.WA, CPS.WA]
+  SF2:
+    name: "Akcje USA"
+    tickers: [AAPL, MSFT, NVDA, AMZN, GOOGL, JPM, JNJ, XOM, PG, WMT]
+  SF3:
+    name: "Akcje rynków rozwiniętych ex-USA"
+    tickers: [EFA, EWJ, EWU, EWG, EWQ, EWL, EWC, EWA, EWN, EWS]
+  SF4:
+    name: "Akcje rynków wschodzących"
+    tickers: [EEM, MCHI, INDA, EWZ, EWW, EWT, THD, IDX, TUR, EZA]
+  SF5:
+    name: "Obligacje skarbowe USA"
+    tickers: [SHY, IEI, IEF, TLT, GOVT, VGSH, VGIT, VGLT, SCHO, SCHR]
+  SF6:
+    name: "Obligacje korporacyjne IG"
+    tickers: [LQD, VCIT, VCSH, IGSB, IGIB, USIG]
+  SF7:
+    name: "Obligacje high yield"
+    tickers: [HYG, JNK, ANGL, FALN]
+  SF8:
+    name: "Złoto i spółki wydobywcze"
+    tickers: [GLD, IAU, SGOL, GDX, GDXJ, NEM, AEM, KGC, WPM, FNV]
+  SF9:
+    name: "Nieruchomości (REIT)"
+    tickers: [PLD, AMT, EQIX, O, SPG, PSA, WELL, DLR, AVB, EXR]

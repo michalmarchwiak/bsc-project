@@ -7,3 +7,4 @@ scipy>=1.11
 pyarrow>=14
 pyyaml>=6
 pytest>=8
+arch>=7
