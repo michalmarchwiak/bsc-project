@@ -44,7 +44,7 @@
     }
   },
   "rebalance/composition": {
-    "updated_utc": "2026-10-30T12:27:58+00:00",
+    "updated_utc": "2026-10-30T13:21:06+00:00",
     "versions": {
       "python": "3.13.17",
       "numpy": "2.5.3",

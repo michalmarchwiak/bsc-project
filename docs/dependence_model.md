@@ -47,7 +47,7 @@ Modele zapisane dla danej daty (R-vine, parametry GARCH) są przy ponownym licze
 (`--refit` estymuje od nowa), a scenariusze są powtarzalne (ziarno zależne od daty).
 Wyniki: `artifacts/rebalance/` – `composition.parquet` (skład: date, subfund, ticker, weight,
 weight_ew), `subfunds.parquet` (E[R], ES, VaR: skład optymalny i równe wagi), `models.parquet`,
-`realized.parquet`, R-vine i parametry GARCH dla każdej daty, scenariusze sub-funduszy najnowszej
+`realized.parquet`, `turnover.parquet`, R-vine i parametry GARCH dla każdej daty, scenariusze sub-funduszy najnowszej
 daty; raport `artifacts/reports/rebalance_summary.md` (każdy sub-fundusz: skład optymalny vs równe wagi).
 Parametry: `config/models.yaml`.
 
@@ -67,4 +67,7 @@ Parametry: `config/models.yaml`.
   dużym błędem, a LP na nie reaguje silnie; limit 30% na ticker ogranicza koncentrację.
 - W sub-funduszu z mniej niż 4 dostępnymi aktywami (np. SF7 przed notowaniem ANGL, FALN)
   limit 1/n wymusza równe wagi.
-- Obrót liczony jest na wagach docelowych (bez dryfu cen w miesiącu), bez kosztów transakcyjnych.
+- Obrót w dniu t: TO_t = ½ Σ_i |w_{i,t} − w̃_{i,t}|, gdzie w̃_{i,t} = w_{i,t−1}(1 + r_i) / Σ_j w_{j,t−1}(1 + r_j)
+  – wagi z poprzedniego rebalansowania po dryfie cen w okresie kupna i trzymania (także dla równych
+  wag, które po dryfie trzeba przywracać). Dryf nie zmienia zrealizowanych stóp zwrotu; koszty
+  transakcyjne nie są uwzględniane.
