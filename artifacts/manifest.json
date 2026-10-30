@@ -43,8 +43,8 @@
       "panel_obs": 2427
     }
   },
-  "rebalance/weights": {
-    "updated_utc": "2026-10-30T12:00:40+00:00",
+  "rebalance/composition": {
+    "updated_utc": "2026-10-30T12:27:58+00:00",
     "versions": {
       "python": "3.13.17",
       "numpy": "2.5.3",
@@ -54,9 +54,9 @@
       "yfinance": "1.7.0",
       "requests": "2.34.2"
     },
-    "path": "rebalance/weights.parquet",
-    "sha256": "eddd3cc16815c605c7c918947e2a8c5a9c68bdc8dafdc67b384158e4c50c0890",
-    "n_rows": 83,
+    "path": "rebalance/composition.parquet",
+    "sha256": "c991f4a468b84cf4896d75cfe6d2aec6daa0512f5f2f7a9faef4cd6eb6d9ead7",
+    "n_rows": 6368,
     "params": {
       "rebalance": {
         "window_days": 1260,
@@ -66,8 +66,7 @@
         "backtest_scenarios": 2000,
         "seed": 20110101,
         "es_alpha": 0.975,
-        "es_limit": 0.08,
-        "max_weight": 1.0
+        "asset_max_weight": 0.3
       },
       "rvine": {
         "truncation": 3,
