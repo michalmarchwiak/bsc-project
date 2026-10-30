@@ -1,0 +1,29 @@
+# Marginesy, R-vine i comiesięczne rebalansowanie.
+
+returns:
+  path: "data/processed/log_returns_pln.csv"   # dzienne log-stopy zwrotu w PLN
+
+margins:
+  mean: "AR"            # AR(1)
+  vol: "GJR-GARCH"      # GJR-GARCH(1,1)
+  dist: "skewt"         # skośny t Hansena
+  scale: 100.0          # estymacja na stopach ×100 (stabilność numeryczna)
+
+rvine:
+  truncation: 3                     # liczba pięter (drzew) z kopułami; wyższe = niezależność
+  families: [gauss, t, clayton, gumbel]
+  rotations: true                   # obroty 90/180/270 dla Claytona i Gumbela
+  criterion: aic                    # wybór rodziny: aic | bic
+  indep_test_level: 0.05            # test niezależności (τ Kendalla); null = wyłączony
+  t_df_bounds: [2.05, 30.0]
+
+rebalance:
+  window_days: 1260                 # okno estymacji (≈ 5 lat sesyjnych)
+  min_obs: 750                      # minimalna liczba obserwacji aktywa w oknie
+  horizon_days: 21                  # horyzont scenariuszy (≈ 1 miesiąc)
+  n_scenarios: 10000               # bieżące rebalansowanie
+  backtest_scenarios: 2000          # daty historyczne (koszt symulacji ≈ 6 s / 1000 scenariuszy)
+  seed: 20110101
+  es_alpha: 0.975
+  # Skład każdego sub-funduszu: max E[R] przy ES_α ≤ ES_α portfela równych wag tego sub-funduszu.
+  asset_max_weight: 0.30            # limit wagi tickera w sub-funduszu (min. 1/n przy n < 4 aktywach)

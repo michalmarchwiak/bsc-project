@@ -1,0 +1,1 @@
+"""Optymalizacja portfela na scenariuszach."""
