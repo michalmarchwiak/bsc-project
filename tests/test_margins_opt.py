@@ -105,26 +105,62 @@ def test_rebalance_dates_and_no_look_ahead():
     assert real["X"] == pytest.approx(np.expm1(0.01 * len(idx[(idx >= dates[0]) & (idx < dates[1])])))
 
 
+def test_optimize_subfund_constraints():
+    from pipelines.monthly_rebalance import optimize_subfund
+
+    rng = np.random.default_rng(4)
+    S = 3000
+    mu = np.array([0.02, 0.01, 0.005, 0.003, 0.0])
+    sd = np.array([0.08, 0.05, 0.03, 0.02, 0.01])
+    R = pd.DataFrame(rng.standard_t(5, size=(S, 5)) * sd * 0.8 + mu, columns=list("ABCDE"))
+    w, st = optimize_subfund(R, 0.975, 0.30)
+    assert w.sum() == pytest.approx(1.0) and (w <= 0.30 + 1e-9).all() and (w >= -1e-12).all()
+    assert st["es"] <= st["es_ew"] + 1e-8
+    assert st["exp_return"] >= st["exp_return_ew"] - 1e-12
+    # mniej aktywów niż 1/limit → limit 1/n wymusza równe wagi
+    w3, st3 = optimize_subfund(R[list("ABC")], 0.975, 0.30)
+    np.testing.assert_allclose(w3.to_numpy(), 1 / 3, atol=1e-8)
+    assert st3["cap"] == pytest.approx(1 / 3)
+    w1, _ = optimize_subfund(R[["A"]], 0.975, 0.30)
+    assert w1.iloc[0] == 1.0
+
+
+def test_turnover():
+    from pipelines.monthly_rebalance import turnover
+
+    d = pd.to_datetime(["2020-01-02", "2020-02-03"])
+    comp = pd.DataFrame({"date": [d[0], d[0], d[1], d[1]], "subfund": "SF1", "ticker": ["A", "B", "A", "B"],
+                         "weight": [0.5, 0.5, 0.8, 0.2]})
+    assert turnover(comp)["turnover"].tolist() == pytest.approx([0.3])
+
+
 def test_rebalance_one_smoke():
-    """Pełny krok: GARCH → R-vine → scenariusze → LP na syntetycznym panelu 6 aktywów / 2 SF."""
+    """Pełny krok: GARCH → R-vine → scenariusze → LP w każdym sub-funduszu (6 aktywów / 2 SF)."""
     from pf import config
-    from pipelines.monthly_rebalance import rebalance_one, summary_report
+    from pipelines.monthly_rebalance import realized_table, rebalance_one, summary_report
 
     rng = np.random.default_rng(7)
     idx = pd.bdate_range("2015-01-01", periods=900)
     f = rng.standard_t(5, size=(900, 1)) * 0.01
-    data = 0.8 * f + rng.standard_t(5, size=(900, 6)) * np.array([0.01, 0.012, 0.008, 0.004, 0.003, 0.005])
-    returns = pd.DataFrame(data, index=idx, columns=["A.WA", "B.WA", "C", "D", "E", "F"])
-    subfunds = {"SF1": {"name": "akcje", "tickers": ["A.WA", "B.WA", "C"]},
-                "SF2": {"name": "obligacje", "tickers": ["D", "E", "F"]}}
+    data = 0.8 * f + rng.standard_t(5, size=(900, 8)) * np.array([0.01, 0.012, 0.008, 0.009, 0.004, 0.003,
+                                                                   0.005, 0.006])
+    returns = pd.DataFrame(data, index=idx, columns=["A.WA", "B.WA", "C", "D", "E", "F", "G", "H"])
+    subfunds = {"SF1": {"name": "akcje", "tickers": ["A.WA", "B.WA", "C", "D"]},
+                "SF2": {"name": "obligacje", "tickers": ["E", "F", "G", "H"]}}
     cfg = config.load("models")
-    cfg = {**cfg, "rebalance": {**cfg["rebalance"], "window_days": 800, "min_obs": 600, "es_limit": 0.05}}
-    t = idx[850]
-    row, model, margins, R = rebalance_one(t, returns, cfg, subfunds, n_scen=500, jobs=1)
-    assert model.end_date < t and len(model.assets) == 6
-    assert R.shape == (500, 2)
-    assert row["w_SF1"] + row["w_SF2"] == pytest.approx(1.0)
-    assert row["es"] <= 0.05 + 1e-6 or not row["feasible"]
-    weights = pd.DataFrame([row])
-    realized = pd.DataFrame([{"date": t, "end": idx[870], "portfolio": 0.01, "r_SF1": 0.02, "r_SF2": 0.0}])
-    assert "portfel (ES-LP)" in summary_report(weights, realized, subfunds, cfg["rebalance"])
+    cfg = {**cfg, "rebalance": {**cfg["rebalance"], "window_days": 800, "min_obs": 600}}
+    t1, t2 = idx[820], idx[850]
+    comp1, stats1, row, model, sf_scen = rebalance_one(t1, returns, cfg, subfunds, n_scen=500, jobs=1)
+    assert model.end_date < t1 and len(model.assets) == 8
+    assert sf_scen.shape == (500, 2)
+    assert comp1.groupby("subfund")["weight"].sum().to_numpy() == pytest.approx([1.0, 1.0])
+    assert (comp1["weight"] <= 0.30 + 1e-9).all()
+    assert (stats1["es"] <= stats1["es_ew"] + 1e-8).all()
+    # ten sam model wczytany ponownie daje te same scenariusze (ziarno zależne od daty)
+    comp1b, *_ = rebalance_one(t1, returns, cfg, subfunds, n_scen=500, jobs=1, model=model)
+    np.testing.assert_allclose(comp1b["weight"], comp1["weight"])
+    comp2, stats2, *_ = rebalance_one(t2, returns, cfg, subfunds, n_scen=500, jobs=1, model=model)
+    comp, stats = pd.concat([comp1, comp2]), pd.concat([stats1, stats2])
+    realized = realized_table(returns, comp, stats)
+    assert len(realized) == 2 and set(realized["subfund"]) == {"SF1", "SF2"}
+    assert "SF1 akcje" in summary_report(comp, stats, realized, subfunds, cfg["rebalance"])

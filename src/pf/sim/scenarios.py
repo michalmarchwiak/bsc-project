@@ -56,3 +56,11 @@ def simulate(model: Model, n_scenarios: int, horizon: int, rng: np.random.Genera
     U = model.vine.simulate(n_scenarios * horizon, rng).reshape(n_scenarios, horizon, d)
     logret = simulate_paths([model.margins[a] for a in model.assets], U)
     return pd.DataFrame(np.expm1(logret), columns=model.assets)
+
+
+def load_model(vine_path, margins_path, end_date: pd.Timestamp, panel_obs: int) -> Model:
+    """Odtworzenie modelu zapisanego przez pipeline rebalansowania (R-vine + parametry GARCH)."""
+    vine = RVine.load(vine_path)
+    rows = pd.read_parquet(margins_path).to_dict(orient="records")
+    margins = {r["name"]: MarginFit(**r) for r in rows}
+    return Model(list(vine.names), margins, vine, int(panel_obs), pd.Timestamp(end_date))

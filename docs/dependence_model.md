@@ -23,8 +23,13 @@ dostępnymi w dniu rebalansowania (macierz look-through A, x = AᵀW).
 4. **Scenariusze** (`pf.sim.scenarios`): H = 21 dziennych losowań z R-vine na scenariusz,
    kwantyle skew-t, rekursja GARCH od stanu na koniec okna, proste stopy zwrotu aktywów
    w horyzoncie, agregacja do sub-funduszy.
-5. **Optymalizacja** (`pf.opt.cvar`): LP Rockafellara–Uryaseva – max E[R] przy ES_97,5% ≤ L;
-   gdy limit nieosiągalny – portfel minimalnego ES.
+5. **Skład sub-funduszy** (`pf.opt.cvar`, `pipelines.monthly_rebalance.optimize_subfund`):
+   dla każdego sub-funduszu k osobny LP Rockafellara–Uryaseva na scenariuszach jego aktywów:
+   max E[R_kᵀw] przy ES_97,5%(−R_kᵀw) ≤ ES_97,5% portfela równych wag tego sub-funduszu,
+   Σw = 1, 0 ≤ w_i ≤ max(30%, 1/n_k). Portfel równych wag jest zawsze dopuszczalny, więc skład
+   optymalny ma nie wyższe ES i nie niższy oczekiwany zwrot (na scenariuszach). Wagi między
+   sub-funduszami (W) nie są wyznaczane – zapisywane są scenariusze stóp zwrotu sub-funduszy
+   (`scenarios_latest.parquet`), na których W dobierane jest dla profilu ryzyka.
 
 ## Uruchomienie
 
@@ -38,8 +43,12 @@ Rebalansowanie odbywa się w pierwszej sesji miesiąca t na danych do sesji t−
 sesji, aktywa z ≥ 750 obserwacjami w oknie; pierwsza data, gdy każdy sub-fundusz ma
 dostępne aktywo). Przebieg jest przyrostowy – każde kolejne uruchomienie liczy tylko nowe
 daty, więc wystarczy uruchamiać je po pierwszej sesji miesiąca (po odświeżeniu danych).
-Wyniki: `artifacts/rebalance/` (wagi, zrealizowane stopy zwrotu, R-vine i parametry GARCH
-dla każdej daty, scenariusze najnowszej daty), raport `artifacts/reports/rebalance_summary.md`.
+Modele zapisane dla danej daty (R-vine, parametry GARCH) są przy ponownym liczeniu wczytywane
+(`--refit` estymuje od nowa), a scenariusze są powtarzalne (ziarno zależne od daty).
+Wyniki: `artifacts/rebalance/` – `composition.parquet` (skład: date, subfund, ticker, weight,
+weight_ew), `subfunds.parquet` (E[R], ES, VaR: skład optymalny i równe wagi), `models.parquet`,
+`realized.parquet`, R-vine i parametry GARCH dla każdej daty, scenariusze sub-funduszy najnowszej
+daty; raport `artifacts/reports/rebalance_summary.md` (każdy sub-fundusz: skład optymalny vs równe wagi).
 Parametry: `config/models.yaml`.
 
 ## Ograniczenia
@@ -55,5 +64,7 @@ Parametry: `config/models.yaml`.
 - Innowacje kopuły są iid w czasie (zależność stała w oknie estymacji); zmienność warunkowa
   pochodzi wyłącznie z marginesów GARCH.
 - Oczekiwane stopy zwrotu wynikają ze stałych AR(1) estymowanych w oknie – są obarczone
-  dużym błędem, a LP na nie reaguje silnie (rozwiązania narożne).
-- Limit ES (`es_limit`) jest tymczasowy – docelowo pochodzi z profilu ryzyka P1–P5.
+  dużym błędem, a LP na nie reaguje silnie; limit 30% na ticker ogranicza koncentrację.
+- W sub-funduszu z mniej niż 4 dostępnymi aktywami (np. SF7 przed notowaniem ANGL, FALN)
+  limit 1/n wymusza równe wagi.
+- Obrót liczony jest na wagach docelowych (bez dryfu cen w miesiącu), bez kosztów transakcyjnych.

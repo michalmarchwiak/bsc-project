@@ -25,6 +25,5 @@ rebalance:
   backtest_scenarios: 2000          # daty historyczne (koszt symulacji ≈ 6 s / 1000 scenariuszy)
   seed: 20110101
   es_alpha: 0.975
-  # Limit ES 97,5% miesięcznej straty portfela; docelowo z profilu ryzyka P1–P5.
-  es_limit: 0.08
-  max_weight: 1.0                   # górny limit wagi sub-funduszu
+  # Skład każdego sub-funduszu: max E[R] przy ES_α ≤ ES_α portfela równych wag tego sub-funduszu.
+  asset_max_weight: 0.30            # limit wagi tickera w sub-funduszu (min. 1/n przy n < 4 aktywach)

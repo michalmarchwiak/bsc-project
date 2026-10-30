@@ -1,27 +1,37 @@
-"""Comiesięczne rebalansowanie wag sub-funduszy (pierwsza sesja miesiąca).
+"""Comiesięczne rebalansowanie składu sub-funduszy (pierwsza sesja miesiąca).
+
+Optymalizowane są wagi tickerów wewnątrz każdego sub-funduszu; wagi między sub-funduszami (W)
+nie są tu wyznaczane – pipeline zapisuje skład i scenariusze stóp zwrotu sub-funduszy, na których
+W dobierane jest później (profil ryzyka).
 
 Dla każdej daty rebalansowania t (pierwsza sesja miesiąca w danych):
     1. okno estymacji: ostatnie ``window_days`` sesji przed t (dane ≤ t−1, bez look-ahead);
-    2. marginesy AR(1)–GJR-GARCH(1,1) skew-t i R-vine (3 drzewa) na resztach;
-    3. scenariusze stóp zwrotu aktywów w horyzoncie H (start ze stanu GARCH na t−1),
-       agregacja do sub-funduszy macierzą A (wagi równe w sub-funduszu);
-    4. LP: max E[R] przy ES_97,5% ≤ L (portfel min-ES, gdy limit nieosiągalny);
-    5. (dla dat historycznych) zrealizowane stopy zwrotu sub-funduszy i portfela do
-       następnego rebalansowania (kupno i trzymanie w miesiącu).
+    2. marginesy AR(1)–GJR-GARCH(1,1) skew-t i R-vine (3 drzewa) na resztach wszystkich aktywów
+       (model zapisany dla daty t jest używany ponownie, ``--refit`` estymuje od nowa);
+    3. scenariusze stóp zwrotu aktywów w horyzoncie H (start ze stanu GARCH na t−1);
+    4. dla każdego sub-funduszu k z aktywami i ∈ I_k (LP Rockafellara–Uryaseva):
+           max E[R_kᵀ w]  p.w.  ES_α(−R_kᵀ w) ≤ ES_α(−R_kᵀ w_EW),  Σ w_i = 1,
+           0 ≤ w_i ≤ max(w_max, 1/|I_k|),
+       gdzie w_EW – wagi równe; portfel równych wag jest zawsze dopuszczalny;
+    5. (dla dat historycznych) zrealizowane stopy zwrotu sub-funduszy (skład optymalny i równe
+       wagi, kupno i trzymanie do następnego rebalansowania).
 
 Przebieg jest przyrostowy: daty już policzone są pomijane (``--force`` liczy ponownie).
 Daty historyczne używają ``backtest_scenarios``, najnowsza – ``n_scenarios`` scenariuszy.
 
 Wyjście (artifacts/rebalance/):
-    weights.parquet            – wagi, E[R], ES, VaR, wykonalność, rodziny kopuł, AIC
-    realized.parquet           – zrealizowane stopy zwrotu sub-funduszy i portfela
+    composition.parquet        – skład: date, subfund, ticker, weight, weight_ew
+    subfunds.parquet           – E[R], ES, VaR sub-funduszy (skład optymalny i równe wagi)
+    models.parquet             – okno estymacji, liczba aktywów, AIC i rodziny kopuł R-vine
+    realized.parquet           – zrealizowane stopy zwrotu sub-funduszy
     vines/<data>.json.gz       – R-vine dla daty; margins/<data>.parquet – parametry GARCH
-    scenarios_latest.parquet   – scenariusze sub-funduszy dla ostatniej daty
+    scenarios_latest.parquet   – scenariusze stóp zwrotu sub-funduszy (skład optymalny), ostatnia data
+Raport: artifacts/reports/rebalance_summary.md
 
 Uruchomienie:
     python -m pipelines.monthly_rebalance                 # wszystkie brakujące daty
     python -m pipelines.monthly_rebalance --date 2020-12-01
-    python -m pipelines.monthly_rebalance --start 2019-01-01 --scenarios 1000 --jobs 4
+    python -m pipelines.monthly_rebalance --start 2019-01-01 --scenarios 1000 --jobs 4 --force
 """
 
 from __future__ import annotations
@@ -35,14 +45,15 @@ import pandas as pd
 
 from pf import ARTIFACTS_DIR, ROOT, config
 from pf.artifacts import update_manifest, write_parquet
-from pf.opt.cvar import max_return_es
-from pf.portfolio import load_subfunds, lookthrough_matrix, subfund_returns
-from pf.sim.scenarios import eligible_assets, estimate, simulate
+from pf.opt.cvar import empirical_es, max_return_es
+from pf.portfolio import load_subfunds
+from pf.sim.scenarios import Model, eligible_assets, estimate, load_model, simulate
 
 log = logging.getLogger("monthly_rebalance")
 
 OUT_DIR = ARTIFACTS_DIR / "rebalance"
 REPORT_DIR = ARTIFACTS_DIR / "reports"
+TABLES = ("composition", "subfunds", "models")
 
 
 def rebalance_dates(index: pd.DatetimeIndex, min_history: int) -> pd.DatetimeIndex:
@@ -69,61 +80,143 @@ def realized_returns(returns: pd.DataFrame, t0: pd.Timestamp, t1: pd.Timestamp |
     return np.expm1(period.fillna(0.0).sum())
 
 
-def summary_report(weights: pd.DataFrame, realized: pd.DataFrame, subfunds: dict, rcfg: dict) -> str:
-    """Raport: statystyki zrealizowane portfela i sub-funduszy, średnie wagi, przekroczenia VaR."""
-    m = realized.merge(weights[["date", "var", "es", "feasible"]], on="date")
-    loss = -m["portfolio"]
-    n = len(m)
+def optimize_subfund(R: pd.DataFrame, alpha: float, max_weight: float) -> tuple[pd.Series, dict]:
+    """Skład sub-funduszu: max E[R] przy ES_α ≤ ES_α portfela równych wag (scenariusze × aktywa)."""
+    n = R.shape[1]
+    X = R.to_numpy()
+    w_ew = np.full(n, 1.0 / n)
+    es_ew = empirical_es(-X @ w_ew, alpha)
+    cap = max(max_weight, 1.0 / n)
+    if n == 1:
+        w, sol = w_ew, None
+    else:
+        sol = max_return_es(X, alpha, es_ew + 1e-10 * max(1.0, abs(es_ew)), cap)
+        w = sol.weights
+    stats = {"n_assets": n, "cap": cap, "exp_return": float(X.mean(axis=0) @ w),
+             "es": empirical_es(-X @ w, alpha), "var": float(sol.var) if sol else float(np.quantile(-X @ w, alpha)),
+             "exp_return_ew": float(X.mean(axis=0) @ w_ew), "es_ew": es_ew,
+             "feasible": bool(sol.feasible) if sol else True}
+    return pd.Series(w, index=R.columns), stats
 
-    def stats(r: pd.Series) -> tuple[float, float, float, float]:
+
+def rebalance_one(t: pd.Timestamp, returns: pd.DataFrame, cfg: dict, subfunds: dict, n_scen: int,
+                  jobs: int | None, model: Model | None = None
+                  ) -> tuple[pd.DataFrame, pd.DataFrame, dict, Model, pd.DataFrame]:
+    """Zwraca (skład, statystyki sub-funduszy, wiersz modelu, model, scenariusze sub-funduszy)."""
+    rcfg = cfg["rebalance"]
+    window = estimation_window(returns, t, rcfg["window_days"])
+    if model is None:
+        model = estimate(window, cfg, rcfg["min_obs"], jobs=jobs)
+    rng = np.random.default_rng([rcfg["seed"], int(t.strftime("%Y%m%d"))])
+    scen = simulate(model, n_scen, rcfg["horizon_days"], rng)
+    comp, stats, sf_scen = [], [], {}
+    available = set(model.assets)
+    for sf, spec in subfunds.items():
+        members = [a for a in spec["tickers"] if a in available]
+        if not members:
+            continue
+        w, st = optimize_subfund(scen[members], rcfg["es_alpha"], rcfg["asset_max_weight"])
+        comp += [{"date": t, "subfund": sf, "ticker": a, "weight": float(w[a]), "weight_ew": 1.0 / len(members)}
+                 for a in members]
+        stats.append({"date": t, "subfund": sf, **st})
+        sf_scen[sf] = scen[members].to_numpy() @ w.to_numpy()
+    families = pd.Series([e.copula.label() for e in model.vine.edges()]).value_counts()
+    model_row = {"date": t, "window_start": window.index.min(), "window_end": window.index.max(),
+                 "n_assets": len(model.assets), "panel_obs": model.panel_obs, "n_scenarios": n_scen,
+                 "vine_aic": model.vine.aic(), **{f"n_{fam}": int(c) for fam, c in families.items()}}
+    return pd.DataFrame(comp), pd.DataFrame(stats), model_row, model, pd.DataFrame(sf_scen)
+
+
+def upsert(path, new: pd.DataFrame) -> pd.DataFrame:
+    """Zastępuje w tabeli wiersze dat obecnych w ``new`` i zapisuje wynik."""
+    if path.exists():
+        old = pd.read_parquet(path)
+        new = pd.concat([old[~old["date"].isin(new["date"])], new], ignore_index=True)
+    sort = [c for c in ("date", "subfund", "ticker") if c in new.columns]
+    out = new.sort_values(sort).reset_index(drop=True)
+    write_parquet(out, path)
+    return out
+
+
+def realized_table(returns: pd.DataFrame, comp: pd.DataFrame, stats: pd.DataFrame) -> pd.DataFrame:
+    rows = []
+    dates = pd.DatetimeIndex(sorted(comp["date"].unique()))
+    for t, t_next in zip(dates[:-1], dates[1:]):
+        r = realized_returns(returns, t, t_next)
+        for sf, g in comp[comp["date"] == t].groupby("subfund"):
+            ra = r.reindex(g["ticker"]).fillna(0.0).to_numpy()
+            rows.append({"date": t, "end": t_next, "subfund": sf, "r_opt": float(g["weight"].to_numpy() @ ra),
+                         "r_ew": float(g["weight_ew"].to_numpy() @ ra)})
+    out = pd.DataFrame(rows)
+    if out.empty:
+        return out
+    return out.merge(stats[["date", "subfund", "var"]], on=["date", "subfund"], how="left")
+
+
+def turnover(comp: pd.DataFrame) -> pd.DataFrame:
+    """Obrót miesięczny ½ Σ|w_t − w_{t−1}| (wagi docelowe, bez dryfu cen) dla każdego sub-funduszu."""
+    wide = comp.pivot_table(index=["subfund", "date"], columns="ticker", values="weight", fill_value=0.0)
+    to = wide.groupby(level="subfund").diff().abs().sum(axis=1) / 2.0
+    first = wide.groupby(level="subfund").head(1).index
+    return to.drop(index=first).rename("turnover").reset_index()
+
+
+def summary_report(comp: pd.DataFrame, stats: pd.DataFrame, realized: pd.DataFrame, subfunds: dict,
+                   rcfg: dict) -> str:
+    def perf(r: pd.Series) -> tuple[float, float, float, float]:
         wealth = (1.0 + r).cumprod()
         ann = wealth.iloc[-1] ** (12.0 / len(r)) - 1.0
         vol = r.std() * np.sqrt(12.0)
         mdd = (wealth / wealth.cummax() - 1.0).min()
         return 100 * ann, 100 * vol, ann / vol if vol > 0 else np.nan, 100 * mdd
 
+    to = turnover(comp)
+    holdings = comp[comp["weight"] > 1e-3].groupby(["subfund", "date"]).size().groupby(level="subfund").mean()
+    n = realized["date"].nunique()
     lines = [
-        "# Comiesięczne rebalansowanie – podsumowanie",
+        "# Comiesięczne rebalansowanie składu sub-funduszy – podsumowanie",
         "",
-        f"Okres: {m['date'].min().date()} – {m['end'].max().date()} ({n} miesięcy). Okno estymacji "
-        f"{rcfg['window_days']} sesji, horyzont {rcfg['horizon_days']} sesji, ES_{rcfg['es_alpha']} ≤ "
-        f"{100 * rcfg['es_limit']:.1f}%.",
-        f"Limit ES nieosiągalny (portfel min-ES): {int((~m['feasible']).sum())} mies.",
-        f"Przekroczenia VaR_{rcfg['es_alpha']}: {int((loss > m['var']).sum())} (oczekiwane "
-        f"{n * (1 - rcfg['es_alpha']):.1f}); strata > prognozowany ES: {int((loss > m['es']).sum())}.",
+        f"Okres: {realized['date'].min().date()} – {realized['end'].max().date()} ({n} miesięcy). "
+        f"Okno estymacji {rcfg['window_days']} sesji, horyzont {rcfg['horizon_days']} sesji.",
+        f"Skład: max E[R] przy ES_{rcfg['es_alpha']} ≤ ES portfela równych wag w sub-funduszu, "
+        f"waga tickera ≤ {100 * rcfg['asset_max_weight']:.0f}% (lub 1/n przy mniejszej liczbie aktywów).",
+        "Opt – skład optymalizowany, EW – równe wagi; zwrot i zmienność roczne [%], Sharpe przy r_f = 0, "
+        "obrót – średni miesięczny ½Σ|Δw| [%], VaR – liczba miesięcy ze stratą powyżej prognozowanego "
+        f"VaR_{rcfg['es_alpha']} (oczekiwane {n * (1 - rcfg['es_alpha']):.1f}).",
         "",
-        "| strategia | zwrot roczny [%] | zmienność [%] | Sharpe (r_f = 0) | max DD [%] | średnia waga |",
-        "|---|---:|---:|---:|---:|---:|",
+        "| sub-fundusz | zwrot Opt | zwrot EW | zmienn. Opt | zmienn. EW | Sharpe Opt | Sharpe EW | "
+        "max DD Opt | max DD EW | śr. liczba składników | obrót | VaR |",
+        "|---|" + "---:|" * 11,
     ]
-    ann, vol, sh, mdd = stats(m["portfolio"])
-    lines.append(f"| portfel (ES-LP) | {ann:.2f} | {vol:.2f} | {sh:.2f} | {mdd:.2f} | – |")
     for sf, spec in subfunds.items():
-        if f"r_{sf}" in m:
-            ann, vol, sh, mdd = stats(m[f"r_{sf}"])
-            lines.append(f"| {sf} {spec['name']} | {ann:.2f} | {vol:.2f} | {sh:.2f} | {mdd:.2f} | "
-                         f"{weights[f'w_{sf}'].mean():.3f} |")
+        g = realized[realized["subfund"] == sf]
+        if g.empty:
+            continue
+        a_o, v_o, s_o, d_o = perf(g["r_opt"])
+        a_e, v_e, s_e, d_e = perf(g["r_ew"])
+        breaches = int((-g["r_opt"] > g["var"]).sum())
+        t_sf = 100 * to.loc[to["subfund"] == sf, "turnover"].mean()
+        lines.append(f"| {sf} {spec['name']} | {a_o:.2f} | {a_e:.2f} | {v_o:.2f} | {v_e:.2f} | {s_o:.2f} | "
+                     f"{s_e:.2f} | {d_o:.2f} | {d_e:.2f} | {holdings.get(sf, np.nan):.1f} | {t_sf:.1f} | "
+                     f"{breaches} |")
+    last = comp[comp["date"] == comp["date"].max()]
+    lines += ["", f"## Skład na {last['date'].max().date()}", "",
+              "| sub-fundusz | skład (waga > 0,1%) |", "|---|---|"]
+    for sf, g in last.groupby("subfund"):
+        g = g[g["weight"] > 1e-3].sort_values("weight", ascending=False)
+        lines.append(f"| {sf} | " + ", ".join(f"{r.ticker} {100 * r.weight:.1f}%" for r in g.itertuples()) + " |")
     return "\n".join(lines) + "\n"
 
 
-def rebalance_one(t: pd.Timestamp, returns: pd.DataFrame, cfg: dict, subfunds: dict, n_scen: int,
-                  jobs: int | None) -> tuple[dict, object, pd.DataFrame, pd.DataFrame]:
-    rcfg = cfg["rebalance"]
-    window = estimation_window(returns, t, rcfg["window_days"])
-    model = estimate(window, cfg, rcfg["min_obs"], jobs=jobs)
-    rng = np.random.default_rng([rcfg["seed"], int(t.strftime("%Y%m%d"))])
-    scen_assets = simulate(model, n_scen, rcfg["horizon_days"], rng)
-    A = lookthrough_matrix(subfunds, model.assets)
-    R = subfund_returns(scen_assets, A)
-    sol = max_return_es(R, rcfg["es_alpha"], rcfg["es_limit"], rcfg["max_weight"])
-    families = pd.Series([e.copula.label() for e in model.vine.edges()]).value_counts()
-    row = {"date": t, "window_start": window.index.min(), "window_end": window.index.max(),
-           "n_assets": len(model.assets), "panel_obs": model.panel_obs, "n_scenarios": n_scen,
-           "exp_return": sol.expected_return, "es": sol.es, "var": sol.var, "feasible": sol.feasible,
-           "vine_aic": model.vine.aic(), **{f"w_{sf}": 0.0 for sf in subfunds},
-           **{f"w_{sf}": w for sf, w in zip(A.index, sol.weights)},
-           **{f"n_{fam}": int(c) for fam, c in families.items()}}
-    margins = pd.DataFrame([f.to_dict() for f in model.margins.values()])
-    return row, model, margins, pd.DataFrame(R, columns=A.index)
+def cached_model(t: pd.Timestamp, models: pd.DataFrame | None) -> Model | None:
+    tag = t.strftime("%Y-%m-%d")
+    vine_path, margins_path = OUT_DIR / "vines" / f"{tag}.json.gz", OUT_DIR / "margins" / f"{tag}.parquet"
+    if models is None or not (vine_path.exists() and margins_path.exists()):
+        return None
+    row = models[models["date"] == t]
+    if row.empty:
+        return None
+    return load_model(vine_path, margins_path, row["window_end"].iloc[0], row["panel_obs"].iloc[0])
 
 
 def main() -> None:
@@ -135,7 +228,8 @@ def main() -> None:
     parser.add_argument("--end", type=pd.Timestamp, default=None)
     parser.add_argument("--scenarios", type=int, default=None, help="liczba scenariuszy dla dat historycznych")
     parser.add_argument("--jobs", type=int, default=None, help="procesy do estymacji GARCH")
-    parser.add_argument("--force", action="store_true")
+    parser.add_argument("--force", action="store_true", help="przelicz daty już obecne w wynikach")
+    parser.add_argument("--refit", action="store_true", help="estymuj modele od nowa zamiast wczytywać zapisane")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
@@ -151,55 +245,46 @@ def main() -> None:
     if args.end is not None:
         dates = dates[dates <= args.end]
 
-    weights_path = OUT_DIR / "weights.parquet"
-    done = pd.read_parquet(weights_path) if weights_path.exists() else pd.DataFrame(columns=["date"])
-    if not args.force:
-        dates = dates[~dates.isin(pd.DatetimeIndex(done["date"]))]
+    paths = {name: OUT_DIR / f"{name}.parquet" for name in TABLES}
+    models = pd.read_parquet(paths["models"]) if paths["models"].exists() else None
+    if not args.force and paths["subfunds"].exists():
+        dates = dates[~dates.isin(pd.DatetimeIndex(pd.read_parquet(paths["subfunds"])["date"]))]
     log.info("Daty do policzenia: %d (%s – %s)", len(dates), dates.min().date() if len(dates) else "-",
              dates.max().date() if len(dates) else "-")
 
-    rows = []
     latest_date = all_dates.max()
     for t in dates:
         t0 = time.time()
         n_scen = rcfg["n_scenarios"] if t == latest_date else (args.scenarios or rcfg["backtest_scenarios"])
-        row, model, margins, R = rebalance_one(t, returns, cfg, subfunds, n_scen, args.jobs)
+        model = None if args.refit else cached_model(t, models)
+        reused = model is not None
+        comp, stats, model_row, model, sf_scen = rebalance_one(t, returns, cfg, subfunds, n_scen, args.jobs, model)
         tag = t.strftime("%Y-%m-%d")
-        model.vine.save(OUT_DIR / "vines" / f"{tag}.json.gz")
-        write_parquet(margins, OUT_DIR / "margins" / f"{tag}.parquet")
+        if not reused:
+            model.vine.save(OUT_DIR / "vines" / f"{tag}.json.gz")
+            write_parquet(pd.DataFrame([f.to_dict() for f in model.margins.values()]),
+                          OUT_DIR / "margins" / f"{tag}.parquet")
         if t == latest_date:
-            write_parquet(R.astype("float32"), OUT_DIR / "scenarios_latest.parquet")
-        rows.append(row)
-        w = {k[2:]: round(float(v), 3) for k, v in row.items() if k.startswith("w_") and v > 1e-4}
-        log.info("%s: E[R] = %.2f%%, ES = %.2f%%%s, wagi %s (%.0f s)", tag, 100 * row["exp_return"],
-                 100 * row["es"], "" if row["feasible"] else " (limit nieosiągalny – min ES)", w, time.time() - t0)
+            write_parquet(sf_scen.astype("float32"), OUT_DIR / "scenarios_latest.parquet")
         # zapis po każdej dacie – przerwany przebieg można wznowić
-        out = pd.concat([done[~done["date"].isin(pd.DatetimeIndex([r["date"] for r in rows]))],
-                         pd.DataFrame(rows)], ignore_index=True).sort_values("date")
-        write_parquet(out.reset_index(drop=True), weights_path)
+        upsert(paths["composition"], comp)
+        upsert(paths["subfunds"], stats)
+        models = upsert(paths["models"], pd.DataFrame([model_row]))
+        gain = 100 * (stats["exp_return"] - stats["exp_return_ew"]).mean()
+        log.info("%s: %d sub-funduszy, śr. ΔE[R] vs EW = %+.2f p.p.%s (%.0f s)", tag, len(stats), gain,
+                 " [model z pliku]" if reused else "", time.time() - t0)
 
-    if not weights_path.exists():
+    if not paths["subfunds"].exists():
         return
-    weights = pd.read_parquet(weights_path)
-    realized = []
-    reb = pd.DatetimeIndex(weights["date"])
-    for i, t in enumerate(reb):
-        t_next = reb[i + 1] if i + 1 < len(reb) else None
-        if t_next is None:
-            continue  # okres jeszcze się nie zakończył
-        assets = eligible_assets(estimation_window(returns, t, rcfg["window_days"]), rcfg["min_obs"])
-        A = lookthrough_matrix(subfunds, assets)
-        r_sf = A.to_numpy() @ realized_returns(returns, t, t_next).reindex(A.columns).to_numpy()
-        w = weights.loc[i, [f"w_{sf}" for sf in A.index]].to_numpy(dtype=float)
-        realized.append({"date": t, "end": t_next, "portfolio": float(w @ r_sf),
-                         **{f"r_{sf}": float(r) for sf, r in zip(A.index, r_sf)}})
-    if realized:
-        realized = pd.DataFrame(realized)
+    comp, stats = pd.read_parquet(paths["composition"]), pd.read_parquet(paths["subfunds"])
+    realized = realized_table(returns, comp, stats)
+    if not realized.empty:
         write_parquet(realized, OUT_DIR / "realized.parquet")
         REPORT_DIR.mkdir(parents=True, exist_ok=True)
-        (REPORT_DIR / "rebalance_summary.md").write_text(summary_report(weights, realized, subfunds, rcfg),
+        (REPORT_DIR / "rebalance_summary.md").write_text(summary_report(comp, stats, realized, subfunds, rcfg),
                                                          encoding="utf-8")
-    update_manifest("rebalance/weights", weights_path, n_rows=len(weights), params={
+    reb = pd.DatetimeIndex(stats["date"].unique())
+    update_manifest("rebalance/composition", paths["composition"], n_rows=len(comp), params={
         "rebalance": rcfg, "rvine": cfg["rvine"], "margins": cfg["margins"], "returns": cfg["returns"]["path"],
         "first_date": str(reb.min().date()), "last_date": str(reb.max().date())})
 
