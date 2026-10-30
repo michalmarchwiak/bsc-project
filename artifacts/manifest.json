@@ -1,0 +1,99 @@
+{
+  "models/rvine_full_sample": {
+    "updated_utc": "2026-10-30T11:37:59+00:00",
+    "versions": {
+      "python": "3.13.17",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.0",
+      "yfinance": "1.7.0",
+      "requests": "2.34.2"
+    },
+    "path": "models/rvine_full_sample.json.gz",
+    "sha256": "4bca8d3d4bfc729404e835b39a65a1e938bea0b2f64349ba69d301062e4271a9",
+    "params": {
+      "returns": "data/processed/log_returns_pln.csv",
+      "start": "2011-01-04",
+      "end": "2020-12-31",
+      "rvine": {
+        "truncation": 3,
+        "families": [
+          "gauss",
+          "t",
+          "clayton",
+          "gumbel"
+        ],
+        "rotations": true,
+        "criterion": "aic",
+        "indep_test_level": 0.05,
+        "t_df_bounds": [
+          2.05,
+          30.0
+        ]
+      },
+      "margins": {
+        "mean": "AR",
+        "vol": "GJR-GARCH",
+        "dist": "skewt",
+        "scale": 100.0
+      },
+      "loglik": 160166.45352134056,
+      "aic": -319538.9070426811,
+      "panel_obs": 2427
+    }
+  },
+  "rebalance/weights": {
+    "updated_utc": "2026-10-30T12:00:40+00:00",
+    "versions": {
+      "python": "3.13.17",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.0",
+      "yfinance": "1.7.0",
+      "requests": "2.34.2"
+    },
+    "path": "rebalance/weights.parquet",
+    "sha256": "eddd3cc16815c605c7c918947e2a8c5a9c68bdc8dafdc67b384158e4c50c0890",
+    "n_rows": 83,
+    "params": {
+      "rebalance": {
+        "window_days": 1260,
+        "min_obs": 750,
+        "horizon_days": 21,
+        "n_scenarios": 10000,
+        "backtest_scenarios": 2000,
+        "seed": 20110101,
+        "es_alpha": 0.975,
+        "es_limit": 0.08,
+        "max_weight": 1.0
+      },
+      "rvine": {
+        "truncation": 3,
+        "families": [
+          "gauss",
+          "t",
+          "clayton",
+          "gumbel"
+        ],
+        "rotations": true,
+        "criterion": "aic",
+        "indep_test_level": 0.05,
+        "t_df_bounds": [
+          2.05,
+          30.0
+        ]
+      },
+      "margins": {
+        "mean": "AR",
+        "vol": "GJR-GARCH",
+        "dist": "skewt",
+        "scale": 100.0
+      },
+      "returns": "data/processed/log_returns_pln.csv",
+      "first_date": "2014-02-03",
+      "last_date": "2020-12-01"
+    }
+  }
+}
