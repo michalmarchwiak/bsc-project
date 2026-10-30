@@ -1,4 +1,4 @@
-"""Dzienne logarytmiczne stopy zwrotu (2011-01-01 – 2020-12-31) oraz wykresy dla każdego tickera.
+"""Dzienne logarytmiczne stopy zwrotu (2005-01-01 – 2026-10-29) oraz wykresy dla każdego tickera.
 
 Definicja: r_t = ln(P_t / P_{t-1}), gdzie P_t to cena zamknięcia skorygowana (Adj Close).
 
@@ -34,8 +34,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-START = "2011-01-01"
-END = "2020-12-31"
+START = "2005-01-01"
+END = "2026-10-29"
 
 ROOT = Path(__file__).resolve().parent
 RAW_DIR = ROOT / "data" / "raw"
