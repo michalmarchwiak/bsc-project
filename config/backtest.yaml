@@ -47,3 +47,30 @@ scenarios:
   n_max: 50000
   rel_se: 0.02
   rel_se_last: 0.01            # ostatnia data (bieżący skład)
+
+# Siatka backtestu (ograniczenie: usuń elementy list). Modele z config/models.yaml: dependence.models.
+grid:
+  models: [rvine, cvine, dvine, gauss, student_t, indep, empirical]
+  profiles: [P1, P2, P3, P4, P5]
+  strategies: [ce_dep, ce, maxret_es, min_es]
+  benchmarks: [ew, mv_hist]
+forecast_model: rvine          # scenariusze dla prognoz ex ante benchmarków (ew, mv_hist)
+transaction_cost: 0.001        # koszt c·Σ|x − x̃| (zakup początkowy: c)
+pit_grid_step: 0.005           # siatka kwantyli rozkładu strat (PIT poniżej VaR)
+
+# Analiza wrażliwości (tylko daty próby kalibracyjnej), liczona w tym samym przebiegu na tych samych
+# scenariuszach (lag 0 – te same ścieżki dzienne przesunięte o jeden dzień).
+sensitivity:
+  enabled: true
+  sample: calibration
+  variants:
+    lag0: {execution_lag: 0, strategies: [ce_dep, ce], benchmarks: true}
+    q10: {tail_q: 0.10, strategies: [ce_dep]}
+    rhoS: {dependence_measure: rho_S, strategies: [ce_dep]}
+  kappa_grid: {values: [0.0, 0.05, 0.15, 0.35, 0.6, 1.0, 2.0], strategies: [ce_dep]}
+
+# Testy VaR/ES (pf.backtest.risk_tests)
+risk_tests:
+  level: 0.05
+  z2_simulations: 20000
+  de_lags: [1, 5]              # Box–Pierce w warunkowym teście Du–Escanciano

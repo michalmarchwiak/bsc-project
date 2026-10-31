@@ -9,3 +9,7 @@ artifacts/backtest/cache/
 artifacts/backtest/*/tails/
 artifacts/backtest/*/scenarios/
 artifacts/backtest/*/models/
+artifacts/backtest/*/dates/
+artifacts/backtest/*/daily.parquet
+artifacts/backtest/*/daily_sf.parquet
+artifacts/backtest/*/weights_x.parquet

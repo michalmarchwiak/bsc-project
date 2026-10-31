@@ -461,5 +461,28 @@
         "nbp_ref": 21
       }
     }
+  },
+  "backtest/test_backtest_smoke_end_to_end0/periods": {
+    "updated_utc": "2026-10-31T17:56:27+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.0",
+      "yfinance": "1.7.0",
+      "requests": "2.34.2"
+    },
+    "path": "/tmp/pytest-of-root/pytest-18/test_backtest_smoke_end_to_end0/periods.parquet",
+    "sha256": "32c9bf27ed74499c97a9482421d51c955a079042f52e78f56a716f80fcfff357",
+    "n_rows": 324,
+    "params": {
+      "first_date": "2019-11-01",
+      "last_date": "2020-01-01",
+      "n_dates": 3,
+      "n_series": 162,
+      "transaction_cost": 0.001,
+      "execution_lag": 1
+    }
   }
 }

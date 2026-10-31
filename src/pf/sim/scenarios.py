@@ -18,6 +18,8 @@ tylko od daty, więc modele przyjmujące W (vine, Gauss, niezależność) dziel�
 N scenariuszy są identyczne niezależnie od liczby partii. Losowość specyficzna dla modelu
 (χ² kopuły t, kopuła empiryczna) pochodzi ze strumienia zależnego od daty i identyfikatora modelu.
 Dla opóźnienia wykonania L symulowanych jest H + L dni, a suma obejmuje dni L+1, …, L+H.
+Warianty z innym opóźnieniem L' (``extra_skips``, np. L' = 0 w analizie wrażliwości) korzystają z tych
+samych ścieżek dziennych (H + max L dni): R(L') = exp(Σ_{h=L'+1}^{L'+H} r_h) − 1.
 """
 
 from __future__ import annotations
@@ -31,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 from pf.backtest.data import eligible_assets  # noqa: F401 (ponowny eksport)
-from pf.models.margins import MarginFit, fit_margins, residual_panel, simulate_paths
+from pf.models.margins import MarginFit, fit_margins, residual_panel, simulate_daily, simulate_paths
 from pf.models.rvine import RVine, pseudo_observations
 from pf.opt.cvar import empirical_es
 
@@ -127,6 +129,10 @@ class ScenarioSet:
     seconds: float
     rel_se_target: float
     meta: dict = field(default_factory=dict)
+    R_alt: dict = field(default_factory=dict)  # opóźnienie L' → scenariusze (N × d) z tych samych ścieżek
+
+    def for_lag(self, lag: int) -> np.ndarray:
+        return self.R if lag == self.meta.get("skip", lag) else self.R_alt[lag]
 
     @property
     def n(self) -> int:
@@ -144,19 +150,23 @@ def portfolio_stats(R: np.ndarray, portfolios: dict[str, np.ndarray], alpha: flo
 
 def simulate_adaptive(margins: list[MarginFit], dep_model, horizon: int, portfolios: dict[str, np.ndarray],
                       scfg: dict, alpha: float, w_rng: np.random.Generator, model_rng: np.random.Generator,
-                      skip: int = 0, rel_se: float | None = None) -> ScenarioSet:
+                      skip: int = 0, rel_se: float | None = None, extra_skips: tuple[int, ...] = ()) -> ScenarioSet:
     """Scenariusze w partiach do osiągnięcia max_k SE/|ES| ≤ ε (lub n_max); ``dep_model`` – DependenceModel."""
     t0 = time.time()
     eps = float(rel_se if rel_se is not None else scfg["rel_se"])
     B, n_min, n_max = int(scfg["batch"]), int(scfg["n_min"]), int(scfg["n_max"])
-    d, H = len(margins), horizon + skip
-    blocks, N, n_batches = [], 0, 0
+    extra = tuple(sorted(set(extra_skips) - {skip}))
+    d, H = len(margins), horizon + max((skip,) + extra)
+    blocks, alt_blocks, N, n_batches = [], {k: [] for k in extra}, 0, 0
     stats, converged = None, False
     while N < n_max:
         b = min(B, n_max - N)
         W = w_rng.random((b * H, d))
         U = dep_model.simulate(b * H, model_rng, W=W).reshape(b, H, d)
-        blocks.append(np.expm1(simulate_paths(margins, U, skip)))
+        daily = simulate_daily(margins, U)
+        blocks.append(np.expm1(daily[:, skip:skip + horizon, :].sum(axis=1)))
+        for k in extra:
+            alt_blocks[k].append(np.expm1(daily[:, k:k + horizon, :].sum(axis=1)))
         N += b
         n_batches += 1
         if N >= n_min:
@@ -167,4 +177,5 @@ def simulate_adaptive(margins: list[MarginFit], dep_model, horizon: int, portfol
     R = np.vstack(blocks)
     if stats is None:
         stats = portfolio_stats(R, portfolios, alpha)
-    return ScenarioSet(R, [m.name for m in margins], stats, n_batches, converged, time.time() - t0, eps)
+    return ScenarioSet(R, [m.name for m in margins], stats, n_batches, converged, time.time() - t0, eps,
+                       meta={"skip": skip}, R_alt={k: np.vstack(v) for k, v in alt_blocks.items()})
