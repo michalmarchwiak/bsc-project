@@ -84,3 +84,14 @@ expost_mc:
   rel_se: 0.01
   main_model: rvine            # strategia główna (wielowymiarowe MC)
   main_strategy: ce_dep
+
+# Ranking (Etap 6, pipelines.ranking): MCS, test Sharpe'a vs ew, ranga złożona (średnia ważona rang).
+ranking:
+  mcs_size: 0.10
+  mcs_reps: 5000
+  sharpe_test: {block: 3, reps: 5000, benchmark: "-|ew|ALL|base"}
+  test_level: 0.05
+  composite_weights: {ce_ann: 3.0, sharpe: 1.0, sortino: 1.0, calmar: 1.0, max_dd: 1.0, omega: 1.0, starr: 1.0,
+                      turnover: 0.5}
+  es_expost_method: fhs        # ES ex post do STARR (Etap 5): fhs | stationary_bootstrap
+  main_series: {model: rvine, strategy: ce_dep}

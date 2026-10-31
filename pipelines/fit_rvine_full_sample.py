@@ -90,8 +90,8 @@ def models_markdown(table: pd.DataFrame, models: dict, returns: pd.DataFrame, n_
         "# Modele zależności na próbie kalibracyjnej",
         "",
         f"Dane: dzienne log-stopy w PLN, {returns.index.min().date()} – {returns.index.max().date()}; "
-        f"{next(iter(models.values())).d} aktywów, {n_panel} sesji panelu reszt (wspólne marginesy "
-        "AR(1)–GJR-GARCH(1,1) skew-t, pseudo-obserwacje z rang).",
+        f"{next(iter(models.values())).d} aktywów z pokryciem ≥ 90% sesji próby, {n_panel} sesji panelu reszt "
+        "(od debiutu najmłodszego aktywa; wspólne marginesy AR(1)–GJR-GARCH(1,1) skew-t, pseudo-obserwacje z rang).",
         f"AIC = 2k − 2ℓ, BIC = k ln n − 2ℓ. Test Vuonga z poprawką Schwarza: Z > 0 – lepszy {reference}; "
         f"rozstrzygnięcie przy |Z| > z_(1−{level}/2). Kopuła empiryczna nie ma gęstości (bez AIC/BIC i testu).",
         "",
@@ -151,7 +151,11 @@ def main() -> None:
     returns = load_returns(ROOT / cfg["returns"]["path"])
     lo, hi = (pd.Timestamp(x) for x in bcfg["calibration"])
     returns = returns.loc[(returns.index >= lo) & (returns.index <= hi)]
-    assets = eligible_assets(returns, cfg["rebalance"]["min_obs"])
+    # panel kopuły zaczyna się od debiutu najmłodszego aktywa – w próbie pełnej wymagane jest pokrycie
+    # ``full_sample_min_coverage`` sesji, aby nie skracać panelu do kilku ostatnich lat
+    min_obs = max(cfg["rebalance"]["min_obs"], int(np.ceil(dcfg["full_sample_min_coverage"]
+                                                           * returns.notna().sum().max())))
+    assets = eligible_assets(returns, min_obs)
 
     t0 = time.time()
     margins, z = fit_margins(returns[assets], scale=cfg["margins"]["scale"], jobs=args.jobs)

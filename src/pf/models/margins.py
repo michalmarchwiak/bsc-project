@@ -13,7 +13,8 @@ z parametrami z okna, start ze stanu (r_T, ε_T, σ_T²):
     u_t = F_skewt(ε_t / σ_t; η, λ)  (PIT, przy poprawnym modelu u_t ~ U(0, 1) iid).
 Sesje bez notowania danego aktywa (NaN) są pomijane: u_t = NaN, stan filtra bez zmian.
 
-Panel reszt łączy GPW i giełdy USA: dni, w których cały rynek był zamknięty (święta), są
+Panel reszt łączy GPW i giełdy USA: zaczyna się od dnia, w którym notowane są już wszystkie aktywa
+(okresy przed debiutem nie są wypełniane), dni, w których cały rynek był zamknięty (święta), są
 usuwane, a pojedyncze braki (dni bez obrotu danego instrumentu) wypełniane są ẑ = 0.
 Zamknięcie GPW (17:00) i NYSE (22:00 czasu polskiego) nie są synchroniczne, co zaniża
 dzienną zależność między rynkami.
@@ -127,8 +128,18 @@ def fit_margins(returns: pd.DataFrame, scale: float = 100.0, jobs: int | None = 
     return fits, z
 
 
-def residual_panel(z: pd.DataFrame, market_of=lambda t: "PL" if t.endswith(".WA") else "US") -> pd.DataFrame:
-    """Usuwa dni zamknięcia całego rynku, pozostałe braki zastępuje ẑ = 0."""
+def residual_panel(z: pd.DataFrame, market_of=lambda t: "PL" if t.endswith(".WA") else "US",
+                   trim_leading: bool = True) -> pd.DataFrame:
+    """Usuwa dni zamknięcia całego rynku, pozostałe braki zastępuje ẑ = 0.
+
+    ``trim_leading``: panel zaczyna się w dniu, od którego notowane są wszystkie aktywa (max pierwszych
+    obserwacji). Okresy przed debiutem instrumentu nie są „pojedynczymi brakami” – wypełnienie ich ẑ = 0
+    tworzy długie serie wiązań, zaniża zależność i czyni macierz sin(πτ̂/2) nieokreśloną.
+    """
+    if trim_leading and len(z.columns):
+        first = z.apply(pd.Series.first_valid_index).dropna()
+        if len(first):
+            z = z.loc[z.index >= first.max()]
     markets = pd.Series({c: market_of(c) for c in z.columns})
     open_all = np.ones(len(z), dtype=bool)
     for m in markets.unique():

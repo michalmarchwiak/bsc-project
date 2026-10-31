@@ -65,9 +65,12 @@ class DateModels:
         return self.panel.index.max()
 
 
+PANEL_VERSION = "trim_leading-v2"   # zmiana budowy panelu reszt unieważnia pamięć podręczną
+
+
 def margins_key(window: pd.DataFrame, cfg: dict) -> str:
     return config_digest({"window": window_digest(window), "margins": cfg["margins"],
-                          "min_obs": cfg["rebalance"]["min_obs"]})[:16]
+                          "min_obs": cfg["rebalance"]["min_obs"], "panel": PANEL_VERSION})[:16]
 
 
 def dependence_key(cfg: dict) -> str:
