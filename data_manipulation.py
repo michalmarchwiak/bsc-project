@@ -16,6 +16,8 @@ Wejście (``data/raw``): adj_close.csv, adj_close_pln.csv
 Wyjście:
     data/processed/log_returns_<wariant>.csv        – tabela stóp (Date × ticker)
     data/processed/log_returns_<wariant>_stats.csv  – statystyki opisowe
+    data/processed/log_returns_<wariant>_check.json – kontrola kompletności (pełny zakres, brak pustych
+                                                       kolumn, wszystkie tickery z ``data_import.TICKERS``)
     figures/log_returns/<wariant>/<TICKER>.png      – wykresy
 
 Uruchomienie:
@@ -24,7 +26,9 @@ Uruchomienie:
 
 from __future__ import annotations
 
+import json
 import logging
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -48,6 +52,10 @@ VARIANTS = {
 }
 
 TRADING_DAYS = 252
+
+sys.path.insert(0, str(ROOT / "src"))
+from data_import import TICKERS  # noqa: E402
+from pf.data.quality import returns_report  # noqa: E402
 
 log = logging.getLogger("data_manipulation")
 
@@ -162,6 +170,11 @@ def main() -> None:
         returns.to_csv(PROCESSED_DIR / f"log_returns_{variant}.csv")
         describe(returns).to_csv(PROCESSED_DIR / f"log_returns_{variant}_stats.csv")
         log.info("%s: %d tickerów, %d dni", variant, returns.shape[1], returns.shape[0])
+        check = returns_report(returns, TICKERS, START, END)
+        (PROCESSED_DIR / f"log_returns_{variant}_check.json").write_text(
+            json.dumps(check, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        if not check["ok"]:
+            log.error("%s: dane niekompletne: %s", variant, check)
 
         fig_dir = FIG_DIR / variant
         fig_dir.mkdir(parents=True, exist_ok=True)

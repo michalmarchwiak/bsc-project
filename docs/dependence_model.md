@@ -18,8 +18,13 @@ dostępnymi w dniu rebalansowania (macierz look-through A, x = AᵀW).
    (maksymalne drzewa rozpinające z wagami |τ̂ Kendalla|, warunek bliskości), obcięta na
    3 drzewach (wyższe drzewa – kopuła niezależności). Dla każdej krawędzi: test niezależności
    (τ Kendalla, α = 5%), parametr z odwrócenia τ (ρ = sin(πτ/2), θ_Clayton = 2τ/(1−τ),
-   θ_Gumbel = 1/(1−τ); ν kopuły t z MNW przy ustalonym ρ), rodzina z kryterium AIC spośród:
-   Gauss, t, Clayton, Gumbel oraz obrotów 180° (τ > 0, ogon przeciwny) i 90°/270° (τ < 0).
+   θ_Gumbel = 1/(1−τ), θ_Frank z τ = 1 − 4/θ·[1 − D₁(θ)]; ν kopuły t z MNW przy ustalonym ρ),
+   a przy `rvine.estimation: mle` (domyślnie) – sekwencyjna MNW wszystkich parametrów krawędzi
+   (L-BFGS-B z ograniczeniami) startująca z odwrócenia τ; pseudo-obserwacje kolejnego drzewa
+   liczone są h-funkcjami z parametrami MNW. Rodzina z kryterium AIC spośród: Gauss, t, Clayton,
+   Gumbel z obrotami 180° (τ > 0, ogon przeciwny) i 90°/270° (τ < 0) oraz Frank (bez zależności
+   w ogonach, τ dowolnego znaku). h-funkcje i ich odwrotności mają postać zamkniętą; h⁻¹ Gumbela
+   wyznaczana jest metodą Newtona z równania A + (θ−1) ln A = −ln w − ln v + (θ−1) ln(−ln v).
 4. **Scenariusze** (`pf.sim.scenarios`): H = 21 dziennych losowań z R-vine na scenariusz,
    kwantyle skew-t, rekursja GARCH od stanu na koniec okna, proste stopy zwrotu aktywów
    w horyzoncie, agregacja do sub-funduszy.
@@ -31,10 +36,33 @@ dostępnymi w dniu rebalansowania (macierz look-through A, x = AᵀW).
    sub-funduszami (W) nie są wyznaczane – zapisywane są scenariusze stóp zwrotu sub-funduszy
    (`scenarios_latest.parquet`), na których W dobierane jest dla profilu ryzyka.
 
+## Modele zależności (porównanie)
+
+Wspólny interfejs `DependenceModel` (`pf.models.dependence`, rejestr nazw): `fit(U, names, cfg)`,
+`simulate(n, rng, W)`, `logpdf(U)`, `loglik`, `n_params`, `aic`, `bic`, `to_dict`/`from_dict`.
+Wszystkie modele estymowane są na tych samych pseudo-obserwacjach (wspólne marginesy GARCH).
+
+| nazwa | model | liczba parametrów |
+|---|---|---|
+| `rvine` | R-vine (Dißmann), obcięcie na L drzewach | Σ parametrów kopuł parowych |
+| `cvine` | C-vine: w drzewie T_k korzeń r_k maksymalizujący Σ_j \|τ̂(r_k, j \| r₁…r_{k−1})\| | jw. |
+| `dvine` | D-vine: porządek z maksymalnej ścieżki Hamiltona na \|τ̂\| (zachłanna + 2-opt) | jw. |
+| `gauss` | kopuła Gaussa, R = corr(Φ⁻¹(U)), naprawa PSD (Higham) | d(d−1)/2 |
+| `student_t` | kopuła t, ρᵢⱼ = sin(πτ̂ᵢⱼ/2) (Higham), ν z profilu wiarygodności na siatce | d(d−1)/2 + 1 |
+| `indep` | kopuła niezależności | 0 |
+| `empirical` | losowanie wierszy panelu pseudo-obserwacji (bez gęstości) | – |
+
+Ocena (`pf.models.gof`): AIC = 2k − 2ℓ, BIC = k ln n − 2ℓ; test Vuonga z poprawką Schwarza
+Z = [Σ mᵢ − (k₁ − k₂) ln(n)/2] / (√n s_m), mᵢ = log c₁(uᵢ) − log c₂(uᵢ) (R-vine vs pozostałe modele
+z gęstością, na oknie estymacji); log-score poza próbą LS = Σ_t log ĉ(u_t), gdzie
+u_{i,t} = F_skewt((r_{i,t} − μ − φ r_{i,t−1}) / σ_{i,t}) z filtru GARCH naprzód parametrami z okna
+(`MarginFit.pit_forward`) dla sesji do końca następnego okna. Raport na próbie kalibracyjnej:
+`artifacts/reports/dependence_models_full_sample.md`.
+
 ## Uruchomienie
 
 ```bash
-python -m pipelines.fit_rvine_full_sample      # pełna próba → artifacts/reports/rvine_full_sample.md
+python -m pipelines.fit_rvine_full_sample      # próba kalibracyjna → rvine_full_sample.md, dependence_models_full_sample.md
 python -m pipelines.monthly_rebalance --jobs 4 # wszystkie brakujące daty rebalansowania
 python -m pipelines.monthly_rebalance --date 2020-12-01   # pojedyncza data
 ```
@@ -59,8 +87,9 @@ Parametry: `config/models.yaml`.
   obligacje skarbowe) zależność wynika głównie z kursu walutowego (τ ≈ 0,96 dla SHY–SCHO).
 - Duplikaty ekspozycji (GLD/IAU/SGOL, SHY/VGSH/SCHO) dają τ > 0,9; parametry kopuł są
   ograniczone (|ρ| ≤ 0,9999, θ_Clayton ≤ 50, θ_Gumbel ≤ 30).
-- Parametry z odwrócenia τ nie są estymatorami MNW (wyjątek: ν kopuły t); AIC liczony jest
-  w tych punktach.
+- Przy `estimation: itau` parametry z odwrócenia τ nie są estymatorami MNW (wyjątek: ν kopuły t);
+  AIC liczony jest w tych punktach. Sekwencyjna MNW (`mle`) nie jest MNW łączną całego vine'a.
+- Wyniki `artifacts/rebalance/` policzono wersją z `itau` i czterema rodzinami (bez Franka).
 - Innowacje kopuły są iid w czasie (zależność stała w oknie estymacji); zmienność warunkowa
   pochodzi wyłącznie z marginesów GARCH.
 - Oczekiwane stopy zwrotu wynikają ze stałych AR(1) estymowanych w oknie – są obarczone

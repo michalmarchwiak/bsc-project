@@ -3,8 +3,10 @@
 Źródła:
     * Yahoo Finance (biblioteka ``yfinance``) – źródło podstawowe dla wszystkich tickerów
       (OHLC, Close oraz Adj Close skorygowany o dywidendy i splity).
-    * Stooq (stooq.pl, CSV) – źródło zapasowe, gdy Yahoo nie zwróci danych
-      (spółki GPW: ``pko``, akcje/ETF USA: ``aapl.us``).
+    * Stooq (stooq.pl / stooq.com, CSV) – źródło zapasowe, gdy Yahoo nie zwróci danych także
+      przy ponownym zapytaniu o pojedynczy ticker (spółki GPW: ``pko``, akcje/ETF USA: ``aapl.us``;
+      wyjątki w ``STOOQ_SYMBOLS``, np. AVB → ``avb.us``). Odpowiedź z komunikatem o limicie
+      zapytań lub bez nagłówka CSV jest odrzucana; opcjonalny klucz API: zmienna ``STOOQ_APIKEY``.
     * NBP API (api.nbp.pl, tabela A, kurs średni) – oficjalne kursy walut względem PLN.
 
 Waluty notowań: tickery z sufiksem ``.WA`` – PLN, pozostałe (NYSE/NASDAQ/NYSE Arca) – USD.
@@ -27,6 +29,8 @@ from __future__ import annotations
 
 import io
 import logging
+import os
+import sys
 import time
 from datetime import date, timedelta
 from pathlib import Path
@@ -58,6 +62,12 @@ TICKERS = (
     TICKERS_PL + TICKERS_US_EQUITY + TICKERS_US_TREASURY + TICKERS_CORP_IG + TICKERS_CORP_HY
     + TICKERS_DEVELOPED + TICKERS_EMERGING + TICKERS_GOLD + TICKERS_REIT
 )
+
+# Symbole Stooq odbiegające od reguły (zapas, gdy Yahoo nie zwróci danych). AVB brakowało w poprzednim
+# pobraniu (coverage.csv: MISSING) – symbol podany jawnie.
+STOOQ_SYMBOLS: dict[str, str] = {"AVB": "avb.us"}
+STOOQ_URLS = ["https://stooq.pl/q/d/l/", "https://stooq.com/q/d/l/"]
+YAHOO_RETRIES = 3
 
 # Waluta notowań; wyjątki od reguły ".WA" -> PLN, reszta -> USD można dopisać tutaj.
 CURRENCY_OVERRIDES: dict[str, str] = {}
@@ -109,38 +119,70 @@ def fetch_yahoo(tickers: list[str], start: str, end: str) -> dict[str, pd.DataFr
 # --------------------------------------------------------------------------- Stooq
 
 def stooq_symbol(ticker: str) -> str:
+    if ticker in STOOQ_SYMBOLS:
+        return STOOQ_SYMBOLS[ticker]
     if ticker.endswith(".WA"):
         return ticker[:-3].lower()
     return f"{ticker.lower()}.us"
 
 
+STOOQ_RENAME = {"Data": "Date", "Otwarcie": "Open", "Najwyzszy": "High", "Najnizszy": "Low",
+                "Zamkniecie": "Close", "Wolumen": "Volume"}
+
+
+def parse_stooq_prices(text: str) -> pd.DataFrame | None:
+    """CSV Stooq (nagłówki PL lub EN) → OHLCV; None przy komunikacie zamiast danych (limit, brak danych)."""
+    text = text.strip()
+    if not text:
+        return None
+    header = text.splitlines()[0]
+    if "Date" not in header and "Data" not in header:
+        return None  # np. „Przekroczony dzienny limit wywolan”, „Brak danych”
+    df = pd.read_csv(io.StringIO(text)).rename(columns=STOOQ_RENAME)
+    if "Close" not in df.columns or df.empty:
+        return None
+    df["Date"] = pd.to_datetime(df["Date"])
+    df = df.set_index("Date").sort_index()
+    df.index.name = "Date"
+    # Stooq podaje ceny skorygowane o splity i dywidendy – brak osobnej kolumny Adj Close.
+    df["Adj Close"] = df["Close"]
+    return df.reindex(columns=OHLCV_COLUMNS)
+
+
 def fetch_stooq(ticker: str, start: str, end: str) -> pd.DataFrame | None:
-    url = "https://stooq.pl/q/d/l/"
     params = {
         "s": stooq_symbol(ticker),
         "d1": start.replace("-", ""),
         "d2": end.replace("-", ""),
         "i": "d",
     }
-    try:
-        resp = requests.get(url, params=params, timeout=30)
-        resp.raise_for_status()
-    except requests.RequestException as exc:
-        log.warning("Stooq %s: %s", ticker, exc)
-        return None
-    text = resp.text.strip()
-    if not text or "Brak danych" in text or "Data" not in text.splitlines()[0]:
-        return None
-    df = pd.read_csv(io.StringIO(text))
-    df = df.rename(columns={
-        "Data": "Date", "Otwarcie": "Open", "Najwyzszy": "High", "Najnizszy": "Low",
-        "Zamkniecie": "Close", "Wolumen": "Volume",
-    })
-    df["Date"] = pd.to_datetime(df["Date"])
-    df = df.set_index("Date").sort_index()
-    # Stooq podaje ceny skorygowane o splity i dywidendy – brak osobnej kolumny Adj Close.
-    df["Adj Close"] = df["Close"]
-    return df.reindex(columns=OHLCV_COLUMNS)
+    if os.environ.get("STOOQ_APIKEY"):
+        params["apikey"] = os.environ["STOOQ_APIKEY"]
+    for url in STOOQ_URLS:
+        try:
+            resp = requests.get(url, params=params, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
+            resp.raise_for_status()
+        except requests.RequestException as exc:
+            log.warning("Stooq %s (%s): %s", ticker, url, exc)
+            continue
+        df = parse_stooq_prices(resp.text)
+        if df is not None and not df.empty:
+            return df
+        log.warning("Stooq %s (%s): odpowiedź bez danych: %r", ticker, url, resp.text[:120])
+    return None
+
+
+def fetch_yahoo_single(ticker: str, start: str, end: str, retries: int = YAHOO_RETRIES) -> pd.DataFrame | None:
+    """Ponowne zapytanie Yahoo o pojedynczy ticker (zbiorcze pobranie gubi tickery przy limicie zapytań)."""
+    for attempt in range(retries):
+        try:
+            df = fetch_yahoo([ticker], start, end).get(ticker)
+            if df is not None and not df.empty:
+                return df
+        except Exception as exc:  # noqa: BLE001
+            log.warning("Yahoo %s (próba %d): %s", ticker, attempt + 1, exc)
+        time.sleep(2 ** (attempt + 1))
+    return None
 
 
 # --------------------------------------------------------------------------- NBP
@@ -192,7 +234,12 @@ def download_prices() -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
     sources = {t: "yahoo" for t in prices}
 
     for t in [t for t in TICKERS if t not in prices]:
-        log.info("Brak danych z Yahoo dla %s – próbuję Stooq", t)
+        log.info("Brak danych z Yahoo dla %s – ponawiam zapytanie dla pojedynczego tickera", t)
+        df = fetch_yahoo_single(t, START, END)
+        if df is not None:
+            prices[t], sources[t] = df, "yahoo"
+            continue
+        log.info("Brak danych z Yahoo dla %s – próbuję Stooq (%s)", t, stooq_symbol(t))
         df = fetch_stooq(t, START, END)
         if df is not None and not df.empty:
             prices[t] = df
@@ -264,10 +311,15 @@ def main() -> None:
     if not late.empty:
         log.warning("Instrumenty z historią krótszą niż okres badania:\n%s",
                     late[["ticker", "first_date"]].to_string(index=False))
-    missing = coverage.loc[coverage["source"] == "MISSING", "ticker"].tolist()
-    if missing:
-        log.error("Brak danych dla: %s", ", ".join(missing))
-    log.info("Zapisano dane w %s", OUT_DIR)
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+    from pf.data.quality import coverage_report
+
+    report = coverage_report(coverage, START, END)
+    if report["missing"]:
+        log.error("Brak danych dla: %s", ", ".join(report["missing"]))
+    if report["stale"]:
+        log.error("Notowania kończą się przed %s: %s", END, ", ".join(report["stale"]))
+    log.info("Zapisano dane w %s (źródła: %s)", OUT_DIR, report["sources"])
 
 
 if __name__ == "__main__":

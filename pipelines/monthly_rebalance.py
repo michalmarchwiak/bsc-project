@@ -48,39 +48,16 @@ import pandas as pd
 
 from pf import ARTIFACTS_DIR, ROOT, config
 from pf.artifacts import update_manifest, write_parquet
+from pf.backtest.data import covers_all_subfunds, estimation_window, realized_returns, rebalance_dates  # noqa: F401
 from pf.opt.cvar import empirical_es, max_return_es
 from pf.portfolio import load_subfunds
-from pf.sim.scenarios import Model, eligible_assets, estimate, load_model, simulate
+from pf.sim.scenarios import Model, estimate, load_model, simulate
 
 log = logging.getLogger("monthly_rebalance")
 
 OUT_DIR = ARTIFACTS_DIR / "rebalance"
 REPORT_DIR = ARTIFACTS_DIR / "reports"
 TABLES = ("composition", "subfunds", "models")
-
-
-def rebalance_dates(index: pd.DatetimeIndex, min_history: int) -> pd.DatetimeIndex:
-    """Pierwsza sesja każdego miesiąca, przed którą jest co najmniej ``min_history`` sesji."""
-    s = pd.Series(index, index=index)
-    firsts = pd.DatetimeIndex(s.groupby(index.to_period("M")).min().to_numpy())
-    pos = index.get_indexer(firsts)
-    return firsts[pos >= min_history]
-
-
-def covers_all_subfunds(returns: pd.DataFrame, t: pd.Timestamp, rcfg: dict, subfunds: dict) -> bool:
-    """Czy w oknie przed t każdy sub-fundusz ma co najmniej jedno aktywo z ``min_obs`` obserwacjami."""
-    assets = set(eligible_assets(estimation_window(returns, t, rcfg["window_days"]), rcfg["min_obs"]))
-    return all(assets & set(spec["tickers"]) for spec in subfunds.values())
-
-
-def estimation_window(returns: pd.DataFrame, t: pd.Timestamp, window_days: int) -> pd.DataFrame:
-    return returns.loc[returns.index < t].iloc[-window_days:]
-
-
-def realized_returns(returns: pd.DataFrame, t0: pd.Timestamp, t1: pd.Timestamp | None) -> pd.Series:
-    """Proste stopy zwrotu aktywów w okresie [t0, t1) (kupno i trzymanie; brak notowań = 0)."""
-    period = returns.loc[(returns.index >= t0) & ((returns.index < t1) if t1 is not None else True)]
-    return np.expm1(period.fillna(0.0).sum())
 
 
 def optimize_subfund(R: pd.DataFrame, alpha: float, max_weight: float) -> tuple[pd.Series, dict]:

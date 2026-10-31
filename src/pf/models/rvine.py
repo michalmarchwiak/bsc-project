@@ -6,7 +6,18 @@ Wybór struktury – algorytm Dißmanna i in. (2013), drzewo po drzewie:
     bliskości (proximity) – łączone węzły mają wspólny węzeł w T_k; wagi |τ̂| obliczane
     na pseudo-obserwacjach warunkowych F(a | D), F(b | D) uzyskanych h-funkcjami z T_k.
 Dla każdej krawędzi (a, b | D) dobierana jest kopuła parowa (``copulas.select``):
-parametr z odwrócenia τ Kendalla, rodzina (Gauss, t, Clayton, Gumbel i obroty) z AIC.
+parametry z odwrócenia τ Kendalla (``itau``) lub sekwencyjnej MNW startującej z tego punktu
+(``mle``), rodzina (Gauss, t, Clayton, Gumbel z obrotami, Frank) z AIC.
+
+Struktury narzucone (``structure``), budowane tym samym algorytmem z innym wyborem drzew:
+    cvine – C-vine: w drzewie T_k gwiazda wokół korzenia r_k maksymalizującego Σ_j |τ̂(r_k, j | r₁…r_{k−1})|
+            (krawędzie (r_k, j | r₁, …, r_{k−1}));
+    dvine – D-vine: T₁ jest ścieżką Hamiltona o maksymalnej Σ|τ̂| między sąsiadami (heurystyka zachłanna
+            krawędziowa + poprawa 2-opt); kolejne drzewa wynikają z warunku bliskości (ścieżki).
+Wyższe drzewa poza obcięciem (niezależność) uzupełniane są strukturą zgodną z typem vine'a.
+
+Gęstość (``logpdf``): log c(u) = Σ_{e ∈ T₁…T_L} log c_e(F(a_e | D_e), F(b_e | D_e)), z argumentami
+liczonymi rekurencyjnie h-funkcjami, jak przy estymacji.
 
 Obcięcie (truncation) na piętrze L: kopuły w drzewach T_{L+1}, …, T_{d−1} są kopułami
 niezależności. Struktura tych drzew jest jednak uzupełniana (dowolne drzewa spełniające
@@ -23,6 +34,7 @@ a F(p_j | D_j) liczone są rekurencyjnie h-funkcjami z wartości już zasymulowa
 from __future__ import annotations
 
 import gzip
+import hashlib
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -86,6 +98,117 @@ def max_spanning_tree(n_nodes: int, edges: list[tuple[float, int, int]]) -> list
     return out
 
 
+_TAU_CACHE: dict[bytes, np.ndarray] = {}
+_TAU_CACHE_SIZE = 8
+
+
+def kendall_matrix(U: np.ndarray) -> np.ndarray:
+    """Macierz τ̂ Kendalla kolumn U (z pamięcią podręczną – wspólna dla modeli estymowanych na tym samym U)."""
+    U = np.ascontiguousarray(U, dtype=float)
+    key = hashlib.sha1(U.tobytes()).digest() + np.array(U.shape).tobytes()
+    if key not in _TAU_CACHE:
+        d = U.shape[1]
+        T = np.eye(d)
+        for i in range(d):
+            for j in range(i + 1, d):
+                T[i, j] = T[j, i] = kendall_tau(U[:, i], U[:, j])[0]
+        if len(_TAU_CACHE) >= _TAU_CACHE_SIZE:
+            _TAU_CACHE.pop(next(iter(_TAU_CACHE)))
+        _TAU_CACHE[key] = T
+    return _TAU_CACHE[key].copy()
+
+
+def best_star(n_nodes: int, edges: list[tuple[float, int, int]]) -> list[tuple[int, int]] | None:
+    """Gwiazda (drzewo rozpinające o jednym centrum) o maksymalnej sumie wag; None, gdy żadna nie istnieje."""
+    incident: dict[int, list[tuple[float, int, int]]] = {i: [] for i in range(n_nodes)}
+    for w, i, j in edges:
+        incident[i].append((w, i, j))
+        incident[j].append((w, i, j))
+    best, best_w = None, -np.inf
+    for c in range(n_nodes):
+        if len(incident[c]) != n_nodes - 1:
+            continue
+        total = sum(w for w, _, _ in incident[c])
+        if total > best_w + 1e-15:
+            best, best_w = [(i, j) for _, i, j in incident[c]], total
+    return best
+
+
+def max_hamiltonian_path(W: np.ndarray) -> list[int]:
+    """Ścieżka Hamiltona o (przybliżenie) maksymalnej Σ W między sąsiadami: zachłanna + 2-opt."""
+    d = len(W)
+    if d <= 2:
+        return list(range(d))
+    parent = list(range(d))
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    deg = np.zeros(d, dtype=int)
+    adj: dict[int, list[int]] = {i: [] for i in range(d)}
+    order = sorted(((W[i, j], i, j) for i in range(d) for j in range(i + 1, d)), key=lambda e: -e[0])
+    n_edges = 0
+    for _, i, j in order:
+        if deg[i] < 2 and deg[j] < 2 and find(i) != find(j):
+            parent[find(i)] = find(j)
+            deg[i] += 1
+            deg[j] += 1
+            adj[i].append(j)
+            adj[j].append(i)
+            n_edges += 1
+            if n_edges == d - 1:
+                break
+    start = int(np.flatnonzero(deg == 1)[0])
+    path, prev = [start], -1
+    while len(path) < d:
+        nxt = [k for k in adj[path[-1]] if k != prev][0]
+        prev = path[-1]
+        path.append(nxt)
+    # 2-opt: odwrócenie odcinka path[i..j] zmienia krawędzie (p_{i−1}, p_i) i (p_j, p_{j+1})
+    improved = True
+    while improved:
+        improved = False
+        for i in range(d - 1):
+            for j in range(i + 1, d):
+                delta = 0.0
+                if i > 0:
+                    delta += W[path[i - 1], path[j]] - W[path[i - 1], path[i]]
+                if j < d - 1:
+                    delta += W[path[i], path[j + 1]] - W[path[j], path[j + 1]]
+                if delta > 1e-12:
+                    path[i:j + 1] = path[i:j + 1][::-1]
+                    improved = True
+    return path
+
+
+def path_weight(W: np.ndarray, path: list[int]) -> float:
+    return float(sum(W[a, b] for a, b in zip(path[:-1], path[1:])))
+
+
+def first_tree(tau_abs: np.ndarray, structure: str) -> list[tuple[int, int]]:
+    d = len(tau_abs)
+    if structure == "cvine":
+        root = int(np.argmax(tau_abs.sum(axis=1) - np.diag(tau_abs)))
+        return [(root, j) for j in range(d) if j != root]
+    if structure == "dvine":
+        path = max_hamiltonian_path(tau_abs)
+        return list(zip(path[:-1], path[1:]))
+    if structure != "rvine":
+        raise ValueError(f"Nieznana struktura vine: {structure}")
+    return max_spanning_tree(d, [(tau_abs[i, j], i, j) for i in range(d) for j in range(i + 1, d)])
+
+
+def next_tree(n_nodes: int, weighted: list[tuple[float, int, int]], structure: str) -> list[tuple[int, int]]:
+    if structure == "cvine":
+        star = best_star(n_nodes, weighted)
+        if star is not None:
+            return star
+    return max_spanning_tree(n_nodes, weighted)
+
+
 def proximity_candidates(prev: list[Edge]) -> list[tuple[int, int]]:
     """Pary krawędzi drzewa T_k (indeksy), które mają wspólny węzeł T_k (|full₁ ∩ full₂| = k)."""
     k = prev[0].tree
@@ -111,6 +234,7 @@ class RVine:
     trees: list[list[Edge]]
     truncation: int
     n_obs: int = 0
+    structure: str = "rvine"
 
     @property
     def d(self) -> int:
@@ -121,19 +245,20 @@ class RVine:
     def fit(cls, U: np.ndarray, names: list[str] | None = None, truncation: int = 3,
             families=("gauss", "t", "clayton", "gumbel"), rotations: bool = True,
             criterion: str = "aic", indep_level: float | None = 0.05,
-            t_df_bounds=(2.05, 30.0)) -> "RVine":
-        """Estymacja na pseudo-obserwacjach U (n × d) z (0, 1)."""
+            t_df_bounds=(2.05, 30.0), estimation: str = "itau", structure: str = "rvine",
+            tau_matrix: np.ndarray | None = None) -> "RVine":
+        """Estymacja na pseudo-obserwacjach U (n × d) z (0, 1); ``structure``: rvine | cvine | dvine."""
         n, d = U.shape
         names = list(names) if names is not None else [str(i) for i in range(d)]
         kw = dict(families=families, rotations=rotations, criterion=criterion,
-                  indep_level=indep_level, t_df_bounds=t_df_bounds)
+                  indep_level=indep_level, t_df_bounds=t_df_bounds, estimation=estimation)
         trees: list[list[Edge]] = []
         # pseudo[(var, D)] = F(var | D)
         pseudo: dict[tuple[int, frozenset], np.ndarray] = {(i, frozenset()): U[:, i] for i in range(d)}
 
         # T₁
-        cand = [(abs(kendall_tau(U[:, i], U[:, j])[0]), i, j) for i in range(d) for j in range(i + 1, d)]
-        pairs = max_spanning_tree(d, cand)
+        tau_abs = np.abs(tau_matrix if tau_matrix is not None else kendall_matrix(U))
+        pairs = first_tree(tau_abs, structure)
         trees.append([cls._fit_edge(1, i, j, frozenset(), pseudo, kw) for i, j in pairs])
 
         for t in range(2, d):
@@ -148,7 +273,7 @@ class RVine:
                 else:
                     w = 0.0
                 weighted.append((w, i, j))
-            sel = max_spanning_tree(len(prev), weighted)
+            sel = next_tree(len(prev), weighted, structure)
             level = []
             for i, j in sel:
                 a, b, D = join(prev[i], prev[j], t)
@@ -157,7 +282,7 @@ class RVine:
                 else:
                     level.append(Edge(t, a, b, D))
             trees.append(level)
-        return cls(names, trees, truncation, n_obs=n)
+        return cls(names, trees, truncation, n_obs=n, structure=structure)
 
     @staticmethod
     def _fit_edge(t, a, b, D, pseudo, kw) -> Edge:
@@ -181,6 +306,25 @@ class RVine:
 
     def aic(self) -> float:
         return 2.0 * self.n_params() - 2.0 * self.loglik()
+
+    def bic(self) -> float:
+        return np.log(max(self.n_obs, 1)) * self.n_params() - 2.0 * self.loglik()
+
+    def logpdf(self, U: np.ndarray) -> np.ndarray:
+        """log c(u_t) dla wierszy U (n × d) – gęstość kopuły R-vine (drzewa 1…L)."""
+        U = np.asarray(U, dtype=float)
+        pseudo: dict[tuple[int, frozenset], np.ndarray] = {(i, frozenset()): U[:, i] for i in range(self.d)}
+        out = np.zeros(len(U))
+        top = min(self.truncation, len(self.trees))
+        for k, level in enumerate(self.trees[:top], start=1):
+            for e in level:
+                u, v = pseudo[(e.a, e.cond)], pseudo[(e.b, e.cond)]
+                if e.copula.family != "indep":
+                    out += e.copula.logpdf(u, v)
+                if k < top:
+                    pseudo[(e.a, e.cond | {e.b})] = e.copula.h(u, v)
+                    pseudo[(e.b, e.cond | {e.a})] = e.copula.h1(u, v)
+        return out
 
     def summary(self) -> list[dict]:
         rows = []
@@ -254,7 +398,7 @@ class RVine:
 
     # ------------------------------------------------------------------ serializacja
     def to_dict(self) -> dict:
-        return {"names": self.names, "truncation": self.truncation, "n_obs": self.n_obs,
+        return {"names": self.names, "truncation": self.truncation, "n_obs": self.n_obs, "structure": self.structure,
                 "trees": [[{"a": e.a, "b": e.b, "cond": sorted(e.cond), "tau": e.tau, "loglik": e.loglik,
                             **e.copula.to_dict()} for e in level] for level in self.trees]}
 
@@ -262,7 +406,7 @@ class RVine:
     def from_dict(cls, d: dict) -> "RVine":
         trees = [[Edge(t + 1, e["a"], e["b"], frozenset(e["cond"]), PairCopula.from_dict(e), e["tau"],
                        e["loglik"]) for e in level] for t, level in enumerate(d["trees"])]
-        return cls(d["names"], trees, d["truncation"], d.get("n_obs", 0))
+        return cls(d["names"], trees, d["truncation"], d.get("n_obs", 0), d.get("structure", "rvine"))
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), separators=(",", ":"))
