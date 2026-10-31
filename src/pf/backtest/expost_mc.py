@@ -119,6 +119,7 @@ class MultiMC:
 
         logr = np.log1p(r_sf)
         self.names = list(r_sf.columns)
+        self.eps_cap = float(cfg["margins"].get("sim_eps_cap") or np.inf)
         self.margins, z = fit_margins(logr, scale=cfg["margins"]["scale"], jobs=1)
         Z = z.dropna(how="any")
         self.model = fit_model("rvine", pseudo_observations(Z.to_numpy()), self.names, cfg)
@@ -156,8 +157,9 @@ class MultiMC:
             r_prev = st[:, 2]
             Z = skewt_ppf(U[:, :, j].ravel(), f.eta, f.lam).reshape(n, horizon)
             total = np.zeros(n)
+            cap = self.eps_cap * np.nanmax(np.abs(self.states[k][:, 1]))
             for h in range(horizon):
-                e = np.sqrt(s2) * Z[:, h]
+                e = np.clip(np.sqrt(s2) * Z[:, h], -cap, cap)
                 r = f.mu + f.phi * r_prev + e
                 total += r
                 s2 = f.omega + (f.alpha + f.gamma * (e < 0)) * e ** 2 + f.beta * s2

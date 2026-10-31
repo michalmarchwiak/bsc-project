@@ -111,15 +111,24 @@ def run_dates(dates: pd.DatetimeIndex, dates_all: pd.DatetimeIndex, run_dir: Pat
             log.info("%s: %.0f s, %d aktywów, %d szeregów (%d/%d)", s["date"], s["seconds"], s["n_assets"],
                      s["n_series"], done, len(tasks))
         return
+    failed = {}
     with ProcessPoolExecutor(max_workers=jobs, mp_context=mp.get_context("spawn")) as ex:
         futs = {ex.submit(_worker, task): task[0] for task in tasks}
         for f in as_completed(futs):
-            s = f.result()
             done += 1
+            try:
+                s = f.result()
+            except Exception as exc:  # noqa: BLE001 – błąd jednej daty nie przerywa przebiegu
+                failed[str(futs[f].date())] = repr(exc)
+                log.error("%s: BŁĄD %r (%d/%d)", futs[f].date(), exc, done, len(tasks))
+                continue
             el = time.time() - t0
             log.info("%s: %.0f s, %d aktywów, N = %s (%d/%d, upłynęło %.1f h, ETA %.1f h)", s["date"], s["seconds"],
                      s["n_assets"], s["n_scenarios"], done, len(tasks), el / 3600,
                      el / done * (len(tasks) - done) / 3600)
+    if failed:
+        (run_dir / "failed_dates.json").write_text(json.dumps(failed, indent=1), encoding="utf-8")
+        raise RuntimeError(f"Nieudane daty ({len(failed)}): {sorted(failed)} – szczegóły w failed_dates.json")
 
 
 def consolidate(run_dir: Path, returns: pd.DataFrame, cfg: dict, bcfg: dict, pcfg: dict, subfunds: dict,

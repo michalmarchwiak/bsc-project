@@ -70,7 +70,7 @@ def simulate(model: Model, n_scenarios: int, horizon: int, rng: np.random.Genera
     """Proste stopy zwrotu aktywów w horyzoncie (n_scenarios × N)."""
     d = len(model.assets)
     U = model.vine.simulate(n_scenarios * horizon, rng).reshape(n_scenarios, horizon, d)
-    logret = simulate_paths([model.margins[a] for a in model.assets], U)
+    logret = simulate_paths([model.margins[a] for a in model.assets], U, eps_cap=None)  # wyniki historyczne
     return pd.DataFrame(np.expm1(logret), columns=model.assets)
 
 
@@ -150,7 +150,8 @@ def portfolio_stats(R: np.ndarray, portfolios: dict[str, np.ndarray], alpha: flo
 
 def simulate_adaptive(margins: list[MarginFit], dep_model, horizon: int, portfolios: dict[str, np.ndarray],
                       scfg: dict, alpha: float, w_rng: np.random.Generator, model_rng: np.random.Generator,
-                      skip: int = 0, rel_se: float | None = None, extra_skips: tuple[int, ...] = ()) -> ScenarioSet:
+                      skip: int = 0, rel_se: float | None = None, extra_skips: tuple[int, ...] = (),
+                      eps_cap: float | None = 2.0) -> ScenarioSet:
     """Scenariusze w partiach do osiągnięcia max_k SE/|ES| ≤ ε (lub n_max); ``dep_model`` – DependenceModel."""
     t0 = time.time()
     eps = float(rel_se if rel_se is not None else scfg["rel_se"])
@@ -163,7 +164,7 @@ def simulate_adaptive(margins: list[MarginFit], dep_model, horizon: int, portfol
         b = min(B, n_max - N)
         W = w_rng.random((b * H, d))
         U = dep_model.simulate(b * H, model_rng, W=W).reshape(b, H, d)
-        daily = simulate_daily(margins, U)
+        daily = simulate_daily(margins, U, eps_cap)
         blocks.append(np.expm1(daily[:, skip:skip + horizon, :].sum(axis=1)))
         for k in extra:
             alt_blocks[k].append(np.expm1(daily[:, k:k + horizon, :].sum(axis=1)))

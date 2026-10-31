@@ -65,7 +65,7 @@ class DateModels:
         return self.panel.index.max()
 
 
-PANEL_VERSION = "trim_leading-v2"   # zmiana budowy panelu reszt unieważnia pamięć podręczną
+PANEL_VERSION = "trim_leading-v2+eps_absmax"   # zmiana panelu/marginesów unieważnia pamięć podręczną
 
 
 def margins_key(window: pd.DataFrame, cfg: dict) -> str:
@@ -142,7 +142,8 @@ def simulate_model(dm: DateModels, name: str, cfg: dict, bcfg: dict, subfunds: d
     m_rng = np.random.default_rng(model_seed(rcfg["seed"], dm.t, name))
     sset = simulate_adaptive(margins, dm.models[name], rcfg["horizon_days"], portfolios, scfg,
                              rcfg["es_alpha"], w_rng, m_rng, skip=lag,
-                             rel_se=scfg["rel_se_last"] if latest else scfg["rel_se"], extra_skips=extra_lags)
+                             rel_se=scfg["rel_se_last"] if latest else scfg["rel_se"], extra_skips=extra_lags,
+                             eps_cap=cfg["margins"].get("sim_eps_cap"))
     dm.timings[f"sim_{name}"] = sset.seconds
     return sset
 

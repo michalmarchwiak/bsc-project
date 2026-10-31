@@ -8,6 +8,7 @@ margins:
   vol: "GJR-GARCH"      # GJR-GARCH(1,1)
   dist: "skewt"         # skośny t Hansena
   scale: 100.0          # estymacja na stopach ×100 (stabilność numeryczna)
+  sim_eps_cap: 2.0      # symulacja: |ε| ≤ k·max|ε̂| z okna (k; null – bez ograniczenia)
 
 rvine:                              # wspólne dla rvine, cvine, dvine
   truncation: 3                     # liczba pięter (drzew) z kopułami; wyższe = niezależność

@@ -1,6 +1,6 @@
 {
   "models/rvine_full_sample": {
-    "updated_utc": "2026-10-31T18:05:11+00:00",
+    "updated_utc": "2026-10-31T20:09:53+00:00",
     "versions": {
       "python": "3.13.18",
       "numpy": "2.5.3",
@@ -11,7 +11,7 @@
       "requests": "2.34.2"
     },
     "path": "models/rvine_full_sample.json.gz",
-    "sha256": "72973bdd057012399844d95923787f5f9c3e91efe3eb94b4ab8fab69db35de4e",
+    "sha256": "28bb346229fc674765e42c8f3ee995d5b8023c6f38af3f13dd9d0a9a43b57d87",
     "params": {
       "returns": "data/processed/log_returns_pln.csv",
       "start": "2008-01-02",
@@ -44,9 +44,9 @@
         "dist": "skewt",
         "scale": 100.0
       },
-      "panel_obs": 3166,
-      "loglik": 185285.4961158475,
-      "aic": -369844.992231695
+      "panel_obs": 2909,
+      "loglik": 122887.00160558648,
+      "aic": -245190.00321117297
     }
   },
   "rebalance/composition": {
@@ -320,7 +320,7 @@
     }
   },
   "reports/dependence_models_full_sample": {
-    "updated_utc": "2026-10-31T18:05:11+00:00",
+    "updated_utc": "2026-10-31T20:09:53+00:00",
     "versions": {
       "python": "3.13.18",
       "numpy": "2.5.3",
@@ -331,7 +331,7 @@
       "requests": "2.34.2"
     },
     "path": "reports/dependence_models_full_sample.csv",
-    "sha256": "4826e0da3d4cdc87d0c21cdd19799ab03980917bacccf7d0a61929ce3dccf2da",
+    "sha256": "5689dbcd40cfe297891a93e98f5c4f40ae106a66b9b1d3fe74dcb352459f24c4",
     "n_rows": 7,
     "params": {
       "returns": "data/processed/log_returns_pln.csv",
@@ -365,7 +365,7 @@
         "dist": "skewt",
         "scale": 100.0
       },
-      "panel_obs": 3166,
+      "panel_obs": 2909,
       "dependence": {
         "models": [
           "rvine",
@@ -378,7 +378,8 @@
         ],
         "reference": "rvine",
         "vuong_level": 0.05,
-        "psd_eig_min": 1e-06,
+        "psd_eig_min": 0.0001,
+        "full_sample_min_coverage": 0.9,
         "higham_tol": 1e-09,
         "higham_max_iter": 500,
         "student_t": {
@@ -404,11 +405,11 @@
         }
       },
       "aic": {
-        "rvine": -369844.992231695,
-        "cvine": -231365.78785376032,
-        "dvine": -353295.98500147805,
-        "gauss": -355225.22045863705,
-        "student_t": 1192781.7781380066,
+        "rvine": -245190.00321117297,
+        "cvine": -181695.98649097377,
+        "dvine": -228747.06889307845,
+        "gauss": -243282.73428617802,
+        "student_t": -248152.1978737529,
         "indep": 0.0,
         "empirical": NaN
       }
@@ -463,7 +464,7 @@
     }
   },
   "backtest/test_backtest_smoke_end_to_end0/periods": {
-    "updated_utc": "2026-10-31T18:09:24+00:00",
+    "updated_utc": "2026-10-31T20:41:34+00:00",
     "versions": {
       "python": "3.13.18",
       "numpy": "2.5.3",
@@ -473,8 +474,8 @@
       "yfinance": "1.7.0",
       "requests": "2.34.2"
     },
-    "path": "/tmp/pytest-of-root/pytest-20/test_backtest_smoke_end_to_end0/periods.parquet",
-    "sha256": "32c9bf27ed74499c97a9482421d51c955a079042f52e78f56a716f80fcfff357",
+    "path": "/tmp/pytest-of-root/pytest-24/test_backtest_smoke_end_to_end0/periods.parquet",
+    "sha256": "06a4e3666ffab2e1d5adcbd02293abe37e98f380404d780d73067e7e560ef063",
     "n_rows": 324,
     "params": {
       "first_date": "2019-11-01",
@@ -486,7 +487,7 @@
     }
   },
   "backtest/run0/periods": {
-    "updated_utc": "2026-10-31T18:18:48+00:00",
+    "updated_utc": "2026-10-31T20:42:14+00:00",
     "versions": {
       "python": "3.13.18",
       "numpy": "2.5.3",
@@ -496,14 +497,37 @@
       "yfinance": "1.7.0",
       "requests": "2.34.2"
     },
-    "path": "/tmp/pytest-of-root/pytest-23/run0/periods.parquet",
-    "sha256": "d0ec7ae533d78bbd4578942dd96ffb6ccf117a0986e3190212356a3ffd097ed4",
+    "path": "/tmp/pytest-of-root/pytest-24/run0/periods.parquet",
+    "sha256": "82016dfd956ca183c67a84fbddb00937fce613d8b22ff70f44b560fc4fd4f30f",
     "n_rows": 1080,
     "params": {
       "first_date": "2019-11-01",
       "last_date": "2020-11-02",
       "n_dates": 13,
       "n_series": 112,
+      "transaction_cost": 0.001,
+      "execution_lag": 1
+    }
+  },
+  "backtest/tmpd_v2b0i3/periods": {
+    "updated_utc": "2026-10-31T18:50:30+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.0",
+      "yfinance": "1.7.0",
+      "requests": "2.34.2"
+    },
+    "path": "/tmp/tmpd_v2b0i3/periods.parquet",
+    "sha256": "d2c57fe8669c95d204dc9b95d5f4f3a86ad1a148ea7e293a50e1690d056316c4",
+    "n_rows": 12351,
+    "params": {
+      "first_date": "2008-01-02",
+      "last_date": "2009-12-01",
+      "n_dates": 24,
+      "n_series": 537,
       "transaction_cost": 0.001,
       "execution_lag": 1
     }
