@@ -28,3 +28,13 @@ riskfree:
 
 # Katalog wyników: artifacts/backtest/<run_id>/, run_id = pierwsze znaki SHA-256 konfiguracji i pliku danych.
 run_id_length: 12
+
+# Scenariusze ex ante (pf.sim.scenarios.simulate_adaptive): partie po `batch`, stop gdy
+# max_k SE(ÊS_k)/|ÊS_k| ≤ rel_se dla portfeli kontrolnych (EW w każdym SF i EW między SF) lub N ≥ n_max.
+# Horyzont, α i ziarno: config/models.yaml (rebalance.horizon_days, es_alpha, seed).
+scenarios:
+  batch: 2500
+  n_min: 5000
+  n_max: 50000
+  rel_se: 0.02
+  rel_se_last: 0.01            # ostatnia data (bieżący skład)
