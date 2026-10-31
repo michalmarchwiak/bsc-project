@@ -14,6 +14,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
+from pf.backtest.data import eligible_assets  # noqa: F401 (ponowny eksport)
 from pf.models.margins import MarginFit, fit_margins, residual_panel, simulate_paths
 from pf.models.rvine import RVine, pseudo_observations
 
@@ -27,11 +28,6 @@ class Model:
     vine: RVine
     panel_obs: int
     end_date: pd.Timestamp
-
-
-def eligible_assets(window: pd.DataFrame, min_obs: int) -> list[str]:
-    counts = window.notna().sum()
-    return counts.index[counts >= min_obs].tolist()
 
 
 def estimate(window: pd.DataFrame, models_cfg: dict, min_obs: int, jobs: int | None = None) -> Model:

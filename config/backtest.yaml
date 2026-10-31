@@ -1,0 +1,30 @@
+# Backtest: próby, opóźnienie wykonania, stopa wolna od ryzyka, scenariusze.
+
+# Próba kalibracyjna (wybór parametrów meta) i hold-out (ocena końcowa); daty włącznie.
+calibration: ["2008-01-01", "2020-12-31"]
+holdout: ["2021-01-01", "2026-10-29"]
+
+# Opóźnienie wykonania (w sesjach). 1: decyzja w sesji t na danych ≤ t−1, transakcja na zamknięciu t,
+# okres realizacji (t, t_next]. 0: wykonanie na zamknięciu t−1, okres [t, t_next) (wariant wrażliwości,
+# zachowanie pipeline'u monthly_rebalance).
+execution_lag: 1
+
+# Stopa wolna od ryzyka (pf.data.riskfree): WIBOR 1M, zapasowo stopa referencyjna NBP.
+riskfree:
+  start: "2005-01-01"
+  end: "2026-10-29"
+  day_count: 365                 # ACT/365: r_f(t0, t1) = WIBOR1M(t0) · (t1 − t0)[dni] / 365
+  max_ffill_days: 10             # dłuższa luka w fixingu WIBOR → stopa referencyjna NBP
+  retries: 3
+  wibor:
+    symbol: "plopln1m"           # Stooq: WIBOR 1M (% p.a.)
+    urls: ["https://stooq.pl/q/d/l/", "https://stooq.com/q/d/l/"]
+  nbp:
+    rate_id: "ref"               # stopa referencyjna
+    always_fetch: true           # pobierz także, gdy WIBOR pokrywa całą próbę (kolumna nbp_ref)
+    urls: ["https://static.nbp.pl/dane/stopy/stopy_procentowe_archiwum.xml",
+           "https://www.nbp.pl/xml/stopy_procentowe_archiwum.xml"]
+  path: "artifacts/market/riskfree_pln.parquet"
+
+# Katalog wyników: artifacts/backtest/<run_id>/, run_id = pierwsze znaki SHA-256 konfiguracji i pliku danych.
+run_id_length: 12
