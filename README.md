@@ -30,9 +30,22 @@ python -m pipelines.fit_rvine_full_sample --jobs 4
 # 3. Pomiar kosztu kroku modelowego i prognoza czasu backtestu
 python -m pipelines.scenario_timing --jobs 3
 
-# 4. Historyczne comiesięczne rebalansowanie składu sub-funduszy (wyniki artifacts/rebalance/)
+# 4. Backtest: kalibracja, zamrożenie parametrów i hold-out, konsolidacja (artifacts/backtest/<run_id>/)
+python -m pipelines.backtest --sample calibration --jobs 4
+python -m pipelines.backtest --sample holdout --jobs 4
+python -m pipelines.backtest --consolidate-only
+
+# 5. MC ex post (ES zrealizowanych szeregów) i ranking (raporty w artifacts/reports/, wykresy w figures/backtest/)
+python -m pipelines.expost_mc --jobs 4
+python -m pipelines.ranking
+
+# Historyczne comiesięczne rebalansowanie składu sub-funduszy (wyniki artifacts/rebalance/, dane 2011–2020)
 python -m pipelines.monthly_rebalance --jobs 4
 ```
+
+Profile inwestora (P1 konserwatywny – P5 agresywny): `config/profiles.yaml`; strategie `ce_dep`
+(ekwiwalent pewności CRRA minus kara za zależność w dolnym ogonie), `ce`, `maxret_es`, `min_es`
+dla 7 modeli zależności oraz benchmarki `ew` i `mv_hist` (`docs/backtest.md`).
 
 Moduł opcji: `pf.data.vol_indices`, `pf.data.underlyings`, `pf.data.options_snapshot`
 (odświeżane codziennie przez `.github/workflows/refresh.yml`), `pipelines.calibrate_surface`,

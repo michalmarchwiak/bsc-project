@@ -12,7 +12,9 @@ dostępnymi w dniu rebalansowania (macierz look-through A, x = AᵀW).
 
 1. **Marginesy** (`pf.models.margins`): AR(1)–GJR-GARCH(1,1) z rozkładem skośnym t Hansena,
    estymowane na dziennych log-stopach w PLN (`arch`). Reszty standaryzowane ẑ_t tworzą panel:
-   dni zamknięcia całego rynku (GPW lub USA) są usuwane, pojedyncze braki → ẑ = 0.
+   zaczyna się on od dnia, w którym notowane są wszystkie aktywa okna (okresy przed debiutem ETF-u nie są
+   wypełniane – długie serie ẑ = 0 tworzyłyby wiązania, zaniżały zależność i czyniły macierz sin(πτ̂/2)
+   nieokreśloną), dni zamknięcia całego rynku (GPW lub USA) są usuwane, pojedyncze braki → ẑ = 0.
 2. **Pseudo-obserwacje**: rangi reszt / (n + 1) – estymacja kopuły półparametryczna.
 3. **R-vine** (`pf.models.rvine`, `pf.models.copulas`): struktura algorytmem Dißmanna
    (maksymalne drzewa rozpinające z wagami |τ̂ Kendalla|, warunek bliskości), obcięta na
@@ -48,7 +50,7 @@ Wszystkie modele estymowane są na tych samych pseudo-obserwacjach (wspólne mar
 | `cvine` | C-vine: w drzewie T_k korzeń r_k maksymalizujący Σ_j \|τ̂(r_k, j \| r₁…r_{k−1})\| | jw. |
 | `dvine` | D-vine: porządek z maksymalnej ścieżki Hamiltona na \|τ̂\| (zachłanna + 2-opt) | jw. |
 | `gauss` | kopuła Gaussa, R = corr(Φ⁻¹(U)), naprawa PSD (Higham) | d(d−1)/2 |
-| `student_t` | kopuła t, ρᵢⱼ = sin(πτ̂ᵢⱼ/2) (Higham), ν z profilu wiarygodności na siatce | d(d−1)/2 + 1 |
+| `student_t` | kopuła t, ρᵢⱼ = sin(πτ̂ᵢⱼ/2) (Higham, λ_min ≥ 10⁻⁴), ν z profilu wiarygodności na siatce | d(d−1)/2 + 1 |
 | `indep` | kopuła niezależności | 0 |
 | `empirical` | losowanie wierszy panelu pseudo-obserwacji (bez gęstości) | – |
 
@@ -56,8 +58,10 @@ Ocena (`pf.models.gof`): AIC = 2k − 2ℓ, BIC = k ln n − 2ℓ; test Vuonga z
 Z = [Σ mᵢ − (k₁ − k₂) ln(n)/2] / (√n s_m), mᵢ = log c₁(uᵢ) − log c₂(uᵢ) (R-vine vs pozostałe modele
 z gęstością, na oknie estymacji); log-score poza próbą LS = Σ_t log ĉ(u_t), gdzie
 u_{i,t} = F_skewt((r_{i,t} − μ − φ r_{i,t−1}) / σ_{i,t}) z filtru GARCH naprzód parametrami z okna
-(`MarginFit.pit_forward`) dla sesji do końca następnego okna. Raport na próbie kalibracyjnej:
-`artifacts/reports/dependence_models_full_sample.md`.
+(`MarginFit.pit_forward`) dla sesji do końca następnego okna. Raport na próbie kalibracyjnej
+(aktywa z ≥ 90% sesji próby, aby panel nie zaczynał się dopiero od debiutu najmłodszego ETF-u):
+`artifacts/reports/dependence_models_full_sample.md`; ranking modeli w backteście:
+`artifacts/reports/dependence_models.md`.
 
 ## Uruchomienie
 
@@ -89,7 +93,8 @@ Parametry: `config/models.yaml`.
   ograniczone (|ρ| ≤ 0,9999, θ_Clayton ≤ 50, θ_Gumbel ≤ 30).
 - Przy `estimation: itau` parametry z odwrócenia τ nie są estymatorami MNW (wyjątek: ν kopuły t);
   AIC liczony jest w tych punktach. Sekwencyjna MNW (`mle`) nie jest MNW łączną całego vine'a.
-- Wyniki `artifacts/rebalance/` policzono wersją z `itau` i czterema rodzinami (bez Franka).
+- Wyniki `artifacts/rebalance/` policzono wersją z `itau`, czterema rodzinami (bez Franka) i panelem
+  wypełniającym ẑ = 0 także okresy przed debiutem (dane 2011–2020).
 - Innowacje kopuły są iid w czasie (zależność stała w oknie estymacji); zmienność warunkowa
   pochodzi wyłącznie z marginesów GARCH.
 - Oczekiwane stopy zwrotu wynikają ze stałych AR(1) estymowanych w oknie – są obarczone

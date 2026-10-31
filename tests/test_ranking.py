@@ -29,6 +29,11 @@ def test_mcs_excludes_bad_models():
     L = pd.DataFrame(rng.standard_normal((200, 4)) + np.array([0, 0.05, 1.0, 1.5]), columns=list("abcd"))
     m = mcs(L, 0.10, 1000, seed=3)
     assert m.loc["a", "in_mcs"] and not m.loc["c", "in_mcs"] and not m.loc["d", "in_mcs"]
+    L["e"] = L["a"]                                     # duplikat – ten sam wynik, bez dzielenia przez 0
+    m2 = mcs(L, 0.10, 500, seed=3)
+    assert m2.loc["e", "in_mcs"] == m2.loc["a", "in_mcs"] and m2.loc["e", "mcs_duplicate_of"] == "a"
+    one = mcs(pd.DataFrame({"x": np.ones(10), "y": np.ones(10)}), 0.1, 100)
+    assert one["in_mcs"].all()
 
 
 def test_crra_loss_orders_like_ce():

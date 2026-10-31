@@ -34,12 +34,28 @@ def crra_loss(r, rf, gamma: float) -> np.ndarray:
 
 
 def mcs(losses: pd.DataFrame, size: float, reps: int, seed: int = 0, block: int | None = None) -> pd.DataFrame:
+    """MCS na kolumnach ``losses``; identyczne szeregi strat (zerowa wariancja różnic) liczone raz."""
     from arch.bootstrap import MCS
 
-    m = MCS(losses, size=size, reps=reps, block_size=block, method="R", bootstrap="stationary", seed=seed)
-    m.compute()
-    pv = m.pvalues.iloc[:, 0]
-    return pd.DataFrame({"mcs_pvalue": pv, "in_mcs": pv.index.isin(m.included)}, index=pv.index)
+    rep: dict[str, str] = {}
+    uniq: list[str] = []
+    for c in losses.columns:
+        same = [u for u in uniq if np.allclose(losses[c].to_numpy(), losses[u].to_numpy(), rtol=0, atol=1e-12)]
+        rep[c] = same[0] if same else c
+        if not same:
+            uniq.append(c)
+    if len(uniq) == 1:
+        pv = pd.Series(1.0, index=uniq)
+        included = set(uniq)
+    else:
+        m = MCS(losses[uniq], size=size, reps=reps, block_size=block, method="R", bootstrap="stationary", seed=seed)
+        m.compute()
+        pv = m.pvalues.iloc[:, 0]
+        included = set(m.included)
+    return pd.DataFrame({"mcs_pvalue": [float(pv[rep[c]]) for c in losses.columns],
+                         "in_mcs": [rep[c] in included for c in losses.columns],
+                         "mcs_duplicate_of": [rep[c] if rep[c] != c else "" for c in losses.columns]},
+                        index=losses.columns)
 
 
 # --------------------------------------------------------------------------- test Ledoita–Wolfa
@@ -67,7 +83,12 @@ def sharpe_diff_test(xi: np.ndarray, xn: np.ndarray, block: int = 3, reps: int =
     Y = np.column_stack([xi, xn, xi * xi, xn * xn])
     v = Y.mean(axis=0)
     d, g = _delta_and_grad(v)
-    se = np.sqrt(g @ _block_psi(Y, block) @ g / T)
+    q = float(g @ _block_psi(Y, block) @ g / T)
+    if not np.isfinite(q) or q <= 1e-24 or np.allclose(xi, xn, rtol=0, atol=1e-14):
+        # szeregi (prawie) identyczne – brak różnicy do testowania
+        return {"sr_diff_m": float(d), "sr_diff_ann": float(d * np.sqrt(12)), "sr_diff_se_m": 0.0,
+                "p_sharpe_vs_ew": 1.0}
+    se = np.sqrt(q)
     rng = np.random.default_rng(seed)
     l = int(np.ceil(T / block))
     stat0 = abs(d) / se
@@ -77,8 +98,10 @@ def sharpe_diff_test(xi: np.ndarray, xn: np.ndarray, block: int = 3, reps: int =
         idx = (starts[:, None] + np.arange(block)[None, :]).ravel() % T
         Yb = Y[idx[:T]]
         db, gb = _delta_and_grad(Yb.mean(axis=0))
-        seb = np.sqrt(gb @ _block_psi(Yb, block) @ gb / T)
-        count += abs(db - d) / seb >= stat0
+        qb = float(gb @ _block_psi(Yb, block) @ gb / T)
+        if not np.isfinite(qb) or qb <= 0:
+            continue
+        count += abs(db - d) / np.sqrt(qb) >= stat0
     return {"sr_diff_m": float(d), "sr_diff_ann": float(d * np.sqrt(12)), "sr_diff_se_m": float(se),
             "p_sharpe_vs_ew": float((count + 1) / (reps + 1))}
 
