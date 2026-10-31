@@ -7,6 +7,12 @@ Estymacja na stopach ×``scale`` (stabilność numeryczna) na dniach sesyjnych d
 Do estymacji kopuły służą standaryzowane reszty ẑ_t (pseudo-obserwacje z rang – podejście
 półparametryczne), do symulacji – kwantyle dopasowanego rozkładu skew-t.
 
+Prognoza poza próbą (``MarginFit.pit_forward``): dla nowych sesji t = T+1, T+2, … filtr GARCH
+z parametrami z okna, start ze stanu (r_T, ε_T, σ_T²):
+    σ_t² = ω + (α + γ·1[ε_{t−1} < 0]) ε_{t−1}² + β σ_{t−1}²,   ε_t = r_t − μ − φ r_{t−1},
+    u_t = F_skewt(ε_t / σ_t; η, λ)  (PIT, przy poprawnym modelu u_t ~ U(0, 1) iid).
+Sesje bez notowania danego aktywa (NaN) są pomijane: u_t = NaN, stan filtra bez zmian.
+
 Panel reszt łączy GPW i giełdy USA: dni, w których cały rynek był zamknięty (święta), są
 usuwane, a pojedyncze braki (dni bez obrotu danego instrumentu) wypełniane są ẑ = 0.
 Zamknięcie GPW (17:00) i NYSE (22:00 czasu polskiego) nie są synchroniczne, co zaniża
@@ -48,6 +54,30 @@ class MarginFit:
     def next_sigma2(self) -> float:
         lev = self.gamma if self.last_eps < 0 else 0.0
         return self.omega + (self.alpha + lev) * self.last_eps ** 2 + self.beta * self.last_sigma2
+
+    def standardized_forward(self, r_new) -> np.ndarray:
+        """ε_t / σ_t dla nowych sesji (filtr GARCH naprzód od stanu na koniec okna; NaN – brak sesji)."""
+        y = self.scale * np.asarray(r_new, dtype=float)
+        z = np.full(len(y), np.nan)
+        r_prev, eps_prev, s2_prev = self.last_r, self.last_eps, self.last_sigma2
+        for t, yt in enumerate(y):
+            if not np.isfinite(yt):
+                continue
+            s2 = self.omega + (self.alpha + (self.gamma if eps_prev < 0 else 0.0)) * eps_prev ** 2 \
+                + self.beta * s2_prev
+            eps = yt - self.mu - self.phi * r_prev
+            z[t] = eps / np.sqrt(s2)
+            r_prev, eps_prev, s2_prev = yt, eps, s2
+        return z
+
+    def pit_forward(self, r_new) -> np.ndarray:
+        """u_t = F_skewt((r_t − μ − φ r_{t−1}) / σ_t) dla sesji po oknie estymacji (r_new w jednostkach pierwotnych)."""
+        z = self.standardized_forward(r_new)
+        u = np.full(len(z), np.nan)
+        ok = np.isfinite(z)
+        if ok.any():
+            u[ok] = skewt_cdf(z[ok], self.eta, self.lam)
+        return u
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -112,11 +142,16 @@ def skewt_ppf(u: np.ndarray, eta: float, lam: float) -> np.ndarray:
     return SkewStudent().ppf(np.asarray(u, dtype=float), np.array([eta, lam]))
 
 
-def simulate_paths(fits: list[MarginFit], U: np.ndarray) -> np.ndarray:
-    """Skumulowane log-stopy w horyzoncie H dla scenariuszy z kopuły.
+def skewt_cdf(z: np.ndarray, eta: float, lam: float) -> np.ndarray:
+    from arch.univariate import SkewStudent
 
-    ``U`` – tablica (S, H, d) wartości kopuły dla kolejnych dni; zwraca (S, d) sumy log-stóp
-    (w jednostkach pierwotnych, tj. /scale), startując ze stanu GARCH na koniec próby.
+    return SkewStudent().cdf(np.asarray(z, dtype=float), np.array([eta, lam]))
+
+
+def simulate_daily(fits: list[MarginFit], U: np.ndarray) -> np.ndarray:
+    """Dzienne log-stopy (S, H, d) w jednostkach pierwotnych dla wartości kopuły ``U`` (S, H, d).
+
+    Innowacje z_h = F_skewt⁻¹(U_h), rekursja AR(1)–GJR-GARCH(1,1) startująca ze stanu na koniec próby.
     """
     S, H, d = U.shape
     assert d == len(fits)
@@ -127,11 +162,22 @@ def simulate_paths(fits: list[MarginFit], U: np.ndarray) -> np.ndarray:
         Z[:, :, j] = skewt_ppf(U[:, :, j].ravel(), f.eta, f.lam).reshape(S, H)
     sigma2 = np.tile(np.array([f.next_sigma2() for f in fits]), (S, 1))
     r_prev = np.tile(par["last_r"], (S, 1))
-    total = np.zeros((S, d))
+    out = np.empty((S, H, d))
     for h in range(H):
         eps = np.sqrt(sigma2) * Z[:, h, :]
         r = par["mu"] + par["phi"] * r_prev + eps
-        total += r
+        out[:, h, :] = r
         sigma2 = par["omega"] + (par["alpha"] + par["gamma"] * (eps < 0)) * eps ** 2 + par["beta"] * sigma2
         r_prev = r
-    return total / par["scale"]
+    return out / par["scale"]
+
+
+def simulate_paths(fits: list[MarginFit], U: np.ndarray, skip: int = 0) -> np.ndarray:
+    """Skumulowane log-stopy w horyzoncie dla scenariuszy z kopuły.
+
+    ``U`` – tablica (S, H, d) wartości kopuły dla kolejnych dni; zwraca (S, d) sumy log-stóp z dni
+    h = skip, …, H − 1 (w jednostkach pierwotnych, tj. /scale), startując ze stanu GARCH na koniec próby.
+    ``skip`` = opóźnienie wykonania: dni między końcem okna a otwarciem pozycji nie wchodzą do sumy,
+    ale przesuwają stan GARCH.
+    """
+    return simulate_daily(fits, U)[:, skip:, :].sum(axis=1)

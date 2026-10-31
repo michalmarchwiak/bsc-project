@@ -9,13 +9,25 @@ margins:
   dist: "skewt"         # skośny t Hansena
   scale: 100.0          # estymacja na stopach ×100 (stabilność numeryczna)
 
-rvine:
+rvine:                              # wspólne dla rvine, cvine, dvine
   truncation: 3                     # liczba pięter (drzew) z kopułami; wyższe = niezależność
-  families: [gauss, t, clayton, gumbel]
+  families: [gauss, t, clayton, gumbel, frank]
   rotations: true                   # obroty 90/180/270 dla Claytona i Gumbela
   criterion: aic                    # wybór rodziny: aic | bic
+  estimation: mle                   # itau (odwrócenie τ) | mle (sekwencyjna MNW startująca z itau)
   indep_test_level: 0.05            # test niezależności (τ Kendalla); null = wyłączony
   t_df_bounds: [2.05, 30.0]
+
+dependence:                         # modele zależności (pf.models.dependence)
+  models: [rvine, cvine, dvine, gauss, student_t, indep, empirical]
+  reference: rvine                  # model odniesienia w teście Vuonga
+  vuong_level: 0.05
+  psd_eig_min: 1.0e-6               # min. wartość własna R po naprawie Highama
+  higham_tol: 1.0e-9
+  higham_max_iter: 500
+  student_t:
+    df_grid: [2.5, 3, 3.5, 4, 5, 6, 7, 8, 10, 12, 15, 20, 25, 30, 40, 50]   # profil wiarygodności ν
+    refine: true                    # doprecyzowanie ν między sąsiednimi punktami siatki
 
 rebalance:
   window_days: 1260                 # okno estymacji (≈ 5 lat sesyjnych)

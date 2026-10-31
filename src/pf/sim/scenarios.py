@@ -42,7 +42,8 @@ def estimate(window: pd.DataFrame, models_cfg: dict, min_obs: int, jobs: int | N
     U = pseudo_observations(panel.to_numpy())
     vine = RVine.fit(U, assets, truncation=vcfg["truncation"], families=tuple(vcfg["families"]),
                      rotations=vcfg["rotations"], criterion=vcfg["criterion"],
-                     indep_level=vcfg["indep_test_level"], t_df_bounds=tuple(vcfg["t_df_bounds"]))
+                     indep_level=vcfg["indep_test_level"], t_df_bounds=tuple(vcfg["t_df_bounds"]),
+                     estimation=vcfg.get("estimation", "itau"))
     return Model(assets, fits, vine, len(panel), window.index.max())
 
 

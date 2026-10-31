@@ -1,8 +1,8 @@
 {
   "models/rvine_full_sample": {
-    "updated_utc": "2026-10-30T11:37:59+00:00",
+    "updated_utc": "2026-10-31T16:59:20+00:00",
     "versions": {
-      "python": "3.13.17",
+      "python": "3.13.18",
       "numpy": "2.5.3",
       "pandas": "3.0.5",
       "scipy": "1.18.1",
@@ -11,21 +11,27 @@
       "requests": "2.34.2"
     },
     "path": "models/rvine_full_sample.json.gz",
-    "sha256": "4bca8d3d4bfc729404e835b39a65a1e938bea0b2f64349ba69d301062e4271a9",
+    "sha256": "27f78a87f100994a746881bb4c8e246b41d9aaa790ef49b13973896d5e02d938",
     "params": {
       "returns": "data/processed/log_returns_pln.csv",
       "start": "2011-01-04",
       "end": "2020-12-31",
+      "calibration": [
+        "2008-01-01",
+        "2020-12-31"
+      ],
       "rvine": {
         "truncation": 3,
         "families": [
           "gauss",
           "t",
           "clayton",
-          "gumbel"
+          "gumbel",
+          "frank"
         ],
         "rotations": true,
         "criterion": "aic",
+        "estimation": "mle",
         "indep_test_level": 0.05,
         "t_df_bounds": [
           2.05,
@@ -38,9 +44,9 @@
         "dist": "skewt",
         "scale": 100.0
       },
-      "loglik": 160166.45352134056,
-      "aic": -319538.9070426811,
-      "panel_obs": 2427
+      "panel_obs": 2427,
+      "loglik": 160382.11740155853,
+      "aic": -320018.23480311705
     }
   },
   "rebalance/composition": {
@@ -311,6 +317,101 @@
     "params": {
       "source": "yfinance",
       "note": "dane nieoficjalne, użytek osobisty"
+    }
+  },
+  "reports/dependence_models_full_sample": {
+    "updated_utc": "2026-10-31T16:59:20+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.0",
+      "yfinance": "1.7.0",
+      "requests": "2.34.2"
+    },
+    "path": "reports/dependence_models_full_sample.csv",
+    "sha256": "31ab3a44e9d643ed2eb7bc7071bb563423de17c64c2c30eafb54eeb8b3b27dcd",
+    "n_rows": 7,
+    "params": {
+      "returns": "data/processed/log_returns_pln.csv",
+      "start": "2011-01-04",
+      "end": "2020-12-31",
+      "calibration": [
+        "2008-01-01",
+        "2020-12-31"
+      ],
+      "rvine": {
+        "truncation": 3,
+        "families": [
+          "gauss",
+          "t",
+          "clayton",
+          "gumbel",
+          "frank"
+        ],
+        "rotations": true,
+        "criterion": "aic",
+        "estimation": "mle",
+        "indep_test_level": 0.05,
+        "t_df_bounds": [
+          2.05,
+          30.0
+        ]
+      },
+      "margins": {
+        "mean": "AR",
+        "vol": "GJR-GARCH",
+        "dist": "skewt",
+        "scale": 100.0
+      },
+      "panel_obs": 2427,
+      "dependence": {
+        "models": [
+          "rvine",
+          "cvine",
+          "dvine",
+          "gauss",
+          "student_t",
+          "indep",
+          "empirical"
+        ],
+        "reference": "rvine",
+        "vuong_level": 0.05,
+        "psd_eig_min": 1e-06,
+        "higham_tol": 1e-09,
+        "higham_max_iter": 500,
+        "student_t": {
+          "df_grid": [
+            2.5,
+            3,
+            3.5,
+            4,
+            5,
+            6,
+            7,
+            8,
+            10,
+            12,
+            15,
+            20,
+            25,
+            30,
+            40,
+            50
+          ],
+          "refine": true
+        }
+      },
+      "aic": {
+        "rvine": -320018.23480311705,
+        "cvine": -206740.06528529996,
+        "dvine": -304325.2630947095,
+        "gauss": -314155.8744464419,
+        "student_t": -314483.7762285255,
+        "indep": 0.0,
+        "empirical": NaN
+      }
     }
   }
 }
