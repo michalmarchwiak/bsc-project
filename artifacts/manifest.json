@@ -413,5 +413,53 @@
         "empirical": NaN
       }
     }
+  },
+  "market/riskfree_pln": {
+    "updated_utc": "2026-10-31T17:44:11+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.0",
+      "yfinance": "1.7.0",
+      "requests": "2.34.2"
+    },
+    "path": "market/riskfree_pln.parquet",
+    "sha256": "d9c29a5a128fdf6bdf070d2be5b4b4c9b9637c61a137f822fde84a7d6cd67699",
+    "n_rows": 5694,
+    "params": {
+      "symbol": "plopln1m",
+      "day_count": 365,
+      "eurostat_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/irt_st_m",
+      "nbp_url": "https://static.nbp.pl/dane/stopy/stopy_procentowe_archiwum.xml",
+      "start": "2005-01-03",
+      "end": "2026-10-29",
+      "n_days": 5694,
+      "wibor_first": null,
+      "wibor_last": null,
+      "n_monthly": 5673,
+      "monthly_ranges": [
+        [
+          "2005-01-03",
+          "2026-09-30"
+        ]
+      ],
+      "n_filled_nbp": 21,
+      "filled_ranges": [
+        [
+          "2026-10-01",
+          "2026-10-29"
+        ]
+      ],
+      "n_missing": 0,
+      "errors": {
+        "wibor": "WIBOR niedostępny: https://stooq.pl/q/d/l/: Stooq plopln1m: nieoczekiwana odpowiedź ('<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"no'); https://stooq.com/q/d/l/: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))"
+      },
+      "source_counts": {
+        "wibor1m_monthly": 5673,
+        "nbp_ref": 21
+      }
+    }
   }
 }

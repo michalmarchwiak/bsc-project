@@ -60,6 +60,16 @@ def get_text(url: str, params: dict | None = None, retries: int = 4, backoff: fl
     return retry(call, retries, backoff, what=url, exceptions=(requests.RequestException,))
 
 
+def get_bytes(url: str, params: dict | None = None, retries: int = 4, backoff: float = 2.0,
+              timeout: float = 30.0) -> bytes:
+    def call() -> bytes:
+        resp = requests.get(url, params=params, timeout=timeout, headers={"User-Agent": USER_AGENT})
+        resp.raise_for_status()
+        return resp.content
+
+    return retry(call, retries, backoff, what=url, exceptions=(requests.RequestException,))
+
+
 def get_json(url: str, params: dict | None = None, retries: int = 4, backoff: float = 2.0,
              timeout: float = 60.0) -> dict:
     def call() -> dict:

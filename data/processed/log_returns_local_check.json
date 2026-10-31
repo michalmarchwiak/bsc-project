@@ -1,0 +1,12 @@
+{
+  "ok": false,
+  "empty_columns": [],
+  "absent": [
+    "AVB"
+  ],
+  "first_date": "2005-01-04",
+  "last_date": "2026-10-29",
+  "covers_range": true,
+  "n_days": 5633,
+  "n_columns": 79
+}

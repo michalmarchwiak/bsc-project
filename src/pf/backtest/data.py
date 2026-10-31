@@ -2,6 +2,8 @@
 
 Daty rebalansowania t – pierwsze sesje miesięcy, przed którymi jest co najmniej ``min_obs`` sesji
 i w których każdy sub-fundusz ma aktywo z ≥ ``min_obs`` obserwacjami w oknie (``covers_all_subfunds``).
+Przy ``require_all_subfunds: false`` (backtest) wystarczy ``min_subfunds`` sub-funduszy z takim aktywem;
+sub-fundusze bez notowań w oknie (np. high yield przed 2010) mają wagę 0 do czasu dostępności danych.
 
 Opóźnienie wykonania L (``execution_lag``):
     L = 1: decyzja w sesji t na danych ≤ t−1, transakcja na zamknięciu t, okres realizacji (t, t_next];
@@ -52,10 +54,20 @@ def covers_all_subfunds(returns: pd.DataFrame, t: pd.Timestamp, rcfg: dict, subf
     return all(assets & set(spec["tickers"]) for spec in subfunds.values())
 
 
-def eligible_dates(returns: pd.DataFrame, rcfg: dict, subfunds: dict) -> pd.DatetimeIndex:
-    """Daty rebalansowania spełniające ``min_obs`` i ``covers_all_subfunds``."""
+def covered_subfunds(returns: pd.DataFrame, t: pd.Timestamp, rcfg: dict, subfunds: dict) -> list[str]:
+    """Sub-fundusze z co najmniej jednym aktywem z ``min_obs`` obserwacjami w oknie przed t."""
+    assets = set(eligible_assets(estimation_window(returns, t, rcfg["window_days"]), rcfg["min_obs"]))
+    return [sf for sf, spec in subfunds.items() if assets & set(spec["tickers"])]
+
+
+def eligible_dates(returns: pd.DataFrame, rcfg: dict, subfunds: dict, require_all: bool = True,
+                   min_subfunds: int = 1) -> pd.DatetimeIndex:
+    """Daty rebalansowania spełniające ``min_obs`` oraz ``covers_all_subfunds`` (``require_all``)
+    albo – przy ``require_all = False`` – pokrycie co najmniej ``min_subfunds`` sub-funduszy."""
     dates = rebalance_dates(returns.index, rcfg["min_obs"])
-    return pd.DatetimeIndex([t for t in dates if covers_all_subfunds(returns, t, rcfg, subfunds)])
+    if require_all:
+        return pd.DatetimeIndex([t for t in dates if covers_all_subfunds(returns, t, rcfg, subfunds)])
+    return pd.DatetimeIndex([t for t in dates if len(covered_subfunds(returns, t, rcfg, subfunds)) >= min_subfunds])
 
 
 def in_range(dates: pd.DatetimeIndex, bounds) -> pd.DatetimeIndex:

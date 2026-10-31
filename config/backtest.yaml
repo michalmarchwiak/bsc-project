@@ -4,6 +4,12 @@
 calibration: ["2008-01-01", "2020-12-31"]
 holdout: ["2021-01-01", "2026-10-29"]
 
+# Pierwsza data rebalansowania: min_obs (config/models.yaml) i pokrycie sub-funduszy. Przy
+# require_all_subfunds: false SF bez aktywa z pełnym oknem (np. high yield: HYG od 04.2007) ma wagę 0
+# do czasu dostępności danych; wymagane jest co najmniej min_subfunds sub-funduszy.
+require_all_subfunds: false
+min_subfunds: 2
+
 # Opóźnienie wykonania (w sesjach). 1: decyzja w sesji t na danych ≤ t−1, transakcja na zamknięciu t,
 # okres realizacji (t, t_next]. 0: wykonanie na zamknięciu t−1, okres [t, t_next) (wariant wrażliwości,
 # zachowanie pipeline'u monthly_rebalance).
@@ -17,13 +23,16 @@ riskfree:
   max_ffill_days: 10             # dłuższa luka w fixingu WIBOR → stopa referencyjna NBP
   retries: 3
   wibor:
-    symbol: "plopln1m"           # Stooq: WIBOR 1M (% p.a.)
+    symbol: "plopln1m"           # Stooq: WIBOR 1M (% p.a.); stooq.pl/.com zrywają połączenia z kontenera sesji
     urls: ["https://stooq.pl/q/d/l/", "https://stooq.com/q/d/l/"]
+    local_csv: "data/raw/stooq/plopln1m.csv"   # lokalna kopia CSV ze Stooq (używana, jeśli istnieje)
+  eurostat:                      # średnia miesięczna WIBOR 1M (PL, 1-month rate), gdy brak fixingów dziennych
+    enabled: true
+    url: "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/irt_st_m"
+    params: {geo: "PL", int_rt: "IRT_M1", format: "JSON", lang: "EN"}
   nbp:
     rate_id: "ref"               # stopa referencyjna
-    always_fetch: true           # pobierz także, gdy WIBOR pokrywa całą próbę (kolumna nbp_ref)
-    urls: ["https://static.nbp.pl/dane/stopy/stopy_procentowe_archiwum.xml",
-           "https://www.nbp.pl/xml/stopy_procentowe_archiwum.xml"]
+    urls: ["https://static.nbp.pl/dane/stopy/stopy_procentowe_archiwum.xml"]
   path: "artifacts/market/riskfree_pln.parquet"
 
 # Katalog wyników: artifacts/backtest/<run_id>/, run_id = pierwsze znaki SHA-256 konfiguracji i pliku danych.
