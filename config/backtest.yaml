@@ -74,3 +74,13 @@ risk_tests:
   level: 0.05
   z2_simulations: 20000
   de_lags: [1, 5]              # Box–Pierce w warunkowym teście Du–Escanciano
+
+# MC ex post (Etap 5, pipelines.expost_mc): N adaptacyjnie wzorem SE(ÊS) z Etapu 2.
+expost_mc:
+  horizon: 21
+  batch: 20000
+  n_min: 20000
+  n_max: 200000
+  rel_se: 0.01
+  main_model: rvine            # strategia główna (wielowymiarowe MC)
+  main_strategy: ce_dep

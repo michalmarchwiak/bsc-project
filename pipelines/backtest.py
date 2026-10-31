@@ -51,8 +51,13 @@ def load_all() -> tuple[dict, dict, dict, dict]:
     return config.load("models"), config.load("backtest"), config.load("profiles"), load_subfunds()
 
 
+# Sekcje post-processingu (nie wpływają na wyniki dat) – poza run_id.
+POSTPROCESS_KEYS = ("risk_tests", "expost_mc", "ranking")
+
+
 def current_run_id(cfg, bcfg, pcfg, subfunds) -> str:
-    return run_id({"models": cfg, "backtest": bcfg, "profiles": pcfg, "subfunds": subfunds},
+    b = {k: v for k, v in bcfg.items() if k not in POSTPROCESS_KEYS}
+    return run_id({"models": cfg, "backtest": b, "profiles": pcfg, "subfunds": subfunds},
                   ROOT / cfg["returns"]["path"], bcfg.get("run_id_length", 12))
 
 
@@ -64,7 +69,7 @@ def all_dates(returns, cfg, bcfg, subfunds) -> pd.DatetimeIndex:
 
 def freeze(run_dir: Path, cfg, bcfg, pcfg, subfunds) -> dict:
     """Zapis (lub weryfikacja) zamrożonych parametrów meta przed hold-out."""
-    meta = {"profiles": pcfg, "backtest": {k: v for k, v in bcfg.items() if k != "riskfree"},
+    meta = {"profiles": pcfg, "backtest": {k: v for k, v in bcfg.items() if k not in ("riskfree",) + POSTPROCESS_KEYS},
             "rvine": cfg["rvine"], "dependence": cfg["dependence"], "margins": cfg["margins"],
             "rebalance": cfg["rebalance"], "subfunds": subfunds}
     digest = config_digest(meta)

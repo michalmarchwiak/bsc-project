@@ -463,7 +463,7 @@
     }
   },
   "backtest/test_backtest_smoke_end_to_end0/periods": {
-    "updated_utc": "2026-10-31T17:56:27+00:00",
+    "updated_utc": "2026-10-31T18:02:19+00:00",
     "versions": {
       "python": "3.13.18",
       "numpy": "2.5.3",
@@ -473,7 +473,7 @@
       "yfinance": "1.7.0",
       "requests": "2.34.2"
     },
-    "path": "/tmp/pytest-of-root/pytest-18/test_backtest_smoke_end_to_end0/periods.parquet",
+    "path": "/tmp/pytest-of-root/pytest-19/test_backtest_smoke_end_to_end0/periods.parquet",
     "sha256": "32c9bf27ed74499c97a9482421d51c955a079042f52e78f56a716f80fcfff357",
     "n_rows": 324,
     "params": {
