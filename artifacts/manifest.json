@@ -531,5 +531,124 @@
       "transaction_cost": 0.001,
       "execution_lag": 1
     }
+  },
+  "backtest/preview_cal/periods": {
+    "updated_utc": "2026-11-01T03:29:33+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.0",
+      "yfinance": "1.7.0",
+      "requests": "2.34.2"
+    },
+    "path": "/tmp/preview_cal/periods.parquet",
+    "sha256": "e0f872cb4f1711d42eedd75be3722bc54461454b489c29aa33c9fdc0d3c70c63",
+    "n_rows": 83235,
+    "params": {
+      "first_date": "2008-01-02",
+      "last_date": "2020-12-01",
+      "n_dates": 156,
+      "n_series": 537,
+      "transaction_cost": 0.001,
+      "execution_lag": 1
+    }
+  },
+  "backtest/4010467a06e7/periods": {
+    "updated_utc": "2026-11-01T08:10:25+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.0",
+      "yfinance": "1.7.0",
+      "requests": "2.34.2"
+    },
+    "path": "backtest/4010467a06e7/periods.parquet",
+    "sha256": "3c743c36d259892b9290a64365a399b161ae5ccaaf0f0eb152aa0c4517c875df",
+    "n_rows": 93846,
+    "params": {
+      "first_date": "2008-01-02",
+      "last_date": "2026-10-01",
+      "n_dates": 226,
+      "n_series": 537,
+      "transaction_cost": 0.001,
+      "execution_lag": 1
+    }
+  },
+  "backtest/4010467a06e7/ranking": {
+    "updated_utc": "2026-11-01T08:11:34+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.0",
+      "yfinance": "1.7.0",
+      "requests": "2.34.2"
+    },
+    "path": "backtest/4010467a06e7/ranking_holdout.parquet",
+    "sha256": "f0ba0f43f86433c3190a7ae8fd28175cae0355c9415fdb36316b9b01d4f75b26",
+    "params": {
+      "ranking": {
+        "mcs_size": 0.1,
+        "mcs_reps": 5000,
+        "sharpe_test": {
+          "block": 3,
+          "reps": 5000,
+          "benchmark": "-|ew|ALL|base"
+        },
+        "test_level": 0.05,
+        "composite_weights": {
+          "ce_ann": 3.0,
+          "sharpe": 1.0,
+          "sortino": 1.0,
+          "calmar": 1.0,
+          "max_dd": 1.0,
+          "omega": 1.0,
+          "starr": 1.0,
+          "turnover": 0.5
+        },
+        "es_expost_method": "fhs",
+        "main_series": {
+          "model": "rvine",
+          "strategy": "ce_dep"
+        }
+      },
+      "figures": [
+        "figures/backtest/wealth_drawdown.png",
+        "figures/backtest/composition_W.png",
+        "figures/backtest/rolling_sharpe.png",
+        "figures/backtest/es_vs_losses.png"
+      ]
+    }
+  },
+  "backtest/4010467a06e7/es_mc": {
+    "updated_utc": "2026-11-01T07:29:36+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.0",
+      "yfinance": "1.7.0",
+      "requests": "2.34.2"
+    },
+    "path": "backtest/4010467a06e7/es_mc.parquet",
+    "sha256": "23dffa37ddeaae2a947d4835553cb589d332fcbc890810a44c23b6d33c2ff14d",
+    "n_rows": 8790,
+    "params": {
+      "expost_mc": {
+        "horizon": 21,
+        "batch": 20000,
+        "n_min": 20000,
+        "n_max": 200000,
+        "rel_se": 0.01,
+        "main_model": "rvine",
+        "main_strategy": "ce_dep"
+      }
+    }
   }
 }

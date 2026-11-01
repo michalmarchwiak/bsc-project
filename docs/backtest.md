@@ -140,7 +140,28 @@ blokowy cykliczny, blok 3 mies.). Ranga złożona – średnia ważona rang (wag
 Ranking modeli zależności: średnie AIC/BIC, wygrane w teście Vuonga, MCS na dziennej stracie −log-score,
 odsetek zaliczonych testów VaR/ES, średnia ranga CE portfeli.
 
-## 9. Uruchomienie
+## 9. Wyniki (przebieg `4010467a06e7`)
+
+226 dat (kalibracja 156, hold-out 70; ocena 156 + 69 miesięcy), 146 szeregów bazowych + 391 wariantów
+wrażliwości, 42 h CPU (4 procesy: ok. 11,5 h). Mediana N = 12 500 scenariuszy (ostatnia data 35–50 tys.).
+Luzowanie limitów c_LT/W_max nie było potrzebne.
+
+Średni zrealizowany CE [% rocznie] po 7 modelach (hold-out; kalibracja w nawiasie):
+
+| profil | ce_dep | ce | maxret_es | min_es | ew | mv_hist |
+|---|---:|---:|---:|---:|---:|---:|
+| P1 | 3,76 (5,32) | 4,32 (4,77) | 2,29 (3,42) | −0,23 (1,58) | 3,52 (3,30) | 1,85 (5,13) |
+| P2 | 5,79 (9,00) | 6,19 (8,54) | 4,15 (7,23) | 0,19 (3,25) | 4,56 (5,25) | 4,39 (7,45) |
+| P3 | 6,87 (11,86) | 7,03 (11,69) | 5,06 (8,88) | 0,81 (4,32) | 5,26 (6,58) | 5,18 (11,13) |
+| P4 | 9,96 (15,83) | 10,93 (16,05) | 6,12 (10,22) | 1,39 (5,11) | 5,96 (7,95) | 8,21 (15,06) |
+| P5 | 15,04 (21,90) | 15,43 (21,54) | 6,84 (12,00) | 1,58 (5,78) | 6,49 (9,00) | 12,11 (17,56) |
+
+Strategie CE dominują pozostałe reguły w obu próbach. Kara za zależność podnosi CE w kalibracji
+(P1–P3, P5), ale nie w hold-out. MCS obejmuje 24–27 z 30 szeregów każdego profilu w hold-out, a test
+Ledoita–Wolfa nie odrzuca równości Sharpe'a z `ew` dla strategii głównej. Przy 69 miesiącach różnice
+między strategiami CE są statystycznie nierozróżnialne. Szczegóły: `artifacts/reports/`.
+
+## 10. Uruchomienie
 
 ```bash
 python -m pipelines.backtest --sample calibration --jobs 4   # daty kalibracji (wznawialne)
@@ -150,7 +171,7 @@ python -m pipelines.expost_mc --jobs 4                        # MC ex post → e
 python -m pipelines.ranking                                   # ranking, raporty, wykresy
 ```
 
-## 10. Ograniczenia
+## 11. Ograniczenia
 
 - **Asynchroniczność.** GPW zamyka się o 17:00, NYSE o 22:00, a fixing NBP jest ok. 11:50. Dzienna
   zależność między rynkami jest więc zaniżona, a przeliczenie na PLN używa kursu z innej chwili niż cena.

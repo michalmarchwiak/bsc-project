@@ -1,0 +1,362 @@
+{
+ "digest": "ed5654073379306b6965c5f602852308729740e21b6f63599a562494a5a96ce5",
+ "frozen_utc": "2026-11-01T03:26:24+00:00",
+ "note": "Parametry meta (γ, κ, limity, q, ε, obcięcie vine'a) zamrożone przed hold-out; wartości wyjściowe z config/profiles.yaml (bez dostrajania na kalibracji).",
+ "params": {
+  "profiles": {
+   "profiles": {
+    "P1": {
+     "name": "konserwatywny",
+     "gamma": 10.0,
+     "kappa": 1.0,
+     "c_sf": 0.2,
+     "c_lt": 0.05,
+     "w_max": 0.4
+    },
+    "P2": {
+     "name": "umiarkowany",
+     "gamma": 7.0,
+     "kappa": 0.6,
+     "c_sf": 0.25,
+     "c_lt": 0.07,
+     "w_max": 0.45
+    },
+    "P3": {
+     "name": "zrównoważony",
+     "gamma": 5.0,
+     "kappa": 0.35,
+     "c_sf": 0.3,
+     "c_lt": 0.1,
+     "w_max": 0.5
+    },
+    "P4": {
+     "name": "dynamiczny",
+     "gamma": 3.0,
+     "kappa": 0.15,
+     "c_sf": 0.4,
+     "c_lt": 0.15,
+     "w_max": 0.6
+    },
+    "P5": {
+     "name": "agresywny",
+     "gamma": 1.5,
+     "kappa": 0.05,
+     "c_sf": 0.5,
+     "c_lt": 0.25,
+     "w_max": 0.75
+    }
+   },
+   "dependence_measure": "lambda_L",
+   "tail_q": 0.05,
+   "optimizer": {
+    "maxiter": 500,
+    "ftol": 1e-12,
+    "min_wealth": 1e-08,
+    "feasibility_tol": 1e-09
+   },
+   "strategies": [
+    "ce_dep",
+    "ce",
+    "maxret_es",
+    "min_es"
+   ],
+   "benchmarks": [
+    "ew",
+    "mv_hist"
+   ]
+  },
+  "backtest": {
+   "calibration": [
+    "2008-01-01",
+    "2020-12-31"
+   ],
+   "holdout": [
+    "2021-01-01",
+    "2026-10-29"
+   ],
+   "require_all_subfunds": false,
+   "min_subfunds": 2,
+   "execution_lag": 1,
+   "run_id_length": 12,
+   "scenarios": {
+    "batch": 2500,
+    "n_min": 5000,
+    "n_max": 50000,
+    "rel_se": 0.02,
+    "rel_se_last": 0.01
+   },
+   "grid": {
+    "models": [
+     "rvine",
+     "cvine",
+     "dvine",
+     "gauss",
+     "student_t",
+     "indep",
+     "empirical"
+    ],
+    "profiles": [
+     "P1",
+     "P2",
+     "P3",
+     "P4",
+     "P5"
+    ],
+    "strategies": [
+     "ce_dep",
+     "ce",
+     "maxret_es",
+     "min_es"
+    ],
+    "benchmarks": [
+     "ew",
+     "mv_hist"
+    ]
+   },
+   "forecast_model": "rvine",
+   "transaction_cost": 0.001,
+   "pit_grid_step": 0.005,
+   "sensitivity": {
+    "enabled": true,
+    "sample": "calibration",
+    "variants": {
+     "lag0": {
+      "execution_lag": 0,
+      "strategies": [
+       "ce_dep",
+       "ce"
+      ],
+      "benchmarks": true
+     },
+     "q10": {
+      "tail_q": 0.1,
+      "strategies": [
+       "ce_dep"
+      ]
+     },
+     "rhoS": {
+      "dependence_measure": "rho_S",
+      "strategies": [
+       "ce_dep"
+      ]
+     }
+    },
+    "kappa_grid": {
+     "values": [
+      0.0,
+      0.05,
+      0.15,
+      0.35,
+      0.6,
+      1.0,
+      2.0
+     ],
+     "strategies": [
+      "ce_dep"
+     ]
+    }
+   }
+  },
+  "rvine": {
+   "truncation": 3,
+   "families": [
+    "gauss",
+    "t",
+    "clayton",
+    "gumbel",
+    "frank"
+   ],
+   "rotations": true,
+   "criterion": "aic",
+   "estimation": "mle",
+   "indep_test_level": 0.05,
+   "t_df_bounds": [
+    2.05,
+    30.0
+   ]
+  },
+  "dependence": {
+   "models": [
+    "rvine",
+    "cvine",
+    "dvine",
+    "gauss",
+    "student_t",
+    "indep",
+    "empirical"
+   ],
+   "reference": "rvine",
+   "vuong_level": 0.05,
+   "psd_eig_min": 0.0001,
+   "full_sample_min_coverage": 0.9,
+   "higham_tol": 1e-09,
+   "higham_max_iter": 500,
+   "student_t": {
+    "df_grid": [
+     2.5,
+     3,
+     3.5,
+     4,
+     5,
+     6,
+     7,
+     8,
+     10,
+     12,
+     15,
+     20,
+     25,
+     30,
+     40,
+     50
+    ],
+    "refine": true
+   }
+  },
+  "margins": {
+   "mean": "AR",
+   "vol": "GJR-GARCH",
+   "dist": "skewt",
+   "scale": 100.0,
+   "sim_eps_cap": 2.0
+  },
+  "rebalance": {
+   "window_days": 1260,
+   "min_obs": 750,
+   "horizon_days": 21,
+   "n_scenarios": 10000,
+   "backtest_scenarios": 2000,
+   "seed": 20110101,
+   "es_alpha": 0.975,
+   "asset_max_weight": 0.3,
+   "transaction_cost": 0.001
+  },
+  "subfunds": {
+   "SF1": {
+    "name": "Akcje polskie",
+    "tickers": [
+     "PKO.WA",
+     "PZU.WA",
+     "KGH.WA",
+     "PKN.WA",
+     "PEO.WA",
+     "LPP.WA",
+     "CDR.WA",
+     "DNP.WA",
+     "PGE.WA",
+     "CPS.WA"
+    ]
+   },
+   "SF2": {
+    "name": "Akcje USA",
+    "tickers": [
+     "AAPL",
+     "MSFT",
+     "NVDA",
+     "AMZN",
+     "GOOGL",
+     "JPM",
+     "JNJ",
+     "XOM",
+     "PG",
+     "WMT"
+    ]
+   },
+   "SF3": {
+    "name": "Akcje rynków rozwiniętych ex-USA",
+    "tickers": [
+     "EFA",
+     "EWJ",
+     "EWU",
+     "EWG",
+     "EWQ",
+     "EWL",
+     "EWC",
+     "EWA",
+     "EWN",
+     "EWS"
+    ]
+   },
+   "SF4": {
+    "name": "Akcje rynków wschodzących",
+    "tickers": [
+     "EEM",
+     "MCHI",
+     "INDA",
+     "EWZ",
+     "EWW",
+     "EWT",
+     "THD",
+     "IDX",
+     "TUR",
+     "EZA"
+    ]
+   },
+   "SF5": {
+    "name": "Obligacje skarbowe USA",
+    "tickers": [
+     "SHY",
+     "IEI",
+     "IEF",
+     "TLT",
+     "GOVT",
+     "VGSH",
+     "VGIT",
+     "VGLT",
+     "SCHO",
+     "SCHR"
+    ]
+   },
+   "SF6": {
+    "name": "Obligacje korporacyjne IG",
+    "tickers": [
+     "LQD",
+     "VCIT",
+     "VCSH",
+     "IGSB",
+     "IGIB",
+     "USIG"
+    ]
+   },
+   "SF7": {
+    "name": "Obligacje high yield",
+    "tickers": [
+     "HYG",
+     "JNK",
+     "ANGL",
+     "FALN"
+    ]
+   },
+   "SF8": {
+    "name": "Złoto i spółki wydobywcze",
+    "tickers": [
+     "GLD",
+     "IAU",
+     "SGOL",
+     "GDX",
+     "GDXJ",
+     "NEM",
+     "AEM",
+     "KGC",
+     "WPM",
+     "FNV"
+    ]
+   },
+   "SF9": {
+    "name": "Nieruchomości (REIT)",
+    "tickers": [
+     "PLD",
+     "AMT",
+     "EQIX",
+     "O",
+     "SPG",
+     "PSA",
+     "WELL",
+     "DLR",
+     "AVB",
+     "EXR"
+    ]
+   }
+  }
+ }
+}
