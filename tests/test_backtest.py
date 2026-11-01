@@ -165,6 +165,10 @@ def test_backtest_smoke_end_to_end(tmp_path):
     assert {"rvine", "gauss", "empirical"} >= set(out["gof"]["model"])
     sf_per = out["periods_sf"]
     assert set(sf_per["subfund"]) == {"SF1", "SF2", "SF3"}
+    tw = pd.read_parquet(tmp_path / "weights_tickers.parquet")
+    sums = tw.groupby(["date", "model", "strategy", "profile"], observed=True)["x"].sum()
+    assert np.allclose(sums, 1.0, atol=1e-6) and np.allclose(tw["x"], tw["w_sf"] * tw["W_sf"], atol=1e-7)
+    assert tw.groupby(["model", "strategy", "profile"], observed=True).ngroups == 2 * 4 * 5 + 1 + 5
     # limity profili w wagach look-through
     W = out["weights_W"]
     assert (W.groupby(["date", "sid"])["weight"].sum() - 1).abs().max() < 1e-9
