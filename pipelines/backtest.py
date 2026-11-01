@@ -131,6 +131,40 @@ def run_dates(dates: pd.DatetimeIndex, dates_all: pd.DatetimeIndex, run_dir: Pat
         raise RuntimeError(f"Nieudane daty ({len(failed)}): {sorted(failed)} – szczegóły w failed_dates.json")
 
 
+def ticker_weights(weights: pd.DataFrame) -> pd.DataFrame:
+    """Wagi tickerów w czasie (wariant bazowy): w_sf – udział w sub-funduszu (poziom 1), W_sf – waga
+    sub-funduszu (poziom 2), x – ekspozycja look-through x_i = W_k·w_{k,i} (suma po tickerach = 1).
+    Wagi docelowe w dniu rebalansowania; między datami portfel jest trzymany (dryf cen)."""
+    keys = ["date", "model", "strategy", "profile"]
+    b = weights[weights["variant"] == "base"]
+    sf = b[b["level"] == "sf"][keys + ["subfund", "ticker", "weight"]].rename(columns={"weight": "w_sf"})
+    W = b[b["level"] == "W"][keys + ["subfund", "weight"]].rename(columns={"weight": "W_sf"})
+    out = sf.merge(W, on=keys + ["subfund"], how="left")
+    out["x"] = out["w_sf"] * out["W_sf"]
+    out = out.sort_values(keys + ["subfund", "ticker"]).reset_index(drop=True)
+    for c in ("model", "strategy", "profile", "subfund", "ticker"):
+        out[c] = out[c].astype("category")
+    for c in ("w_sf", "W_sf", "x"):
+        out[c] = out[c].astype("float32")
+    return out
+
+
+def export_ticker_weights(tw: pd.DataFrame, subfunds: dict, main: dict, out_dir: Path) -> list[Path]:
+    """CSV (data × ticker, ekspozycja look-through x) dla strategii głównej w każdym profilu."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    order = [t for spec in subfunds.values() for t in spec["tickers"]]
+    files = []
+    m = tw[(tw["model"] == main["model"]) & (tw["strategy"] == main["strategy"])]
+    for prof, g in m.groupby("profile", observed=True):
+        piv = g.pivot_table(index="date", columns="ticker", values="x", aggfunc="sum", observed=True).fillna(0.0)
+        piv = piv[[t for t in order if t in piv.columns]]
+        piv.index = pd.DatetimeIndex(piv.index).strftime("%Y-%m-%d")
+        path = out_dir / f"{main['model']}_{main['strategy']}_{prof}.csv"
+        piv.round(6).to_csv(path, index_label="date")
+        files.append(path)
+    return files
+
+
 def consolidate(run_dir: Path, returns: pd.DataFrame, cfg: dict, bcfg: dict, pcfg: dict, subfunds: dict,
                 rf: pd.Series | None = None, calendar: pd.DatetimeIndex | None = None) -> dict:
     """Tabele zbiorcze: stopy zrealizowane, prognozy z PIT, testy VaR/ES, oceny modeli.
@@ -193,6 +227,10 @@ def consolidate(run_dir: Path, returns: pd.DataFrame, cfg: dict, bcfg: dict, pcf
     write_parquet(daily, run_dir / "daily.parquet")
     write_parquet(daily_sf, run_dir / "daily_sf.parquet")
     write_parquet(wx, run_dir / "weights_x.parquet")
+    tw = ticker_weights(weights)
+    write_parquet(tw, run_dir / "weights_tickers.parquet")
+    if run_dir.resolve().is_relative_to(ARTIFACTS_DIR.resolve()):
+        export_ticker_weights(tw, subfunds, bcfg["ranking"]["main_series"], ARTIFACTS_DIR / "reports" / "weights")
     timings = pd.DataFrame([json.loads((run_dir / "dates" / d / "done.json").read_text()) for d in done])
     write_parquet(timings.drop(columns=["timings", "cached", "n_scenarios", "subfunds"]).assign(
         n_subfunds=timings["subfunds"].map(len)), run_dir / "timings.parquet")

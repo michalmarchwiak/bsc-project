@@ -96,6 +96,11 @@ Dla każdej daty: okno 1260 sesji ≤ t−1 → marginesy → 7 modeli → scena
 ex ante (VaR, ES, kwantyle i ogon – najgorsze ⌈(1−α)N⌉ strat, float32). Zapis po dacie
 (`dates/<t>/`, wznawialne), równoległość po datach (`--jobs`, GARCH jobs = 1, BLAS 1 wątek).
 
+Wagi tickerów (poziom 1) i sub-funduszy (poziom 2) są wyznaczane od nowa w każdej dacie rebalansowania
+regułą danej strategii (dla `ce`/`ce_dep` – maksymalizacja CE_γ profilu, z karą κ dla `ce_dep`).
+Wagi w czasie: `artifacts/backtest/<run_id>/weights_tickers.parquet` (wszystkie szeregi bazowe) i
+`artifacts/reports/weights/` (CSV dla strategii głównej, opis w `README.md`).
+
 Realizacja: kupno i trzymanie z dryfem wag look-through x = Σ_k W_k w_k; V_h = Σ_i x_i Π_{j≤h}(1 + r_ij);
 koszt c·Σ_i|x_i − x̃_i| (c = 0,1%; zakup początkowy c), x̃ – wagi po dryfie; stopy dzienne i miesięczne
 brutto/netto, analogicznie dla każdego SF.
