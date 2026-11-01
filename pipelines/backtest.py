@@ -132,11 +132,18 @@ def run_dates(dates: pd.DatetimeIndex, dates_all: pd.DatetimeIndex, run_dir: Pat
 
 
 def consolidate(run_dir: Path, returns: pd.DataFrame, cfg: dict, bcfg: dict, pcfg: dict, subfunds: dict,
-                rf: pd.Series | None = None) -> dict:
-    """Tabele zbiorcze: stopy zrealizowane, prognozy z PIT, testy VaR/ES, oceny modeli."""
+                rf: pd.Series | None = None, calendar: pd.DatetimeIndex | None = None) -> dict:
+    """Tabele zbiorcze: stopy zrealizowane, prognozy z PIT, testy VaR/ES, oceny modeli.
+
+    ``calendar`` – pełny kalendarz dat rebalansowania (koniec okresu realizacji ostatniej policzonej daty
+    wyznacza następna data kalendarza, także jeśli nie została jeszcze policzona).
+    """
     alpha = float(cfg["rebalance"]["es_alpha"])
     done = sorted(p.parent.name for p in (run_dir / "dates").glob("*/done.json"))
     dates = pd.DatetimeIndex(done)
+    if calendar is not None:
+        nxt = calendar[calendar > dates.max()]
+        dates = dates.union(nxt[:1])
     log.info("Konsolidacja %d dat (%s – %s)", len(dates), dates.min().date(), dates.max().date())
     weights = add_sid(collect(run_dir, "weights"))
     flags = add_sid(collect(run_dir, "flags"))
@@ -233,7 +240,7 @@ def main() -> None:
             log.info("Parametry zamrożone (%s, %s)", rec["digest"][:12], rec["frozen_utc"])
         run_dates(dates, dates_all, run_dir, args.jobs, args.force)
     if not args.no_consolidate:
-        consolidate(run_dir, returns, cfg, bcfg, pcfg, subfunds)
+        consolidate(run_dir, returns, cfg, bcfg, pcfg, subfunds, calendar=dates_all)
 
 
 if __name__ == "__main__":
