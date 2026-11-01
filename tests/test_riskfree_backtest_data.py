@@ -71,6 +71,23 @@ def test_combine_fills_tail_with_nbp_and_has_no_gaps():
     assert rep2["n_missing"] == 14
 
 
+def test_combine_monthly_tier_and_bom():
+    nbp = riskfree.parse_nbp_rates_xml("\ufeff" + NBP_ARCHIVE)
+    assert riskfree.parse_nbp_rates_xml(("\ufeff" + NBP_ARCHIVE).encode("utf-8")).equals(nbp)
+    payload = {"dimension": {"time": {"category": {"index": {"2023-10": 0, "2023-11": 1}}}},
+               "value": {"0": 5.71, "1": 5.80}}
+    monthly = riskfree.parse_eurostat_json(payload)
+    assert monthly.index[0] == pd.Timestamp("2023-10-01")
+    wibor = pd.Series([5.80], index=pd.to_datetime(["2023-10-02"]))
+    table, rep = riskfree.combine(wibor, nbp, "2023-10-02", "2023-12-05", max_ffill_days=3, monthly=monthly)
+    assert table.loc["2023-10-05", "source"] == "wibor1m"
+    assert table.loc["2023-10-06", "source"] == "wibor1m_monthly"
+    assert table.loc["2023-10-06", "rate"] == pytest.approx(0.0571)
+    assert table.loc["2023-11-15", "rate"] == pytest.approx(0.0580)
+    assert table.loc["2023-12-01", "source"] == "nbp_ref" and table.loc["2023-12-01", "rate"] == pytest.approx(0.0575)
+    assert rep["n_missing"] == 0 and rep["n_monthly"] > 0 and rep["filled_ranges"] == [["2023-12-01", "2023-12-05"]]
+
+
 def test_holding_sessions_execution_lag():
     idx = pd.bdate_range("2020-01-01", "2020-03-31")
     t, t_next = pd.Timestamp("2020-02-03"), pd.Timestamp("2020-03-02")
@@ -140,8 +157,29 @@ def test_wibor_symbol_available():
 
 
 @pytest.mark.network
+def test_eurostat_wibor_monthly_available():
+    from pf import config
+
+    s, _ = riskfree.fetch_eurostat(config.load("backtest")["riskfree"])
+    assert s.index.min() <= pd.Timestamp("2005-01-01") and 0.0 < s.iloc[-1] < 25.0
+
+
+@pytest.mark.network
 def test_nbp_reference_available():
     from pf import config
 
     s, _ = riskfree.fetch_nbp_reference(config.load("backtest")["riskfree"])
     assert s.index.min() < pd.Timestamp("2005-01-01") and 0.0 <= s.iloc[-1] < 25.0
+
+
+def test_eligible_dates_relaxed_subfund_coverage():
+    idx = pd.bdate_range("2019-01-01", "2020-06-30")
+    r = pd.DataFrame({"A": 0.0, "B": 0.0, "C": np.nan}, index=idx)
+    r.loc[r.index >= "2019-09-02", "C"] = 0.0          # SF3 notowany później
+    sf = {"SF1": {"tickers": ["A"]}, "SF2": {"tickers": ["B"]}, "SF3": {"tickers": ["C"]}}
+    rcfg = {"window_days": 200, "min_obs": 150}
+    strict = bd.eligible_dates(r, rcfg, sf)
+    loose = bd.eligible_dates(r, rcfg, sf, require_all=False, min_subfunds=2)
+    assert loose[0] < strict[0]
+    assert bd.covered_subfunds(r, loose[0], rcfg, sf) == ["SF1", "SF2"]
+    assert bd.covered_subfunds(r, strict[0], rcfg, sf) == ["SF1", "SF2", "SF3"]

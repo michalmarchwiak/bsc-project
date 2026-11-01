@@ -5,7 +5,7 @@ Dla scenariuszy R_s (s = 1, …, S) i strat L_s(W) = −R_sᵀW:
     max  (1/S) Σ_s R_sᵀ W
     p.w. ζ + 1/((1 − α) S) Σ_s u_s ≤ L,
          u_s ≥ −R_sᵀ W − ζ,  u_s ≥ 0,
-         Σ_k W_k = 1,  0 ≤ W_k ≤ w_max.
+         Σ_k W_k = 1,  0 ≤ W_k ≤ w_max,k  (``w_max`` – liczba lub wektor ograniczeń górnych).
 
 W optimum ζ jest VaR_α, a ζ + (1/((1−α)S)) Σ u_s – ES_α portfela. Gdy limit L jest
 nieosiągalny, zwracany jest portfel o minimalnym ES (z flagą ``feasible = False``).
@@ -40,8 +40,9 @@ def empirical_es(losses: np.ndarray, alpha: float) -> float:
     return float(tail / k)
 
 
-def _solve(R: np.ndarray, alpha: float, es_limit: float | None, w_max: float, minimize_es: bool):
+def _solve(R: np.ndarray, alpha: float, es_limit: float | None, w_max, minimize_es: bool):
     S, K = R.shape
+    ub = np.broadcast_to(np.asarray(w_max, dtype=float), (K,))
     n = K + 1 + S                       # [W, ζ, u]
     c = np.zeros(n)
     if minimize_es:
@@ -58,13 +59,13 @@ def _solve(R: np.ndarray, alpha: float, es_limit: float | None, w_max: float, mi
         b.append([es_limit])
     A_ub = sparse.vstack(rows).tocsr()
     A_eq = sparse.csr_matrix(np.concatenate([np.ones(K), np.zeros(1 + S)]))
-    bounds = [(0.0, w_max)] * K + [(None, None)] + [(0.0, None)] * S
+    bounds = [(0.0, float(u)) for u in ub] + [(None, None)] + [(0.0, None)] * S
     return optimize.linprog(c, A_ub=A_ub, b_ub=np.concatenate(b), A_eq=A_eq, b_eq=[1.0],
                             bounds=bounds, method="highs")
 
 
 def max_return_es(R: np.ndarray, alpha: float = 0.975, es_limit: float = 0.08,
-                  w_max: float = 1.0) -> Solution:
+                  w_max=1.0) -> Solution:
     """Portfel maksymalnego oczekiwanego zwrotu przy ES_α(−R W) ≤ ``es_limit``."""
     K = R.shape[1]
     res = _solve(R, alpha, es_limit, w_max, minimize_es=False)
@@ -78,3 +79,15 @@ def max_return_es(R: np.ndarray, alpha: float = 0.975, es_limit: float = 0.08,
     losses = -R @ w
     return Solution(weights=w, expected_return=float(R.mean(axis=0) @ w), es=empirical_es(losses, alpha),
                     var=float(res.x[K]), feasible=feasible, status=res.message)
+
+
+def min_es(R: np.ndarray, alpha: float = 0.975, w_max=1.0) -> Solution:
+    """Portfel minimalnego ES_α(−R W) (LP Rockafellara–Uryaseva) przy 0 ≤ W ≤ w_max, ΣW = 1."""
+    K = R.shape[1]
+    res = _solve(R, alpha, None, w_max, minimize_es=True)
+    if res.status != 0:
+        raise RuntimeError(f"LP nierozwiązywalny: {res.message}")
+    w = np.clip(res.x[:K], 0.0, None)
+    w /= w.sum()
+    return Solution(weights=w, expected_return=float(R.mean(axis=0) @ w), es=empirical_es(-R @ w, alpha),
+                    var=float(res.x[K]), feasible=True, status=res.message)

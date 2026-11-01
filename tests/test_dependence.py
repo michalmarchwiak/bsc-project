@@ -307,3 +307,13 @@ def test_pit_panel_and_log_score(fitted):
     np.testing.assert_allclose(ls, m.logpdf(Uo.to_numpy()))
     with pytest.raises(ValueError):
         oos_log_score(fitted["empirical"], Uo)
+
+
+def test_residual_panel_trims_pre_listing_span():
+    from pf.models.margins import residual_panel
+
+    idx = pd.bdate_range("2024-01-01", periods=6)
+    z = pd.DataFrame({"A": [0.1, 0.2, -0.3, 0.4, np.nan, 0.5], "B": [np.nan, np.nan, 0.3, 0.1, 0.2, -0.1]}, index=idx)
+    p = residual_panel(z)
+    assert p.index[0] == idx[2] and p.loc[idx[4], "A"] == 0.0      # pojedynczy brak → 0, okres przed B – usunięty
+    assert len(residual_panel(z, trim_leading=False)) == 6

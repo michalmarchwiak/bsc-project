@@ -4,6 +4,12 @@
 calibration: ["2008-01-01", "2020-12-31"]
 holdout: ["2021-01-01", "2026-10-29"]
 
+# Pierwsza data rebalansowania: min_obs (config/models.yaml) i pokrycie sub-funduszy. Przy
+# require_all_subfunds: false SF bez aktywa z pełnym oknem (np. high yield: HYG od 04.2007) ma wagę 0
+# do czasu dostępności danych; wymagane jest co najmniej min_subfunds sub-funduszy.
+require_all_subfunds: false
+min_subfunds: 2
+
 # Opóźnienie wykonania (w sesjach). 1: decyzja w sesji t na danych ≤ t−1, transakcja na zamknięciu t,
 # okres realizacji (t, t_next]. 0: wykonanie na zamknięciu t−1, okres [t, t_next) (wariant wrażliwości,
 # zachowanie pipeline'u monthly_rebalance).
@@ -17,13 +23,16 @@ riskfree:
   max_ffill_days: 10             # dłuższa luka w fixingu WIBOR → stopa referencyjna NBP
   retries: 3
   wibor:
-    symbol: "plopln1m"           # Stooq: WIBOR 1M (% p.a.)
+    symbol: "plopln1m"           # Stooq: WIBOR 1M (% p.a.); stooq.pl/.com zrywają połączenia z kontenera sesji
     urls: ["https://stooq.pl/q/d/l/", "https://stooq.com/q/d/l/"]
+    local_csv: "data/raw/stooq/plopln1m.csv"   # lokalna kopia CSV ze Stooq (używana, jeśli istnieje)
+  eurostat:                      # średnia miesięczna WIBOR 1M (PL, 1-month rate), gdy brak fixingów dziennych
+    enabled: true
+    url: "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/irt_st_m"
+    params: {geo: "PL", int_rt: "IRT_M1", format: "JSON", lang: "EN"}
   nbp:
     rate_id: "ref"               # stopa referencyjna
-    always_fetch: true           # pobierz także, gdy WIBOR pokrywa całą próbę (kolumna nbp_ref)
-    urls: ["https://static.nbp.pl/dane/stopy/stopy_procentowe_archiwum.xml",
-           "https://www.nbp.pl/xml/stopy_procentowe_archiwum.xml"]
+    urls: ["https://static.nbp.pl/dane/stopy/stopy_procentowe_archiwum.xml"]
   path: "artifacts/market/riskfree_pln.parquet"
 
 # Katalog wyników: artifacts/backtest/<run_id>/, run_id = pierwsze znaki SHA-256 konfiguracji i pliku danych.
@@ -38,3 +47,51 @@ scenarios:
   n_max: 50000
   rel_se: 0.02
   rel_se_last: 0.01            # ostatnia data (bieżący skład)
+
+# Siatka backtestu (ograniczenie: usuń elementy list). Modele z config/models.yaml: dependence.models.
+grid:
+  models: [rvine, cvine, dvine, gauss, student_t, indep, empirical]
+  profiles: [P1, P2, P3, P4, P5]
+  strategies: [ce_dep, ce, maxret_es, min_es]
+  benchmarks: [ew, mv_hist]
+forecast_model: rvine          # scenariusze dla prognoz ex ante benchmarków (ew, mv_hist)
+transaction_cost: 0.001        # koszt c·Σ|x − x̃| (zakup początkowy: c)
+pit_grid_step: 0.005           # siatka kwantyli rozkładu strat (PIT poniżej VaR)
+
+# Analiza wrażliwości (tylko daty próby kalibracyjnej), liczona w tym samym przebiegu na tych samych
+# scenariuszach (lag 0 – te same ścieżki dzienne przesunięte o jeden dzień).
+sensitivity:
+  enabled: true
+  sample: calibration
+  variants:
+    lag0: {execution_lag: 0, strategies: [ce_dep, ce], benchmarks: true}
+    q10: {tail_q: 0.10, strategies: [ce_dep]}
+    rhoS: {dependence_measure: rho_S, strategies: [ce_dep]}
+  kappa_grid: {values: [0.0, 0.05, 0.15, 0.35, 0.6, 1.0, 2.0], strategies: [ce_dep]}
+
+# Testy VaR/ES (pf.backtest.risk_tests)
+risk_tests:
+  level: 0.05
+  z2_simulations: 20000
+  de_lags: [1, 5]              # Box–Pierce w warunkowym teście Du–Escanciano
+
+# MC ex post (Etap 5, pipelines.expost_mc): N adaptacyjnie wzorem SE(ÊS) z Etapu 2.
+expost_mc:
+  horizon: 21
+  batch: 20000
+  n_min: 20000
+  n_max: 200000
+  rel_se: 0.01
+  main_model: rvine            # strategia główna (wielowymiarowe MC)
+  main_strategy: ce_dep
+
+# Ranking (Etap 6, pipelines.ranking): MCS, test Sharpe'a vs ew, ranga złożona (średnia ważona rang).
+ranking:
+  mcs_size: 0.10
+  mcs_reps: 5000
+  sharpe_test: {block: 3, reps: 5000, benchmark: "-|ew|ALL|base"}
+  test_level: 0.05
+  composite_weights: {ce_ann: 3.0, sharpe: 1.0, sortino: 1.0, calmar: 1.0, max_dd: 1.0, omega: 1.0, starr: 1.0,
+                      turnover: 0.5}
+  es_expost_method: fhs        # ES ex post do STARR (Etap 5): fhs | stationary_bootstrap
+  main_series: {model: rvine, strategy: ce_dep}

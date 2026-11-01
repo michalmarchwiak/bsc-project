@@ -13,7 +13,8 @@ z parametrami z okna, start ze stanu (r_T, ε_T, σ_T²):
     u_t = F_skewt(ε_t / σ_t; η, λ)  (PIT, przy poprawnym modelu u_t ~ U(0, 1) iid).
 Sesje bez notowania danego aktywa (NaN) są pomijane: u_t = NaN, stan filtra bez zmian.
 
-Panel reszt łączy GPW i giełdy USA: dni, w których cały rynek był zamknięty (święta), są
+Panel reszt łączy GPW i giełdy USA: zaczyna się od dnia, w którym notowane są już wszystkie aktywa
+(okresy przed debiutem nie są wypełniane), dni, w których cały rynek był zamknięty (święta), są
 usuwane, a pojedyncze braki (dni bez obrotu danego instrumentu) wypełniane są ẑ = 0.
 Zamknięcie GPW (17:00) i NYSE (22:00 czasu polskiego) nie są synchroniczne, co zaniża
 dzienną zależność między rynkami.
@@ -50,6 +51,7 @@ class MarginFit:
     loglik: float
     n_obs: int
     converged: bool
+    eps_absmax: float = float("nan")   # max_t |ε̂_t| w oknie (×scale) – winsoryzacja innowacji w symulacji
 
     def next_sigma2(self) -> float:
         lev = self.gamma if self.last_eps < 0 else 0.0
@@ -101,6 +103,7 @@ def fit_margin(r: pd.Series, scale: float = 100.0) -> tuple[MarginFit, pd.Series
         eta=float(p["eta"]), lam=float(p["lambda"]), scale=scale, last_r=float(y.iloc[-1]),
         last_eps=float(res.resid.iloc[-1]), last_sigma2=float(res.conditional_volatility.iloc[-1] ** 2),
         loglik=float(res.loglikelihood), n_obs=int(len(y)), converged=bool(res.convergence_flag == 0),
+        eps_absmax=float(np.nanmax(np.abs(res.resid))),
     )
     return fit, z.rename(r.name)
 
@@ -127,8 +130,18 @@ def fit_margins(returns: pd.DataFrame, scale: float = 100.0, jobs: int | None = 
     return fits, z
 
 
-def residual_panel(z: pd.DataFrame, market_of=lambda t: "PL" if t.endswith(".WA") else "US") -> pd.DataFrame:
-    """Usuwa dni zamknięcia całego rynku, pozostałe braki zastępuje ẑ = 0."""
+def residual_panel(z: pd.DataFrame, market_of=lambda t: "PL" if t.endswith(".WA") else "US",
+                   trim_leading: bool = True) -> pd.DataFrame:
+    """Usuwa dni zamknięcia całego rynku, pozostałe braki zastępuje ẑ = 0.
+
+    ``trim_leading``: panel zaczyna się w dniu, od którego notowane są wszystkie aktywa (max pierwszych
+    obserwacji). Okresy przed debiutem instrumentu nie są „pojedynczymi brakami” – wypełnienie ich ẑ = 0
+    tworzy długie serie wiązań, zaniża zależność i czyni macierz sin(πτ̂/2) nieokreśloną.
+    """
+    if trim_leading and len(z.columns):
+        first = z.apply(pd.Series.first_valid_index).dropna()
+        if len(first):
+            z = z.loc[z.index >= first.max()]
     markets = pd.Series({c: market_of(c) for c in z.columns})
     open_all = np.ones(len(z), dtype=bool)
     for m in markets.unique():
@@ -148,10 +161,18 @@ def skewt_cdf(z: np.ndarray, eta: float, lam: float) -> np.ndarray:
     return SkewStudent().cdf(np.asarray(z, dtype=float), np.array([eta, lam]))
 
 
-def simulate_daily(fits: list[MarginFit], U: np.ndarray) -> np.ndarray:
+SIM_EPS_CAP = 2.0   # domyślne k w |ε| ≤ k·max_t|ε̂_t| (config/models.yaml: margins.sim_eps_cap)
+
+
+def simulate_daily(fits: list[MarginFit], U: np.ndarray, eps_cap: float | None = SIM_EPS_CAP) -> np.ndarray:
     """Dzienne log-stopy (S, H, d) w jednostkach pierwotnych dla wartości kopuły ``U`` (S, H, d).
 
     Innowacje z_h = F_skewt⁻¹(U_h), rekursja AR(1)–GJR-GARCH(1,1) startująca ze stanu na koniec próby.
+    Winsoryzacja: ε_h = clip(σ_h z_h, ±k·max_t|ε̂_t|) (``eps_cap`` = k; None – bez ograniczenia). Przy rozkładzie
+    skośnym t z η < 4 (nieskończona kurtoza) i silnym efekcie ARCH skrajne kwantyle (u → 1 − 10⁻¹²) uruchamiają
+    eksplozję rekursji σ² w symulacji (np. LPP.WA, okno do 2013-10: η = 2,79, α + γ = 0,33 → miesięczna stopa
+    rzędu 10¹⁹); ograniczenie do k-krotności największej innowacji z 5 lat okna zachowuje grube ogony, ale
+    wyklucza ścieżki bez sensu ekonomicznego.
     """
     S, H, d = U.shape
     assert d == len(fits)
@@ -162,9 +183,14 @@ def simulate_daily(fits: list[MarginFit], U: np.ndarray) -> np.ndarray:
         Z[:, :, j] = skewt_ppf(U[:, :, j].ravel(), f.eta, f.lam).reshape(S, H)
     sigma2 = np.tile(np.array([f.next_sigma2() for f in fits]), (S, 1))
     r_prev = np.tile(par["last_r"], (S, 1))
+    cap = None
+    if eps_cap is not None:
+        cap = np.array([eps_cap * f.eps_absmax if np.isfinite(f.eps_absmax) else np.inf for f in fits])
     out = np.empty((S, H, d))
     for h in range(H):
         eps = np.sqrt(sigma2) * Z[:, h, :]
+        if cap is not None:
+            eps = np.clip(eps, -cap, cap)
         r = par["mu"] + par["phi"] * r_prev + eps
         out[:, h, :] = r
         sigma2 = par["omega"] + (par["alpha"] + par["gamma"] * (eps < 0)) * eps ** 2 + par["beta"] * sigma2
@@ -172,7 +198,8 @@ def simulate_daily(fits: list[MarginFit], U: np.ndarray) -> np.ndarray:
     return out / par["scale"]
 
 
-def simulate_paths(fits: list[MarginFit], U: np.ndarray, skip: int = 0) -> np.ndarray:
+def simulate_paths(fits: list[MarginFit], U: np.ndarray, skip: int = 0, eps_cap: float | None = SIM_EPS_CAP
+                   ) -> np.ndarray:
     """Skumulowane log-stopy w horyzoncie dla scenariuszy z kopuły.
 
     ``U`` – tablica (S, H, d) wartości kopuły dla kolejnych dni; zwraca (S, d) sumy log-stóp z dni
@@ -180,4 +207,4 @@ def simulate_paths(fits: list[MarginFit], U: np.ndarray, skip: int = 0) -> np.nd
     ``skip`` = opóźnienie wykonania: dni między końcem okna a otwarciem pozycji nie wchodzą do sumy,
     ale przesuwają stan GARCH.
     """
-    return simulate_daily(fits, U)[:, skip:, :].sum(axis=1)
+    return simulate_daily(fits, U, eps_cap)[:, skip:, :].sum(axis=1)

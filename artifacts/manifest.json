@@ -1,6 +1,6 @@
 {
   "models/rvine_full_sample": {
-    "updated_utc": "2026-10-31T16:59:20+00:00",
+    "updated_utc": "2026-10-31T20:09:53+00:00",
     "versions": {
       "python": "3.13.18",
       "numpy": "2.5.3",
@@ -11,10 +11,10 @@
       "requests": "2.34.2"
     },
     "path": "models/rvine_full_sample.json.gz",
-    "sha256": "27f78a87f100994a746881bb4c8e246b41d9aaa790ef49b13973896d5e02d938",
+    "sha256": "28bb346229fc674765e42c8f3ee995d5b8023c6f38af3f13dd9d0a9a43b57d87",
     "params": {
       "returns": "data/processed/log_returns_pln.csv",
-      "start": "2011-01-04",
+      "start": "2008-01-02",
       "end": "2020-12-31",
       "calibration": [
         "2008-01-01",
@@ -44,9 +44,9 @@
         "dist": "skewt",
         "scale": 100.0
       },
-      "panel_obs": 2427,
-      "loglik": 160382.11740155853,
-      "aic": -320018.23480311705
+      "panel_obs": 2909,
+      "loglik": 122887.00160558648,
+      "aic": -245190.00321117297
     }
   },
   "rebalance/composition": {
@@ -320,7 +320,7 @@
     }
   },
   "reports/dependence_models_full_sample": {
-    "updated_utc": "2026-10-31T16:59:20+00:00",
+    "updated_utc": "2026-10-31T20:09:53+00:00",
     "versions": {
       "python": "3.13.18",
       "numpy": "2.5.3",
@@ -331,11 +331,11 @@
       "requests": "2.34.2"
     },
     "path": "reports/dependence_models_full_sample.csv",
-    "sha256": "31ab3a44e9d643ed2eb7bc7071bb563423de17c64c2c30eafb54eeb8b3b27dcd",
+    "sha256": "5689dbcd40cfe297891a93e98f5c4f40ae106a66b9b1d3fe74dcb352459f24c4",
     "n_rows": 7,
     "params": {
       "returns": "data/processed/log_returns_pln.csv",
-      "start": "2011-01-04",
+      "start": "2008-01-02",
       "end": "2020-12-31",
       "calibration": [
         "2008-01-01",
@@ -365,7 +365,7 @@
         "dist": "skewt",
         "scale": 100.0
       },
-      "panel_obs": 2427,
+      "panel_obs": 2909,
       "dependence": {
         "models": [
           "rvine",
@@ -378,7 +378,8 @@
         ],
         "reference": "rvine",
         "vuong_level": 0.05,
-        "psd_eig_min": 1e-06,
+        "psd_eig_min": 0.0001,
+        "full_sample_min_coverage": 0.9,
         "higham_tol": 1e-09,
         "higham_max_iter": 500,
         "student_t": {
@@ -404,13 +405,157 @@
         }
       },
       "aic": {
-        "rvine": -320018.23480311705,
-        "cvine": -206740.06528529996,
-        "dvine": -304325.2630947095,
-        "gauss": -314155.8744464419,
-        "student_t": -314483.7762285255,
+        "rvine": -245190.00321117297,
+        "cvine": -181695.98649097377,
+        "dvine": -228747.06889307845,
+        "gauss": -243282.73428617802,
+        "student_t": -248152.1978737529,
         "indep": 0.0,
         "empirical": NaN
+      }
+    }
+  },
+  "market/riskfree_pln": {
+    "updated_utc": "2026-10-31T17:44:11+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.0",
+      "yfinance": "1.7.0",
+      "requests": "2.34.2"
+    },
+    "path": "market/riskfree_pln.parquet",
+    "sha256": "d9c29a5a128fdf6bdf070d2be5b4b4c9b9637c61a137f822fde84a7d6cd67699",
+    "n_rows": 5694,
+    "params": {
+      "symbol": "plopln1m",
+      "day_count": 365,
+      "eurostat_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/irt_st_m",
+      "nbp_url": "https://static.nbp.pl/dane/stopy/stopy_procentowe_archiwum.xml",
+      "start": "2005-01-03",
+      "end": "2026-10-29",
+      "n_days": 5694,
+      "wibor_first": null,
+      "wibor_last": null,
+      "n_monthly": 5673,
+      "monthly_ranges": [
+        [
+          "2005-01-03",
+          "2026-09-30"
+        ]
+      ],
+      "n_filled_nbp": 21,
+      "filled_ranges": [
+        [
+          "2026-10-01",
+          "2026-10-29"
+        ]
+      ],
+      "n_missing": 0,
+      "errors": {
+        "wibor": "WIBOR niedostępny: https://stooq.pl/q/d/l/: Stooq plopln1m: nieoczekiwana odpowiedź ('<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"no'); https://stooq.com/q/d/l/: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))"
+      },
+      "source_counts": {
+        "wibor1m_monthly": 5673,
+        "nbp_ref": 21
+      }
+    }
+  },
+  "backtest/4010467a06e7/periods": {
+    "updated_utc": "2026-11-01T08:10:25+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.0",
+      "yfinance": "1.7.0",
+      "requests": "2.34.2"
+    },
+    "path": "backtest/4010467a06e7/periods.parquet",
+    "sha256": "3c743c36d259892b9290a64365a399b161ae5ccaaf0f0eb152aa0c4517c875df",
+    "n_rows": 93846,
+    "params": {
+      "first_date": "2008-01-02",
+      "last_date": "2026-10-01",
+      "n_dates": 226,
+      "n_series": 537,
+      "transaction_cost": 0.001,
+      "execution_lag": 1
+    }
+  },
+  "backtest/4010467a06e7/ranking": {
+    "updated_utc": "2026-11-01T08:11:34+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.0",
+      "yfinance": "1.7.0",
+      "requests": "2.34.2"
+    },
+    "path": "backtest/4010467a06e7/ranking_holdout.parquet",
+    "sha256": "f0ba0f43f86433c3190a7ae8fd28175cae0355c9415fdb36316b9b01d4f75b26",
+    "params": {
+      "ranking": {
+        "mcs_size": 0.1,
+        "mcs_reps": 5000,
+        "sharpe_test": {
+          "block": 3,
+          "reps": 5000,
+          "benchmark": "-|ew|ALL|base"
+        },
+        "test_level": 0.05,
+        "composite_weights": {
+          "ce_ann": 3.0,
+          "sharpe": 1.0,
+          "sortino": 1.0,
+          "calmar": 1.0,
+          "max_dd": 1.0,
+          "omega": 1.0,
+          "starr": 1.0,
+          "turnover": 0.5
+        },
+        "es_expost_method": "fhs",
+        "main_series": {
+          "model": "rvine",
+          "strategy": "ce_dep"
+        }
+      },
+      "figures": [
+        "figures/backtest/wealth_drawdown.png",
+        "figures/backtest/composition_W.png",
+        "figures/backtest/rolling_sharpe.png",
+        "figures/backtest/es_vs_losses.png"
+      ]
+    }
+  },
+  "backtest/4010467a06e7/es_mc": {
+    "updated_utc": "2026-11-01T07:29:36+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.0",
+      "yfinance": "1.7.0",
+      "requests": "2.34.2"
+    },
+    "path": "backtest/4010467a06e7/es_mc.parquet",
+    "sha256": "23dffa37ddeaae2a947d4835553cb589d332fcbc890810a44c23b6d33c2ff14d",
+    "n_rows": 8790,
+    "params": {
+      "expost_mc": {
+        "horizon": 21,
+        "batch": 20000,
+        "n_min": 20000,
+        "n_max": 200000,
+        "rel_se": 0.01,
+        "main_model": "rvine",
+        "main_strategy": "ce_dep"
       }
     }
   }

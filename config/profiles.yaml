@@ -1,0 +1,28 @@
+# Profile inwestora (Etap 3). Wyższe ryzyko profilu: niższe γ i κ (większy priorytet zwrotu względem
+# dywersyfikacji) oraz wyższe limity.
+#   gamma – współczynnik awersji do ryzyka CRRA (ekwiwalent pewności CE_γ),
+#   kappa – kara za zależność κ w max CE_γ(w) − κ·σ^EW·D(w),
+#   c_sf  – limit wagi tickera w sub-funduszu (co najmniej 1/n_k),
+#   c_lt  – limit ekspozycji look-through na ticker: W_k · max_i w_{k,i} ≤ c_lt,
+#   w_max – limit wagi sub-funduszu W_k.
+profiles:
+  P1: {name: "konserwatywny", gamma: 10.0, kappa: 1.00, c_sf: 0.20, c_lt: 0.05, w_max: 0.40}
+  P2: {name: "umiarkowany",   gamma: 7.0,  kappa: 0.60, c_sf: 0.25, c_lt: 0.07, w_max: 0.45}
+  P3: {name: "zrównoważony",  gamma: 5.0,  kappa: 0.35, c_sf: 0.30, c_lt: 0.10, w_max: 0.50}
+  P4: {name: "dynamiczny",    gamma: 3.0,  kappa: 0.15, c_sf: 0.40, c_lt: 0.15, w_max: 0.60}
+  P5: {name: "agresywny",     gamma: 1.5,  kappa: 0.05, c_sf: 0.50, c_lt: 0.25, w_max: 0.75}
+
+# Miara zależności D(w) = wᵀMw na pseudo-obserwacjach miesięcznych scenariuszy V = rank(R)/(S + 1):
+#   lambda_L – Λ_ij(q) = (1/(S q)) Σ_s 1{V_si ≤ q}·1{V_sj ≤ q} (dolny ogon), rho_S – corr(V) (Spearman).
+dependence_measure: lambda_L
+tail_q: 0.05
+
+optimizer:
+  maxiter: 500
+  ftol: 1.0e-12
+  min_wealth: 1.0e-8        # zabezpieczenie 1 + R_s w > 0 w CE
+  feasibility_tol: 1.0e-9
+
+# Strategie liczone dla każdego modelu zależności i profilu oraz benchmarki bez kopuły.
+strategies: [ce_dep, ce, maxret_es, min_es]
+benchmarks: [ew, mv_hist]

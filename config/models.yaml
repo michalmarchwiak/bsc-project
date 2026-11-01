@@ -8,6 +8,7 @@ margins:
   vol: "GJR-GARCH"      # GJR-GARCH(1,1)
   dist: "skewt"         # skośny t Hansena
   scale: 100.0          # estymacja na stopach ×100 (stabilność numeryczna)
+  sim_eps_cap: 2.0      # symulacja: |ε| ≤ k·max|ε̂| z okna (k; null – bez ograniczenia)
 
 rvine:                              # wspólne dla rvine, cvine, dvine
   truncation: 3                     # liczba pięter (drzew) z kopułami; wyższe = niezależność
@@ -22,7 +23,8 @@ dependence:                         # modele zależności (pf.models.dependence)
   models: [rvine, cvine, dvine, gauss, student_t, indep, empirical]
   reference: rvine                  # model odniesienia w teście Vuonga
   vuong_level: 0.05
-  psd_eig_min: 1.0e-6               # min. wartość własna R po naprawie Highama
+  psd_eig_min: 1.0e-4               # min. wartość własna R po naprawie Highama
+  full_sample_min_coverage: 0.90    # raport pełnej próby: aktywa z ≥ 90% sesji próby (panel bez skracania)
   higham_tol: 1.0e-9
   higham_max_iter: 500
   student_t:

@@ -194,3 +194,14 @@ def test_rebalance_one_smoke():
     report = summary_report(comp, stats, apply_costs(realized, to, 0.001), to, subfunds,
                             {**cfg["rebalance"], "transaction_cost": 0.001})
     assert "SF1 akcje" in report and "Po kosztach transakcyjnych (0.10%" in report
+
+
+def test_simulation_winsorizes_innovations():
+    """|ε| ≤ k·max|ε̂|: przy η bliskim 2 i silnym ARCH skrajne kwantyle nie powodują eksplozji ścieżek."""
+    f = MarginFit("X", mu=0.1, phi=0.0, omega=1.5, alpha=0.15, gamma=0.18, beta=0.58, eta=2.2, lam=0.0,
+                  scale=100.0, last_r=0.0, last_eps=0.0, last_sigma2=4.0, loglik=0.0, n_obs=1, converged=True,
+                  eps_absmax=10.0)
+    U = np.full((1, 21, 1), 1 - 1e-12)
+    capped = simulate_paths([f], U, eps_cap=2.0)[0, 0]
+    assert capped <= 21 * (0.1 + 20.0) / 100 + 1e-9                  # każdy dzień ≤ μ + 2·max|ε̂|
+    assert simulate_paths([f], U, eps_cap=None)[0, 0] > 100 * capped   # bez ograniczenia – eksplozja
