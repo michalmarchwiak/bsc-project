@@ -196,7 +196,9 @@ def consolidate(run_dir: Path, returns: pd.DataFrame, cfg: dict, bcfg: dict, pcf
     timings = pd.DataFrame([json.loads((run_dir / "dates" / d / "done.json").read_text()) for d in done])
     write_parquet(timings.drop(columns=["timings", "cached", "n_scenarios", "subfunds"]).assign(
         n_subfunds=timings["subfunds"].map(len)), run_dir / "timings.parquet")
-    update_manifest(f"backtest/{run_dir.name}/periods", run_dir / "periods.parquet", n_rows=len(periods), params={
+    # manifest główny tylko dla przebiegów w artifacts/ (testy piszą do własnego katalogu)
+    root = ARTIFACTS_DIR if run_dir.resolve().is_relative_to(ARTIFACTS_DIR.resolve()) else run_dir
+    update_manifest(f"backtest/{run_dir.name}/periods", run_dir / "periods.parquet", root=root, n_rows=len(periods), params={
         "first_date": str(dates.min().date()), "last_date": str(dates.max().date()), "n_dates": len(dates),
         "n_series": int(periods["sid"].nunique()), "transaction_cost": cost, "execution_lag": bcfg["execution_lag"]})
     log.info("Zapisano tabele zbiorcze w %s (%d szeregów, %d okresów)", run_dir, periods["sid"].nunique(), len(periods))
