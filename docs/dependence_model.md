@@ -50,6 +50,7 @@ Wszystkie modele estymowane są na tych samych pseudo-obserwacjach (wspólne mar
 | `cvine` | C-vine: w drzewie T_k korzeń r_k maksymalizujący Σ_j \|τ̂(r_k, j \| r₁…r_{k−1})\| | jw. |
 | `dvine` | D-vine: porządek z maksymalnej ścieżki Hamiltona na \|τ̂\| (zachłanna + 2-opt) | jw. |
 | `gauss` | kopuła Gaussa, R = corr(Φ⁻¹(U)), naprawa PSD (Higham) | d(d−1)/2 |
+| `gauss_rolling` | kopuła Gaussa, R jak w `gauss`, ale z ostatnich w = 252 wierszy U (`dependence.gauss_rolling.window`); ℓ na całym oknie | d(d−1)/2 |
 | `student_t` | kopuła t, ρᵢⱼ = sin(πτ̂ᵢⱼ/2) (Higham, λ_min ≥ 10⁻⁴), ν z profilu wiarygodności na siatce | d(d−1)/2 + 1 |
 | `indep` | kopuła niezależności | 0 |
 | `empirical` | losowanie wierszy panelu pseudo-obserwacji (bez gęstości) | – |
@@ -62,6 +63,12 @@ u_{i,t} = F_skewt((r_{i,t} − μ − φ r_{i,t−1}) / σ_{i,t}) z filtru GARCH
 (aktywa z ≥ 90% sesji próby, aby panel nie zaczynał się dopiero od debiutu najmłodszego ETF-u):
 `artifacts/reports/dependence_models_full_sample.md`; ranking modeli w backteście:
 `artifacts/reports/dependence_models.md`.
+
+Model `gauss_rolling` (zaproponowany w PR #12) nie wchodzi do `dependence.models` w
+`config/models.yaml`: jego dopisanie zmienia `run_id` i wymaga ponownego przebiegu backtestu.
+Uzasadnienie: w prototypie autora (10 ETF-ów, stopy w USD, horyzont 1 dzień, 2023-01-03, portfel
+25% SPY/QQQ/IEF/TLT) korelacja wyników normalnych SPY–TLT z 252 sesji wyniosła +0,08 wobec −0,41
+na próbie 2007–2019, a VaR 99% wzrósł z 1,62% (Gauss statyczny) do 2,17%.
 
 ## Uruchomienie
 

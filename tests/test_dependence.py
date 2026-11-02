@@ -117,6 +117,25 @@ def test_gauss_copula_recovery_and_density():
     assert m.n_params == 10 and m.aic() == pytest.approx(20 - 2 * m.loglik)
 
 
+def test_gauss_rolling_uses_recent_window():
+    names = list("abc")
+    R_old, R_new = random_corr(3, 1), random_corr(3, 2)
+    rng = np.random.default_rng(3)
+    old = dep.GaussCopula(names, R_old, n_obs=0).simulate(4000, rng)
+    new = dep.GaussCopula(names, R_new, n_obs=0).simulate(3000, rng)
+    U = pseudo_observations(np.vstack([old, new]))
+    cfg = {"dependence": {**CFG.get("dependence", {}), "gauss_rolling": {"window": 3000}}}
+    m = dep.fit_model("gauss_rolling", U, names, cfg)
+    np.testing.assert_allclose(m.R, R_new, atol=0.06)
+    assert m.n_obs == len(U) and m.loglik == pytest.approx(m.logpdf(U).sum())
+    # okno ≥ długość panelu ⇒ identycznie jak kopuła Gaussa na całym U
+    full = dep.fit_model("gauss", U, names, CFG)
+    big = {"dependence": {**CFG.get("dependence", {}), "gauss_rolling": {"window": 10**6}}}
+    np.testing.assert_allclose(dep.fit_model("gauss_rolling", U, names, big).R, full.R)
+    with pytest.raises(ValueError):
+        dep.fit_model("gauss_rolling", U, names, {"dependence": {"gauss_rolling": {"window": 1}}})
+
+
 def test_student_t_copula_recovery_and_density():
     R = random_corr(5, 2)
     true = dep.StudentTCopula([str(i) for i in range(5)], R, nu=5.0, n_obs=0)
@@ -220,7 +239,7 @@ def fitted(factor_U):
 
 
 def test_registry_and_interface(fitted, factor_U, tmp_path):
-    assert set(fitted) == {"rvine", "cvine", "dvine", "gauss", "student_t", "indep", "empirical"}
+    assert set(fitted) == {"rvine", "cvine", "dvine", "gauss", "gauss_rolling", "student_t", "indep", "empirical"}
     W = np.random.default_rng(10).random((400, 6))
     for name, m in fitted.items():
         S = m.simulate(400, np.random.default_rng(1), W=W)
@@ -234,7 +253,7 @@ def test_registry_and_interface(fitted, factor_U, tmp_path):
         else:
             assert np.isnan(m.aic())
     # wspólne W: modele vine i Gauss deterministyczne względem W (niezależnie od rng)
-    for name in ("rvine", "cvine", "dvine", "gauss", "indep", "empirical"):
+    for name in ("rvine", "cvine", "dvine", "gauss", "gauss_rolling", "indep", "empirical"):
         a = fitted[name].simulate(400, np.random.default_rng(1), W=W)
         b = fitted[name].simulate(400, np.random.default_rng(2), W=W)
         np.testing.assert_allclose(a, b)

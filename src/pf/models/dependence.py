@@ -9,6 +9,7 @@ standaryzowanych reszt wspólnych marginesów AR(1)–GJR-GARCH(1,1) skew-t, est
 | cvine       | C-vine – ta sama selekcja rodzin i obcięcie, w każdym drzewie korzeń max Σ|τ̂|          |
 | dvine       | D-vine – porządek z maksymalnej ścieżki Hamiltona na |τ̂| (zachłanna + 2-opt)           |
 | gauss       | kopuła Gaussa, R = corr(Φ⁻¹(U)), naprawa PSD (Higham)                                   |
+| gauss_rolling | kopuła Gaussa, R z ostatnich 252 wierszy U (korelacja krocząca)                       |
 | student_t   | kopuła t, R z ρᵢⱼ = sin(π τ̂ᵢⱼ / 2) (Higham), ν z profilu wiarygodności na siatce        |
 | indep       | kopuła niezależności Π                                                                  |
 | empirical   | kopuła empiryczna: losowanie wierszy panelu pseudo-obserwacji (bez gęstości)            |
@@ -256,6 +257,30 @@ class GaussCopula(DependenceModel):
     @classmethod
     def from_dict(cls, d):
         return cls(d["names"], _decode(d["R"]), d["n_obs"], d["loglik"])
+
+
+@register
+class GaussRollingCopula(GaussCopula):
+    """Kopuła Gaussa z R z ostatnich ``dependence.gauss_rolling.window`` wierszy U (domyślnie 252 sesje).
+
+    Wiersze U są uporządkowane chronologicznie, więc ogon panelu to najświeższa historia przed datą
+    decyzji. Korelacja reaguje na zmiany reżimu zależności (np. zmiana znaku ρ akcje–obligacje w 2022 r.).
+    ℓ, AIC i BIC liczone są na całym oknie estymacji – porównywalnie z pozostałymi modelami.
+    Model zaproponowany w PR #12 (cristiano2115).
+    """
+
+    name = "gauss_rolling"
+
+    @classmethod
+    def fit(cls, U, names, cfg=None):
+        U = np.asarray(U, dtype=float)
+        window = int(_dep_cfg(cfg).get("gauss_rolling", {}).get("window", 252))
+        if window < 2:
+            raise ValueError(f"Okno gauss_rolling musi mieć ≥ 2 obserwacje, podano {window}")
+        base = GaussCopula.fit(U[-window:], names, cfg)
+        m = cls(names, base.R, len(U))
+        m._loglik = float(m.logpdf(U).sum())
+        return m
 
 
 def t_copula_logpdf(U: np.ndarray, L: np.ndarray, nu: float) -> np.ndarray:
