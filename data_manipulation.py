@@ -8,6 +8,10 @@ bezpośrednio na niej gubiłoby stopy po dniach wolnych na jednej z giełd).
 Pomijane są dni z zerowym wolumenem (np. święta na GPW, które Yahoo wypełnia ceną
 z poprzedniej sesji), gdyż generowałyby sztuczne zerowe stopy zwrotu.
 
+Obligacje oszczędnościowe Skarbu Państwa (SF10, tickery ``*.SP``) nie są notowane: ich stopy liczone są
+z indeksów wartości (``data/raw/savings_bonds/index.csv``, ``pf.data.savings_bonds``) na wszystkich sesjach
+tabeli stóp (r_t = ln V(t) − ln V(t′), t′ – poprzednia sesja), w obu wariantach w PLN.
+
 Warianty:
     local – w walucie notowania (PLN dla GPW, USD dla USA),
     pln   – w PLN (ceny USA przeliczone kursem średnim NBP).
@@ -17,7 +21,10 @@ Wyjście:
     data/processed/log_returns_<wariant>.csv        – tabela stóp (Date × ticker)
     data/processed/log_returns_<wariant>_stats.csv  – statystyki opisowe
     data/processed/log_returns_<wariant>_check.json – kontrola kompletności (pełny zakres, brak pustych
-                                                       kolumn, wszystkie tickery z ``data_import.TICKERS``)
+                                                       kolumn, wszystkie tickery z ``data_import.TICKERS``
+                                                       i obligacji oszczędnościowych)
+    data/processed/savings_bonds_redemption_cost.csv – opłata za wcześniejszy wykup obligacji (ułamek
+                                                       wartości) na sesjach tabeli stóp
     figures/log_returns/<wariant>/<TICKER>.png      – wykresy
 
 Uruchomienie:
@@ -55,6 +62,7 @@ TRADING_DAYS = 252
 
 sys.path.insert(0, str(ROOT / "src"))
 from data_import import TICKERS  # noqa: E402
+from pf.data import savings_bonds  # noqa: E402
 from pf.data.quality import returns_report  # noqa: E402
 
 log = logging.getLogger("data_manipulation")
@@ -89,6 +97,18 @@ def log_returns(prices: pd.DataFrame) -> pd.DataFrame:
         p = p[p > 0]
         returns[ticker] = np.log(p).diff().dropna()
     return pd.DataFrame(returns).reindex(columns=prices.columns)
+
+
+def add_savings_bonds(returns: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame | None]:
+    """Dołącza log-stopy obligacji oszczędnościowych na sesjach tabeli; zwraca też opłaty za wykup."""
+    cfg = savings_bonds.load_config()
+    if not (ROOT / cfg["index_path"]).exists():
+        log.warning("Brak %s – pomijam obligacje oszczędnościowe (python -m pf.data.savings_bonds)",
+                    cfg["index_path"])
+        return returns, None
+    index, cost = savings_bonds.load_index(cfg)
+    bonds = savings_bonds.log_returns_on(index, returns.index)
+    return pd.concat([returns, bonds], axis=1), savings_bonds.cost_on(cost, returns.index)
 
 
 def describe(returns: pd.DataFrame) -> pd.DataFrame:
@@ -151,7 +171,7 @@ def plot_ticker(r: pd.Series, ticker: str, currency_label: str, path: Path) -> N
 
 
 def currency_label(ticker: str, variant: str) -> str:
-    if variant == "pln" or ticker.endswith(".WA"):
+    if variant == "pln" or ticker.endswith((".WA", ".SP")):
         return "PLN"
     return "USD"
 
@@ -166,11 +186,13 @@ def main() -> None:
             continue
 
         prices = load_prices(price_path)
-        returns = log_returns(prices)
+        returns, bond_cost = add_savings_bonds(log_returns(prices))
         returns.to_csv(PROCESSED_DIR / f"log_returns_{variant}.csv")
+        if bond_cost is not None:
+            bond_cost.to_csv(PROCESSED_DIR / "savings_bonds_redemption_cost.csv", float_format="%.8g")
         describe(returns).to_csv(PROCESSED_DIR / f"log_returns_{variant}_stats.csv")
         log.info("%s: %d tickerów, %d dni", variant, returns.shape[1], returns.shape[0])
-        check = returns_report(returns, TICKERS, START, END)
+        check = returns_report(returns, TICKERS + savings_bonds.tickers(), START, END)
         (PROCESSED_DIR / f"log_returns_{variant}_check.json").write_text(
             json.dumps(check, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         if not check["ok"]:

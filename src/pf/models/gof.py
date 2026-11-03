@@ -66,8 +66,10 @@ def compare_with_reference(models: dict[str, DependenceModel], U: np.ndarray, re
 
 
 def pit_panel(margins: dict[str, MarginFit], r_oos: pd.DataFrame, market_of=default_market) -> pd.DataFrame:
-    """Panel u_t (sesje × aktywa) z filtru GARCH naprzód; zasady panelu jak w ``residual_panel``."""
-    assets = [a for a in r_oos.columns if a in margins]
+    """Panel u_t (sesje × aktywa) z filtru GARCH naprzód; zasady panelu jak w ``residual_panel``.
+
+    Aktywa z marginesem deterministycznym (poza modelami zależności) są pomijane."""
+    assets = [a for a in r_oos.columns if a in margins and not margins[a].deterministic]
     U = pd.DataFrame({a: margins[a].pit_forward(r_oos[a].to_numpy()) for a in assets}, index=r_oos.index)
     markets = pd.Series({a: market_of(a) for a in assets})
     open_all = np.ones(len(U), dtype=bool)

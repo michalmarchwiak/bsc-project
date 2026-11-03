@@ -8,6 +8,10 @@ M liczona jest z pseudo-obserwacji scenariuszy V_si = rank(R_si) / (S + 1):
     rho_S:     ρ_S = corr(V) – macierz korelacji rang Spearmana (dodatnio półokreślona).
 
 D(w) jest więc wypukła, a −κ·σ^EW·D(w) wklęsła; ∇D(w) = 2 M w.
+
+Aktywo o stopie stałej w scenariuszach (margines deterministyczny, SF10) ma V_si = 1/2 (rangi wiązane), więc
+Λ_ij = 0 dla q < 1/2; w ρ_S jego korelacje (nieokreślone przy zerowej wariancji) przyjmowane są jako 0,
+a ρ_ii = 1 – takie aktywo nie zwiększa kary.
 """
 
 from __future__ import annotations
@@ -31,7 +35,14 @@ def spearman_matrix(R: np.ndarray) -> np.ndarray:
     V = pseudo_obs(R)
     if V.shape[1] == 1:
         return np.ones((1, 1))
-    return np.corrcoef(V, rowvar=False)
+    const = V.std(axis=0) <= 0
+    if not const.any():
+        return np.corrcoef(V, rowvar=False)
+    M = np.eye(V.shape[1])
+    live = np.flatnonzero(~const)
+    if len(live) > 1:
+        M[np.ix_(live, live)] = np.corrcoef(V[:, live], rowvar=False)
+    return M
 
 
 def dependence_matrix(R: np.ndarray, measure: str = "lambda_L", q: float = 0.05) -> np.ndarray:

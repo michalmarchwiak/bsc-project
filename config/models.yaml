@@ -9,6 +9,7 @@ margins:
   dist: "skewt"         # skośny t Hansena
   scale: 100.0          # estymacja na stopach ×100 (stabilność numeryczna)
   sim_eps_cap: 2.0      # symulacja: |ε| ≤ k·max|ε̂| z okna (k; null – bez ograniczenia)
+  deterministic_sessions: 21   # aktywa deterministyczne (SF10): prognoza dziennej stopy = średnia z n ostatnich sesji
 
 rvine:                              # wspólne dla rvine, cvine, dvine
   truncation: 3                     # liczba pięter (drzew) z kopułami; wyższe = niezależność
@@ -34,6 +35,7 @@ dependence:                         # modele zależności (pf.models.dependence)
 rebalance:
   window_days: 1260                 # okno estymacji (≈ 5 lat sesyjnych)
   min_obs: 750                      # minimalna liczba obserwacji aktywa w oknie
+  min_obs_deterministic: 21         # aktywa deterministyczne (SF10): bez estymacji GARCH, wymagane też notowanie w t−1
   horizon_days: 21                  # horyzont scenariuszy (≈ 1 miesiąc)
   n_scenarios: 10000               # bieżące rebalansowanie
   backtest_scenarios: 2000          # daty historyczne (koszt symulacji ≈ 6 s / 1000 scenariuszy)

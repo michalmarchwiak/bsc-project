@@ -2,6 +2,9 @@
 
 A (K × N): A_ki – udział aktywa i w sub-funduszu k; wewnątrz sub-funduszu wagi równe
 między aktywami dostępnymi w danym dniu. Ekspozycja portfela na aktywa: x = Aᵀ W.
+
+Sub-fundusz z ``deterministic: true`` (SF10, obligacje oszczędnościowe Skarbu Państwa) składa się z aktywów
+o stopie zwrotu znanej ex ante w horyzoncie rebalansowania (margines deterministyczny, poza kopułą).
 """
 
 from __future__ import annotations
@@ -14,6 +17,15 @@ from pf import config
 
 def load_subfunds() -> dict[str, dict]:
     return config.load("subfunds")["subfunds"]
+
+
+def deterministic_subfunds(subfunds: dict[str, dict]) -> list[str]:
+    return [sf for sf, spec in subfunds.items() if spec.get("deterministic", False)]
+
+
+def deterministic_tickers(subfunds: dict[str, dict]) -> list[str]:
+    """Tickery sub-funduszy z ``deterministic: true`` (stopa znana ex ante)."""
+    return [t for sf in deterministic_subfunds(subfunds) for t in subfunds[sf]["tickers"]]
 
 
 def lookthrough_matrix(subfunds: dict[str, dict], available: list[str]) -> pd.DataFrame:

@@ -10,7 +10,7 @@ oraz mikro-benchmark optymalizacji (LP Rockafellara–Uryaseva – strategie ``m
 SLSQP z gradientem analitycznym dla CE – strategie ``ce``/``ce_dep``) dla typowych N.
 
 Prognoza: T_daty = średni czas kroku modelowego + koszt optymalizacji (7 modeli × 5 profili × strategie
-× (9 SF + poziom 2)); czas całkowity = n_dat × T_daty / jobs (skalowanie idealne – górna granica
+× (K SF + poziom 2)); czas całkowity = n_dat × T_daty / jobs (skalowanie idealne – górna granica
 przyspieszenia). Liczba dat: (a) dla obecnego pliku danych, (b) dla docelowej próby od ``calibration[0]``
 do ``holdout[1]`` (pierwsza sesja każdego miesiąca).
 
@@ -35,7 +35,7 @@ from pf import ARTIFACTS_DIR, ROOT, config
 from pf.backtest import engine
 from pf.backtest.data import eligible_dates, in_range, load_returns
 from pf.models.gof import oos_log_score, pit_panel
-from pf.portfolio import load_subfunds
+from pf.portfolio import deterministic_tickers, load_subfunds
 
 log = logging.getLogger("scenario_timing")
 REPORT_DIR = ARTIFACTS_DIR / "reports"
@@ -48,7 +48,7 @@ def measure_date(t: pd.Timestamp, next_t: pd.Timestamp | None, models: list[str]
     returns = load_returns(ROOT / cfg["returns"]["path"])
     subfunds = load_subfunds()
     t0 = time.time()
-    dm = engine.fit_margins_step(t, returns, cfg, jobs=1, cache_dir=None)
+    dm = engine.fit_margins_step(t, returns, cfg, jobs=1, cache_dir=None, deterministic=deterministic_tickers(subfunds))
     engine.fit_models_step(dm, cfg, models)
     scen = engine.scenarios_step(dm, cfg, bcfg, subfunds, models)
     stats = engine.scenario_stats_table(t, scen)
@@ -156,7 +156,7 @@ def report(times: pd.DataFrame, stats: pd.DataFrame, bench: pd.DataFrame, models
     model_step = float(times["total"].mean())
     per_date = model_step + opt_per_date
     lines += ["", f"Średnie N ≈ {n_mean:.0f}; koszt optymalizacji na datę ≈ {opt_counts['models']} modeli × "
-              f"{opt_counts['profiles']} profili × {opt_counts['levels']} problemów (9 SF + poziom 2) × "
+              f"{opt_counts['profiles']} profili × {opt_counts['levels']} problemów ({opt_counts['levels'] - 1} SF + poziom 2) × "
               f"(2 LP + 2 SLSQP) ≈ {opt_per_date:.0f} s (czasy interpolowane log-log przy średnim N; "
               f"LP {per_problem_lp:.2f} s, SLSQP {per_problem_ce:.3f} s na parę problemów; SLSQP to prototyp "
               "funkcji celu z Etapu 3). Czas pełnego LP rośnie z N w przybliżeniu kwadratowo.", "",

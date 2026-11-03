@@ -14,6 +14,9 @@ Horyzont H = 21 sesji, stopa miesięczna R = Π_h (1 + r_h) − 1, strata L = �
 3. Wielowymiarowe MC (strategia główna): marginesy AR(1)–GJR-GARCH(1,1) skew-t na dziennych log-stopach
    sub-funduszy, R-vine na resztach, stan startowy wszystkich marginesów z tej samej losowej daty;
    portfel R = Σ_k W_k R_k (kupno i trzymanie SF w miesiącu) dla W z ostatniej daty i średnich W okresu.
+   Sub-fundusz deterministyczny (SF10, obligacje oszczędnościowe) ma stałą stopę R_k = exp(H·μ̂_k) − 1
+   (μ̂_k – średnia dzienna log-stopa próby) i nie wchodzi do R-vine'a; FHS dla jego szeregu nie jest liczony
+   (rozkład zdegenerowany), bootstrap stacjonarny – tak.
 
 Liczba ścieżek N dobierana adaptacyjnie (partie, stop przy SE(ÊS)/|ÊS| ≤ ε lub N ≥ n_max), SE ze wzoru
 z ``pf.sim.scenarios.es_with_se``. Szereg strategii o zmiennych w czasie wagach nie jest ściśle
@@ -112,7 +115,7 @@ def stationary_monthly_losses(r: np.ndarray, n: int, horizon: int, block: float,
 class MultiMC:
     """Marginesy AR(1)–GJR-GARCH skew-t + R-vine na dziennych stopach SF; miesięczne stopy SF (S × K)."""
 
-    def __init__(self, r_sf: pd.DataFrame, cfg: dict):
+    def __init__(self, r_sf: pd.DataFrame, cfg: dict, deterministic=()):
         from pf.models.dependence import fit_model
         from pf.models.margins import fit_margins
         from pf.models.rvine import pseudo_observations
@@ -120,9 +123,13 @@ class MultiMC:
         logr = np.log1p(r_sf)
         self.names = list(r_sf.columns)
         self.eps_cap = float(cfg["margins"].get("sim_eps_cap") or np.inf)
-        self.margins, z = fit_margins(logr, scale=cfg["margins"]["scale"], jobs=1)
+        det = [k for k in self.names if k in set(deterministic)]
+        self.margins, z = fit_margins(logr, scale=cfg["margins"]["scale"], jobs=1, deterministic=det,
+                                      n_last=len(logr))
         Z = z.dropna(how="any")
-        self.model = fit_model("rvine", pseudo_observations(Z.to_numpy()), self.names, cfg)
+        self.stochastic = list(z.columns)
+        self.model = (fit_model("rvine", pseudo_observations(Z.to_numpy()), self.stochastic, cfg)
+                      if self.stochastic else None)
         # stany historyczne marginesów (wspólna data startu)
         self.states = self._states(logr)
 
@@ -148,14 +155,19 @@ class MultiMC:
         K = len(self.names)
         T = len(next(iter(self.states.values())))
         start = rng.integers(0, T, n)
-        U = self.model.simulate(n * horizon, rng).reshape(n, horizon, K)
+        d_s = len(self.stochastic)
+        U = self.model.simulate(n * horizon, rng).reshape(n, horizon, d_s) if d_s else None
+        col = {k: i for i, k in enumerate(self.stochastic)}
         out = np.empty((n, K))
         for j, k in enumerate(self.names):
             f = self.margins[k]
+            if f.deterministic:
+                out[:, j] = np.expm1(horizon * f.mu / f.scale)
+                continue
             st = self.states[k][start]
             s2 = f.omega + (f.alpha + f.gamma * (st[:, 1] < 0)) * st[:, 1] ** 2 + f.beta * st[:, 0]
             r_prev = st[:, 2]
-            Z = skewt_ppf(U[:, :, j].ravel(), f.eta, f.lam).reshape(n, horizon)
+            Z = skewt_ppf(U[:, :, col[k]].ravel(), f.eta, f.lam).reshape(n, horizon)
             total = np.zeros(n)
             cap = self.eps_cap * np.nanmax(np.abs(self.states[k][:, 1]))
             for h in range(horizon):

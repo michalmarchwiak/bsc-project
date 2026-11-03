@@ -7,6 +7,7 @@ W dobierane jest później (profil ryzyka).
 Dla każdej daty rebalansowania t (pierwsza sesja miesiąca w danych):
     1. okno estymacji: ostatnie ``window_days`` sesji przed t (dane ≤ t−1, bez look-ahead);
     2. marginesy AR(1)–GJR-GARCH(1,1) skew-t i R-vine (3 drzewa) na resztach wszystkich aktywów
+       stochastycznych; obligacje oszczędnościowe (SF10) mają margines deterministyczny (stopa znana ex ante)
        (model zapisany dla daty t jest używany ponownie, ``--refit`` estymuje od nowa);
     3. scenariusze stóp zwrotu aktywów w horyzoncie H (start ze stanu GARCH na t−1);
     4. dla każdego sub-funduszu k z aktywami i ∈ I_k (LP Rockafellara–Uryaseva):
@@ -50,7 +51,7 @@ from pf import ARTIFACTS_DIR, ROOT, config
 from pf.artifacts import update_manifest, write_parquet
 from pf.backtest.data import covers_all_subfunds, estimation_window, realized_returns, rebalance_dates  # noqa: F401
 from pf.opt.cvar import empirical_es, max_return_es
-from pf.portfolio import load_subfunds
+from pf.portfolio import deterministic_tickers, load_subfunds
 from pf.sim.scenarios import Model, estimate, load_model, simulate
 
 log = logging.getLogger("monthly_rebalance")
@@ -86,7 +87,7 @@ def rebalance_one(t: pd.Timestamp, returns: pd.DataFrame, cfg: dict, subfunds: d
     rcfg = cfg["rebalance"]
     window = estimation_window(returns, t, rcfg["window_days"])
     if model is None:
-        model = estimate(window, cfg, rcfg["min_obs"], jobs=jobs)
+        model = estimate(window, cfg, rcfg["min_obs"], jobs=jobs, deterministic=deterministic_tickers(subfunds))
     rng = np.random.default_rng([rcfg["seed"], int(t.strftime("%Y%m%d"))])
     scen = simulate(model, n_scen, rcfg["horizon_days"], rng)
     comp, stats, sf_scen = [], [], {}

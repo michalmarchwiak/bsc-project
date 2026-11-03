@@ -11,6 +11,10 @@ Opóźnienie wykonania L (``execution_lag``):
 Ogólnie: okres realizacji obejmuje sesje o indeksach [i(t) + L, i(t_next) + L), gdzie i(·) – pozycja
 sesji w kalendarzu danych; początek i koniec inwestycji to zamknięcia sesji i(t) + L − 1 i i(t_next) + L − 1.
 
+Aktywa deterministyczne (obligacje oszczędnościowe SF10, ``pf.portfolio.deterministic_tickers``) wymagają
+``min_obs_deterministic`` obserwacji w oknie (prognoza stopy z ostatnich sesji, bez estymacji GARCH i kopuły)
+oraz notowania w ostatniej sesji okna (indeks rodziny, której nie można już rolować, wygasa).
+
 run_id = SHA-256 kanonicznego JSON-a konfiguracji i skrótu pliku danych (pierwsze ``length`` znaków).
 """
 
@@ -24,6 +28,7 @@ import numpy as np
 import pandas as pd
 
 from pf.artifacts import sha256
+from pf.portfolio import deterministic_tickers
 
 
 def load_returns(path: Path) -> pd.DataFrame:
@@ -43,20 +48,35 @@ def estimation_window(returns: pd.DataFrame, t: pd.Timestamp, window_days: int) 
     return returns.loc[returns.index < t].iloc[-window_days:]
 
 
-def eligible_assets(window: pd.DataFrame, min_obs: int) -> list[str]:
+def eligible_assets(window: pd.DataFrame, min_obs: int, deterministic=(),
+                    min_obs_deterministic: int | None = None) -> list[str]:
+    """Aktywa z ≥ ``min_obs`` obserwacjami w oknie; deterministyczne: ≥ ``min_obs_deterministic``
+    obserwacji i notowanie w ostatniej sesji okna."""
     counts = window.notna().sum()
-    return counts.index[counts >= min_obs].tolist()
+    ok = counts >= min_obs
+    det = counts.index.isin(list(deterministic))
+    if det.any():
+        m = min_obs if min_obs_deterministic is None else int(min_obs_deterministic)
+        alive = window.iloc[-1].notna() if len(window) else pd.Series(False, index=counts.index)
+        ok = ok.where(~det, (counts >= m) & alive)
+    return counts.index[ok.to_numpy()].tolist()
+
+
+def window_assets(returns: pd.DataFrame, t: pd.Timestamp, rcfg: dict, deterministic=()) -> list[str]:
+    """Aktywa dopuszczone w oknie przed t (``eligible_assets`` z parametrami ``rcfg``)."""
+    return eligible_assets(estimation_window(returns, t, rcfg["window_days"]), rcfg["min_obs"], deterministic,
+                           rcfg.get("min_obs_deterministic"))
 
 
 def covers_all_subfunds(returns: pd.DataFrame, t: pd.Timestamp, rcfg: dict, subfunds: dict) -> bool:
-    """Czy w oknie przed t każdy sub-fundusz ma co najmniej jedno aktywo z ``min_obs`` obserwacjami."""
-    assets = set(eligible_assets(estimation_window(returns, t, rcfg["window_days"]), rcfg["min_obs"]))
+    """Czy w oknie przed t każdy sub-fundusz ma co najmniej jedno aktywo dopuszczone (``window_assets``)."""
+    assets = set(window_assets(returns, t, rcfg, deterministic_tickers(subfunds)))
     return all(assets & set(spec["tickers"]) for spec in subfunds.values())
 
 
 def covered_subfunds(returns: pd.DataFrame, t: pd.Timestamp, rcfg: dict, subfunds: dict) -> list[str]:
-    """Sub-fundusze z co najmniej jednym aktywem z ``min_obs`` obserwacjami w oknie przed t."""
-    assets = set(eligible_assets(estimation_window(returns, t, rcfg["window_days"]), rcfg["min_obs"]))
+    """Sub-fundusze z co najmniej jednym aktywem dopuszczonym w oknie przed t (``window_assets``)."""
+    assets = set(window_assets(returns, t, rcfg, deterministic_tickers(subfunds)))
     return [sf for sf, spec in subfunds.items() if assets & set(spec["tickers"])]
 
 
