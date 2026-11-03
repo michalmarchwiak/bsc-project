@@ -8,6 +8,9 @@
       wyjątki w ``STOOQ_SYMBOLS``, np. AVB → ``avb.us``). Odpowiedź z komunikatem o limicie
       zapytań lub bez nagłówka CSV jest odrzucana; opcjonalny klucz API: zmienna ``STOOQ_APIKEY``.
     * NBP API (api.nbp.pl, tabela A, kurs średni) – oficjalne kursy walut względem PLN.
+    * Obligacje oszczędnościowe Skarbu Państwa (SF10): zbiór obrotomierz.pl „Obligacje oszczędnościowe
+      Skarbu Państwa: emisje i oprocentowanie” (GitHub ``obrotomierz/obligacje-skarbowe``, CC BY 4.0);
+      z warunków emisji budowane są indeksy wartości rolowanych pozycji (``pf.data.savings_bonds``).
 
 Waluty notowań: tickery z sufiksem ``.WA`` – PLN, pozostałe (NYSE/NASDAQ/NYSE Arca) – USD.
 Żaden z tickerów nie jest notowany w EUR, więc EUR/PLN jest pobierany tylko gdy
@@ -23,6 +26,9 @@ Wyniki (katalog ``data/raw``):
     fx_nbp.csv           – kursy średnie NBP (PLN za 1 jednostkę waluty)
     adj_close_pln.csv    – ceny skorygowane przeliczone na PLN (kurs NBP, forward-fill)
     coverage.csv         – raport pokrycia danych (źródło, pierwsza/ostatnia data, liczba obserwacji)
+    savings_bonds/       – emisje.csv, oprocentowanie.csv (kopia źródła), index.csv (indeksy wartości
+                           obligacji, kalendarz dzienny, PLN), redemption_cost.csv (opłata za wcześniejszy
+                           wykup jako ułamek wartości), holdings.csv (posiadane serie)
 """
 
 from __future__ import annotations
@@ -320,6 +326,21 @@ def main() -> None:
     if report["stale"]:
         log.error("Notowania kończą się przed %s: %s", END, ", ".join(report["stale"]))
     log.info("Zapisano dane w %s (źródła: %s)", OUT_DIR, report["sources"])
+    download_savings_bonds()
+
+
+def download_savings_bonds() -> None:
+    """Obligacje oszczędnościowe (SF10): dane emisji i indeksy wartości (``data/raw/savings_bonds``)."""
+    from pf.data import savings_bonds
+
+    cfg = savings_bonds.load_config()
+    issues, rates = savings_bonds.fetch_sources(cfg)
+    idx, cost, holdings = savings_bonds.build(issues, rates, cfg)
+    root = Path(__file__).resolve().parent
+    idx.to_csv(root / cfg["index_path"], float_format="%.10g")
+    cost.to_csv(root / cfg["redemption_cost_path"], float_format="%.10g")
+    holdings.to_csv(root / cfg["source"]["local_dir"] / "holdings.csv", index=False)
+    log.info("Obligacje oszczędnościowe: %d indeksów (%s)", idx.shape[1], ", ".join(idx.columns))
 
 
 if __name__ == "__main__":

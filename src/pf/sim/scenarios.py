@@ -20,6 +20,10 @@ N scenariuszy są identyczne niezależnie od liczby partii. Losowość specyficz
 Dla opóźnienia wykonania L symulowanych jest H + L dni, a suma obejmuje dni L+1, …, L+H.
 Warianty z innym opóźnieniem L' (``extra_skips``, np. L' = 0 w analizie wrażliwości) korzystają z tych
 samych ścieżek dziennych (H + max L dni): R(L') = exp(Σ_{h=L'+1}^{L'+H} r_h) − 1.
+
+Aktywa deterministyczne (``MarginFit.deterministic``, SF10) nie należą do modelu zależności: kopuła generuje
+U tylko dla aktywów stochastycznych (``dep_model.names``), a stopa aktywa deterministycznego w scenariuszu
+to R_i = exp(H·μ̂_i) − 1 we wszystkich scenariuszach.
 """
 
 from __future__ import annotations
@@ -44,22 +48,40 @@ log = logging.getLogger(__name__)
 class Model:
     assets: list[str]
     margins: dict[str, MarginFit]
-    vine: RVine
+    vine: RVine                       # na aktywach stochastycznych (``vine.names``)
     panel_obs: int
     end_date: pd.Timestamp
 
 
-def estimate(window: pd.DataFrame, models_cfg: dict, min_obs: int, jobs: int | None = None) -> Model:
-    """Marginesy i R-vine na log-stopach z ``window`` (daty × tickery)."""
-    assets = eligible_assets(window, min_obs)
+def full_uniforms(U_stoch: np.ndarray, margins: list[MarginFit], names=None) -> np.ndarray:
+    """U (S, H, d) dla wszystkich aktywów z U kopuły (S, H, d_s) dla aktywów stochastycznych (kolejność
+    ``margins``); kolumny aktywów deterministycznych = 1/2 (ignorowane w ``simulate_daily``)."""
+    stoch = [j for j, m in enumerate(margins) if not m.deterministic]
+    if len(stoch) == len(margins):
+        return U_stoch
+    if names is not None and list(names) != [margins[j].name for j in stoch]:
+        raise ValueError("Kolejność aktywów modelu zależności różni się od marginesów stochastycznych")
+    S, H = U_stoch.shape[:2]
+    U = np.full((S, H, len(margins)), 0.5)
+    U[:, :, stoch] = U_stoch
+    return U
+
+
+def estimate(window: pd.DataFrame, models_cfg: dict, min_obs: int, jobs: int | None = None,
+             deterministic=()) -> Model:
+    """Marginesy i R-vine na log-stopach z ``window`` (daty × tickery); ``deterministic`` – aktywa SF10."""
+    rcfg = models_cfg.get("rebalance", {})
+    assets = eligible_assets(window, min_obs, deterministic, rcfg.get("min_obs_deterministic"))
     excluded = sorted(set(window.columns) - set(assets))
     if excluded:
         log.info("Pominięte (mniej niż %d obserwacji): %s", min_obs, ", ".join(excluded))
     mcfg, vcfg = models_cfg["margins"], models_cfg["rvine"]
-    fits, z = fit_margins(window[assets], scale=mcfg["scale"], jobs=jobs)
+    det = [a for a in assets if a in set(deterministic)]
+    fits, z = fit_margins(window[assets], scale=mcfg["scale"], jobs=jobs, deterministic=det,
+                          n_last=mcfg.get("deterministic_sessions", 21))
     panel = residual_panel(z)
     U = pseudo_observations(panel.to_numpy())
-    vine = RVine.fit(U, assets, truncation=vcfg["truncation"], families=tuple(vcfg["families"]),
+    vine = RVine.fit(U, list(panel.columns), truncation=vcfg["truncation"], families=tuple(vcfg["families"]),
                      rotations=vcfg["rotations"], criterion=vcfg["criterion"],
                      indep_level=vcfg["indep_test_level"], t_df_bounds=tuple(vcfg["t_df_bounds"]),
                      estimation=vcfg.get("estimation", "itau"))
@@ -68,9 +90,10 @@ def estimate(window: pd.DataFrame, models_cfg: dict, min_obs: int, jobs: int | N
 
 def simulate(model: Model, n_scenarios: int, horizon: int, rng: np.random.Generator) -> pd.DataFrame:
     """Proste stopy zwrotu aktywów w horyzoncie (n_scenarios × N)."""
-    d = len(model.assets)
-    U = model.vine.simulate(n_scenarios * horizon, rng).reshape(n_scenarios, horizon, d)
-    logret = simulate_paths([model.margins[a] for a in model.assets], U, eps_cap=None)  # wyniki historyczne
+    margins = [model.margins[a] for a in model.assets]
+    U = model.vine.simulate(n_scenarios * horizon, rng).reshape(n_scenarios, horizon, model.vine.d)
+    U = full_uniforms(U, margins, model.vine.names)
+    logret = simulate_paths(margins, U, eps_cap=None)  # wyniki historyczne
     return pd.DataFrame(np.expm1(logret), columns=model.assets)
 
 
@@ -79,7 +102,7 @@ def load_model(vine_path, margins_path, end_date: pd.Timestamp, panel_obs: int) 
     vine = RVine.load(vine_path)
     rows = pd.read_parquet(margins_path).to_dict(orient="records")
     margins = {r["name"]: MarginFit(**r) for r in rows}
-    return Model(list(vine.names), margins, vine, int(panel_obs), pd.Timestamp(end_date))
+    return Model(list(margins), margins, vine, int(panel_obs), pd.Timestamp(end_date))
 
 
 # --------------------------------------------------------------------------- scenariusze adaptacyjne
@@ -157,13 +180,15 @@ def simulate_adaptive(margins: list[MarginFit], dep_model, horizon: int, portfol
     eps = float(rel_se if rel_se is not None else scfg["rel_se"])
     B, n_min, n_max = int(scfg["batch"]), int(scfg["n_min"]), int(scfg["n_max"])
     extra = tuple(sorted(set(extra_skips) - {skip}))
-    d, H = len(margins), horizon + max((skip,) + extra)
+    H = horizon + max((skip,) + extra)
+    d_s = sum(not m.deterministic for m in margins)          # wymiar kopuły (aktywa stochastyczne)
     blocks, alt_blocks, N, n_batches = [], {k: [] for k in extra}, 0, 0
     stats, converged = None, False
     while N < n_max:
         b = min(B, n_max - N)
-        W = w_rng.random((b * H, d))
-        U = dep_model.simulate(b * H, model_rng, W=W).reshape(b, H, d)
+        W = w_rng.random((b * H, d_s))
+        U = dep_model.simulate(b * H, model_rng, W=W).reshape(b, H, d_s)
+        U = full_uniforms(U, margins, getattr(dep_model, "names", None))
         daily = simulate_daily(margins, U, eps_cap)
         blocks.append(np.expm1(daily[:, skip:skip + horizon, :].sum(axis=1)))
         for k in extra:

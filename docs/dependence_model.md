@@ -2,10 +2,12 @@
 
 ## Sub-fundusze
 
-`config/subfunds.yaml` – 9 sub-funduszy zgodnych z grupami tickerów w `data_import.py`:
-SF1 akcje polskie, SF2 akcje USA, SF3 rynki rozwinięte ex-USA, SF4 rynki wschodzące,
+`config/subfunds.yaml` – 10 sub-funduszy: SF1–SF9 zgodne z grupami tickerów w `data_import.py`
+(SF1 akcje polskie, SF2 akcje USA, SF3 rynki rozwinięte ex-USA, SF4 rynki wschodzące,
 SF5 obligacje skarbowe USA, SF6 obligacje korporacyjne IG, SF7 high yield, SF8 złoto
-i spółki wydobywcze, SF9 REIT. Wewnątrz sub-funduszu wagi są równe między aktywami
+i spółki wydobywcze, SF9 REIT) oraz SF10 – obligacje oszczędnościowe Skarbu Państwa
+(`deterministic: true`, `docs/savings_bonds.md`). Aktywa SF10 mają stopę znaną ex ante
+(margines deterministyczny) i nie wchodzą do panelu reszt ani do R-vine'a. Wewnątrz sub-funduszu wagi są równe między aktywami
 dostępnymi w dniu rebalansowania (macierz look-through A, x = AᵀW).
 
 ## Model

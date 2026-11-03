@@ -6,7 +6,8 @@ Dla każdej daty rebalansowania t (pierwsza sesja miesiąca; ``config/backtest.y
     i benchmarków → prognozy ex ante (VaR, ES, ogon i kwantyle rozkładu strat) → AIC/BIC/Vuong i
     log-score OOS. Zapis po każdej dacie w artifacts/backtest/<run_id>/dates/<t>/ (wznawialne);
     równoległość po datach (``--jobs``, estymacja GARCH jobs = 1, wątki BLAS = 1).
-Konsolidacja: zrealizowane stopy dzienne i okresowe (brutto/netto, dryf wag, koszty), szeregi SF,
+Konsolidacja: zrealizowane stopy dzienne i okresowe (brutto/netto, dryf wag, koszty transakcyjne i opłaty
+za wcześniejszy wykup obligacji oszczędnościowych SF10), szeregi SF,
 PIT zrealizowanych strat, testy VaR/ES osobno dla kalibracji i hold-out.
 
 Zamrożenie: przed pierwszą datą hold-out zapisywany jest ``frozen_params.json`` (skrót konfiguracji
@@ -165,6 +166,17 @@ def export_ticker_weights(tw: pd.DataFrame, subfunds: dict, main: dict, out_dir:
     return files
 
 
+def load_sell_cost(bcfg: dict) -> pd.DataFrame | None:
+    """Opłaty za wcześniejszy wykup obligacji oszczędnościowych (sesje × tickery) lub None."""
+    rc = bcfg.get("redemption_cost") or {}
+    path = ROOT / rc.get("path", "")
+    if not rc.get("enabled", False) or not path.is_file():
+        if rc.get("enabled", False):
+            log.warning("Brak pliku opłat za wykup %s – opłaty pominięte", path)
+        return None
+    return pd.read_csv(path, index_col=0, parse_dates=True).sort_index()
+
+
 def consolidate(run_dir: Path, returns: pd.DataFrame, cfg: dict, bcfg: dict, pcfg: dict, subfunds: dict,
                 rf: pd.Series | None = None, calendar: pd.DatetimeIndex | None = None) -> dict:
     """Tabele zbiorcze: stopy zrealizowane, prognozy z PIT, testy VaR/ES, oceny modeli.
@@ -184,9 +196,10 @@ def consolidate(run_dir: Path, returns: pd.DataFrame, cfg: dict, bcfg: dict, pcf
     lags = flags.drop_duplicates("sid").set_index("sid")["lag"]
     rf = riskfree.load(ROOT / bcfg["riskfree"]["path"]) if rf is None else rf
     cost = float(bcfg["transaction_cost"])
+    sell_cost = load_sell_cost(bcfg)
 
     wx = weights[weights["level"] == "x"][["date", "sid", "ticker", "weight"]]
-    daily, periods = realize(returns, wx, lags, dates, cost, rf, bcfg["riskfree"]["day_count"])
+    daily, periods = realize(returns, wx, lags, dates, cost, rf, bcfg["riskfree"]["day_count"], sell_cost)
     meta = flags.drop_duplicates("sid").set_index("sid")[["model", "strategy", "profile", "variant"]]
     periods = periods.join(meta, on="sid")
     periods["sample"] = [sample_label(t, bcfg) for t in periods["date"]]
@@ -194,7 +207,7 @@ def consolidate(run_dir: Path, returns: pd.DataFrame, cfg: dict, bcfg: dict, pcf
     wsf = weights[(weights["level"] == "sf") & (weights["variant"] == "base")]
     wsf = add_sid(wsf, "subfund")[["date", "sid", "ticker", "weight"]]
     lags_sf = pd.Series({s: lags[s.rsplit("|", 1)[0]] for s in wsf["sid"].unique()})
-    daily_sf, periods_sf = realize(returns, wsf, lags_sf, dates, cost, rf, bcfg["riskfree"]["day_count"])
+    daily_sf, periods_sf = realize(returns, wsf, lags_sf, dates, cost, rf, bcfg["riskfree"]["day_count"], sell_cost)
     periods_sf["subfund"] = periods_sf["sid"].str.rsplit("|", n=1).str[1]
     periods_sf["series"] = periods_sf["sid"].str.rsplit("|", n=1).str[0]
     periods_sf = periods_sf.join(meta, on="series")

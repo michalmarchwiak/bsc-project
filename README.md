@@ -2,12 +2,14 @@
 
 Projekt bada, czy jawne modelowanie zależności między aktywami (kopuły winorośli i kopuły
 eliptyczne) poprawia alokację wielosegmentowego funduszu dla inwestorów o różnej awersji do ryzyka.
-Fundusz składa się z 9 sub-funduszy (79 instrumentów z GPW i giełd USA), a wszystkie wyniki są
-liczone w PLN, ze stopą wolną od ryzyka WIBOR 1M.
+Fundusz składa się z 10 sub-funduszy: 79 instrumentów z GPW i giełd USA (SF1–SF9) oraz 8 rodzin
+obligacji oszczędnościowych Skarbu Państwa (SF10). Wszystkie wyniki są liczone w PLN, ze stopą wolną
+od ryzyka WIBOR 1M.
 
 Pakiet `pf` (`src/pf`) obejmuje:
 
-- marginesy AR(1)–GJR-GARCH(1,1) ze skośnym rozkładem t Hansena;
+- marginesy AR(1)–GJR-GARCH(1,1) ze skośnym rozkładem t Hansena oraz margines deterministyczny
+  dla obligacji oszczędnościowych (stopa znana ex ante);
 - 7 modeli zależności: R-, C- i D-vine, kopuły Gaussa, t, niezależności i empiryczną;
 - miesięczne scenariusze stóp zwrotu z adaptacyjną liczbą symulacji;
 - dwupoziomową optymalizację składu według ekwiwalentu pewności CRRA z karą za zależność w dolnym
@@ -15,12 +17,14 @@ Pakiet `pf` (`src/pf`) obejmuje:
 - backtest kroczący 2008–2026 z próbą hold-out;
 - testy wsteczne VaR/ES, MC ex post oraz ranking strategii i modeli.
 
-Szczegóły metody i wzory: [`docs/backtest.md`](docs/backtest.md) i
-[`docs/dependence_model.md`](docs/dependence_model.md).
+Szczegóły metody i wzory: [`docs/backtest.md`](docs/backtest.md),
+[`docs/dependence_model.md`](docs/dependence_model.md) i [`docs/savings_bonds.md`](docs/savings_bonds.md) (SF10).
 
 ## Najważniejsze wyniki
 
-Wyniki pochodzą z przebiegu `4010467a06e7`: 226 dat rebalansowania 2008-01 – 2026-10, okres
+Wyniki pochodzą z przebiegu `4010467a06e7`, policzonego przed dodaniem SF10 (9 sub-funduszy). Po dodaniu
+SF10 zmienia się `run_id`, więc wyniki wymagają ponownego przebiegu backtestu (sekcja „Uruchomienie”).
+Przebieg `4010467a06e7`: 226 dat rebalansowania 2008-01 – 2026-10, okres
 kalibracji 156 miesięcy, hold-out 69 miesięcy (2021-01 – 2026-09). Wszystkie stopy są miesięczne,
 netto po kosztach 0,1% wartości transakcji. Zrealizowany ekwiwalent pewności (CE) liczono od stóp
 nadwyżkowych nad WIBOR 1M, w skali rocznej, przy γ danego profilu.
@@ -64,10 +68,21 @@ Pełne tabele: [`backtest_summary.md`](artifacts/reports/backtest_summary.md),
 | SF7 | obligacje high yield | HYG, JNK, ANGL, FALN |
 | SF8 | złoto i spółki wydobywcze | GLD, IAU, SGOL, GDX, GDXJ, NEM, AEM, KGC, WPM, FNV |
 | SF9 | nieruchomości (REIT) | PLD, AMT, EQIX, O, SPG, PSA, WELL, DLR, EXR (AVB niedostępny) |
+| SF10 | obligacje oszczędnościowe Skarbu Państwa | OTS, DOS, DOR, ROR, TOZ, TOS, COI, EDO (`*.SP`) |
 
 **Notowania.** Dzienne notowania z okresu 2005-01-04 – 2026-10-29 pochodzą z Yahoo Finance, a jako
 źródło zapasowe służy Stooq. Ceny w USD są przeliczane na PLN po średnim kursie NBP. Dni bez obrotu
 (zerowy wolumen) są pomijane. Wynik: dzienne log-stopy `data/processed/log_returns_pln.csv`.
+
+**Obligacje oszczędnościowe (SF10).** Nie są notowane, więc ich stopy wynikają z warunków emisji ze zbioru
+obrotomierz.pl „Obligacje oszczędnościowe Skarbu Państwa: emisje i oprocentowanie” (Błażewski 2026,
+[10.5281/zenodo.23208023](https://doi.org/10.5281/zenodo.23208023), CC BY 4.0; dane MF i listy emisyjne).
+Indeks rodziny to wartość pozycji (nominał + narosłe odsetki) kupionej w 2005 r. lub przy debiucie
+rodziny i rolowanej przy wykupie po cenie zamiany (`pf.data.savings_bonds`). Kupony są reinwestowane.
+Sprzedaż przed wykupem obciąża opłata za wcześniejszy wykup z listu emisyjnego. Stopa w horyzoncie miesiąca
+jest znana ex ante, więc SF10 ma margines deterministyczny i nie wchodzi do kopuł. Indeksy DOS i TOZ kończą
+się po wycofaniu tych rodzin ze sprzedaży (2023-01, 2024-05). ROS i ROD (tylko „Rodzina 800+”) pominięto.
+Szczegóły: [`docs/savings_bonds.md`](docs/savings_bonds.md).
 
 **Brak AVB.** AvalonBay wycofano z obrotu w 2026 r. i jego historia nie jest już dostępna w Yahoo
 ani w Nasdaq.
@@ -78,12 +93,15 @@ ani w Nasdaq.
 
 **Skład sub-funduszy w czasie.** Instrumenty notowane krócej niż 750 sesji w oknie nie wchodzą do
 optymalizacji. Sub-fundusz bez takiego instrumentu ma wagę 0: SF7 do 2010-05, SF1 do 2008-02.
+Obligacje SF10 wymagają 21 sesji w oknie i notowania w sesji t−1 (OTS od 2017-11, ROR i DOR od 2022-07,
+TOS od 2022-09; DOS do 2023-01, TOZ do 2024-05).
 
 ## Metoda w skrócie
 
 1. **Marginesy.** Dla każdego instrumentu AR(1)–GJR-GARCH(1,1) ze skośnym rozkładem t, w oknie
    1260 sesji przed datą decyzji. Panel standaryzowanych reszt jest przekształcany w
-   pseudo-obserwacje z rang.
+   pseudo-obserwacje z rang. Obligacje SF10 mają margines deterministyczny: dzienna stopa w horyzoncie
+   to średnia z 21 ostatnich sesji, bez innowacji. Nie wchodzą do panelu reszt ani do kopuł.
 2. **Modele zależności.** Siedem kopuł estymowanych na tych samych pseudo-obserwacjach. Winorośle
    mają obcięcie na 3 drzewach i sekwencyjną MNW par z rodzin Gauss/t/Clayton/Gumbel (z obrotami)
    i Frank, z wyborem rodziny według AIC. Ocena: AIC/BIC, test Vuonga i log-score poza próbą.
@@ -97,11 +115,13 @@ optymalizacji. Sub-fundusz bez takiego instrumentu ma wagę 0: SF7 do 2010-05, S
    gdzie CE_γ to ekwiwalent pewności CRRA na scenariuszach, a Λ(q) to macierz zależności w dolnym
    ogonie. Optymalizacja ma dwa poziomy: najpierw wagi tickerów w sub-funduszu, potem wagi
    sub-funduszy. Obowiązują limity wagi tickera w SF, wagi SF i ekspozycji look-through.
+   Stała stopa SF10 w scenariuszach daje Λ_ij(q) = 0, więc SF10 nie zwiększa kary za zależność.
    Porównywane strategie: `ce_dep`, `ce` (κ = 0), `maxret_es`, `min_es` oraz benchmarki `ew`
    i `mv_hist` (shrinkage Ledoita–Wolfa).
 5. **Backtest.** Rebalansowanie co miesiąc. Decyzja zapada w pierwszej sesji miesiąca na danych do
    dnia poprzedniego, a transakcja na jej zamknięciu. Między datami portfel jest trzymany z dryfem
-   wag. Analizę wrażliwości (opóźnienie 0, q = 0,10, ρ_S, siatka κ) liczono tylko na kalibracji.
+   wag. Koszt: 0,1% wartości transakcji oraz, przy sprzedaży obligacji SF10, opłata za wcześniejszy
+   wykup. Analizę wrażliwości (opóźnienie 0, q = 0,10, ρ_S, siatka κ) liczono tylko na kalibracji.
    Parametry zamrożono przed hold-out.
 6. **Ocena.** Testy Kupca, Christoffersena, Acerbiego–Szekely (Z₂) i Du–Escanciano. MC ex post: FHS,
    bootstrap stacjonarny i wielowymiarowe MC. Ranking: CE, Sharpe z SE Lo, Sortino, Calmar, Omega,
@@ -110,10 +130,11 @@ optymalizacji. Sub-fundusz bez takiego instrumentu ma wagę 0: SF7 do 2010-05, S
 ## Struktura repozytorium
 
 ```
-config/            parametry (YAML): models, backtest, profiles, subfunds, options
+config/            parametry (YAML): models, backtest, profiles, subfunds, savings_bonds, options
 data/              dane surowe (raw/) i przetworzone (processed/); data_import.py, data_manipulation.py
 src/pf/
-  data/            pobieranie danych, stopa wolna od ryzyka (riskfree), kontrola kompletności (quality)
+  data/            pobieranie danych, stopa wolna od ryzyka (riskfree), kontrola kompletności (quality),
+                   indeksy obligacji oszczędnościowych SF10 (savings_bonds)
   models/          marginesy GARCH, kopuły parowe, R-vine, interfejs modeli zależności, ocena (gof)
   sim/             scenariusze (adaptacyjne N, wspólne liczby losowe)
   opt/             CE i gradient (utility), kara za zależność, profile i optymalizacja dwupoziomowa,
@@ -144,8 +165,8 @@ Pipeline'y uruchamia się w podanej kolejności. Są przyrostowe i wznawialne: p
 są pomijane.
 
 ```bash
-# 1. Dane (sieć): notowania, kursy NBP, log-stopy w PLN, stopa wolna od ryzyka
-python data_import.py
+# 1. Dane (sieć): notowania, kursy NBP, obligacje oszczędnościowe, log-stopy w PLN, stopa wolna od ryzyka
+python data_import.py              # zawiera python -m pf.data.savings_bonds
 python data_manipulation.py
 python -m pf.data.riskfree
 
@@ -210,6 +231,8 @@ Benchmarki mają model `-`.
 - **Winsoryzacja innowacji.** Symulowane innowacje są ograniczone do 2·max|ε̂| z okna, co zapobiega
   eksplozji rekursji GARCH przy rozkładach z η < 4.
 - **Krótki hold-out.** 69 miesięcy i niska moc testów miesięcznych utrudniają rozstrzygnięcia.
+- **Indeksy obligacji SF10.** Odzwierciedlają rolowaną pozycję jednego rocznika, a nie serię bieżącą,
+  którą kupuje inwestor w dniu t. Prognoza stopy z 21 sesji pomija zmianę stopy w nowym okresie odsetkowym.
 
 Pełna lista: [`docs/backtest.md`](docs/backtest.md), sekcja 11.
 

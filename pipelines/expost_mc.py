@@ -4,7 +4,8 @@ Szeregi: portfele (wariant bazowy: 7 modeli × 4 strategie × 5 profili + ew + m
 dzienne stopy netto, osobno dla próby kalibracyjnej, hold-out i całości. Metody: FHS (GJR-GARCH skew-t,
 bootstrap reszt, stan startowy z losowej daty) i bootstrap stacjonarny Politisa–Romano; dla strategii
 głównej (``expost_mc.main_model`` × ``expost_mc.main_strategy``) także wielowymiarowe MC (marginesy GARCH
-+ R-vine na 9 dziennych szeregach SF; wagi W z ostatniej daty próby i średnie W okresu).
++ R-vine na dziennych szeregach SF; SF10 – stopa deterministyczna; wagi W z ostatniej daty próby i średnie W okresu).
+Szeregi sub-funduszu deterministycznego (SF10) nie mają FHS (rozkład zdegenerowany).
 N adaptacyjnie (SE(ÊS)/|ÊS| ≤ ``rel_se``, N ≤ ``n_max``). Porównanie: ES ex ante (średnia prognoz) i ES
 historyczny (miesięczne stopy netto).
 
@@ -32,6 +33,7 @@ from pf.artifacts import update_manifest, write_parquet
 from pf.backtest.data import sample_label
 from pf.backtest.expost_mc import FHS, MultiMC, adaptive, block_length, stationary_monthly_losses
 from pf.opt.cvar import empirical_es
+from pf.portfolio import deterministic_subfunds
 from pipelines.backtest import BACKTEST_DIR, current_run_id, load_all
 
 log = logging.getLogger("expost_mc")
@@ -44,21 +46,23 @@ def _seed(*parts) -> int:
 
 
 def univariate_task(args) -> list[dict]:
-    sid, kind, sample, r, ecfg, alpha = args
+    sid, kind, sample, r, ecfg, alpha, deterministic = args
     rows = []
     if len(r) < 2 * ecfg["horizon"] + 50:
         return rows
     H = ecfg["horizon"]
     kw = dict(alpha=alpha, batch=ecfg["batch"], n_min=ecfg["n_min"], n_max=ecfg["n_max"], rel_se=ecfg["rel_se"])
     t0 = time.time()
-    try:
-        fhs = FHS(r)
-        rng = np.random.default_rng(_seed(sid, sample, "fhs"))
-        res = adaptive(lambda b: fhs.monthly_losses(b, H, rng), **kw)
-        rows.append({"sid": sid, "kind": kind, "sample": sample, "method": "fhs", "T_days": len(r),
-                     "garch_converged": fhs.converged, "seconds": time.time() - t0, **res})
-    except Exception as exc:  # noqa: BLE001
-        rows.append({"sid": sid, "kind": kind, "sample": sample, "method": "fhs", "T_days": len(r), "error": str(exc)})
+    if not deterministic:          # FHS (GARCH) nie dotyczy szeregu o stopie deterministycznej (SF10)
+        try:
+            fhs = FHS(r)
+            rng = np.random.default_rng(_seed(sid, sample, "fhs"))
+            res = adaptive(lambda b: fhs.monthly_losses(b, H, rng), **kw)
+            rows.append({"sid": sid, "kind": kind, "sample": sample, "method": "fhs", "T_days": len(r),
+                         "garch_converged": fhs.converged, "seconds": time.time() - t0, **res})
+        except Exception as exc:  # noqa: BLE001
+            rows.append({"sid": sid, "kind": kind, "sample": sample, "method": "fhs", "T_days": len(r),
+                         "error": str(exc)})
     t0 = time.time()
     b = block_length(r)
     seed = _seed(sid, sample, "sb")
@@ -75,10 +79,10 @@ def univariate_task(args) -> list[dict]:
 
 
 def multivariate_task(args) -> list[dict]:
-    sid, sample, r_sf, W_last, W_mean, cfg, ecfg, alpha = args
+    sid, sample, r_sf, W_last, W_mean, cfg, ecfg, alpha, det_sf = args
     rows = []
     t0 = time.time()
-    mm = MultiMC(r_sf, cfg)
+    mm = MultiMC(r_sf, cfg, deterministic=det_sf)
     rng = np.random.default_rng(_seed(sid, sample, "mv"))
     kw = dict(alpha=alpha, batch=ecfg["batch"], n_min=ecfg["n_min"], n_max=ecfg["n_max"], rel_se=ecfg["rel_se"])
     for label, W in (("multivariate_W_last", W_last), ("multivariate_W_mean", W_mean)):
@@ -90,7 +94,7 @@ def multivariate_task(args) -> list[dict]:
     return rows
 
 
-def build_tasks(run_dir, bcfg, ecfg, alpha, cfg):
+def build_tasks(run_dir, bcfg, ecfg, alpha, cfg, det_sf=()):
     daily = pd.read_parquet(run_dir / "daily.parquet")
     daily_sf = pd.read_parquet(run_dir / "daily_sf.parquet")
     base = daily[daily["sid"].str.endswith("|base")]
@@ -102,7 +106,8 @@ def build_tasks(run_dir, bcfg, ecfg, alpha, cfg):
             g = g.sort_values("session")
             for smp in SAMPLES:
                 x = g if smp == "all" else g[g["sample"] == smp]
-                uni.append((sid, kind, smp, x["r_net"].to_numpy(dtype=float), ecfg, alpha))
+                det = kind == "subfund" and sid.rsplit("|", 1)[1] in set(det_sf)
+                uni.append((sid, kind, smp, x["r_net"].to_numpy(dtype=float), ecfg, alpha, det))
     W = pd.read_parquet(run_dir / "weights_W.parquet")
     main = W[(W["model"] == ecfg["main_model"]) & (W["strategy"] == ecfg["main_strategy"]) & (W["variant"] == "base")]
     sf = daily_sf.assign(series=daily_sf["sid"].str.rsplit("|", n=1).str[0],
@@ -118,7 +123,7 @@ def build_tasks(run_dir, bcfg, ecfg, alpha, cfg):
                 continue
             last = wd[wd["date"] == wd["date"].max()].set_index("subfund")["weight"]
             mean = wd.pivot_table(index="date", columns="subfund", values="weight").fillna(0.0).mean()
-            multi.append((sid, smp, r_sf[sorted(r_sf.columns)], last, mean, cfg, ecfg, alpha))
+            multi.append((sid, smp, r_sf[sorted(r_sf.columns)], last, mean, cfg, ecfg, alpha, tuple(det_sf)))
     return uni, multi
 
 
@@ -148,8 +153,8 @@ def report(tab: pd.DataFrame, ecfg: dict) -> str:
     lines = ["# MC ex post: miesięczne VaR i ES 97,5% zrealizowanych szeregów", "",
              f"Dzienne stopy netto, horyzont {ecfg['horizon']} sesji, N adaptacyjnie (SE(ÊS)/|ÊS| ≤ {ecfg['rel_se']}, "
              f"N ≤ {ecfg['n_max']}). FHS – GJR-GARCH(1,1) skew-t z bootstrapem reszt i losowym stanem startowym; "
-             "SB – bootstrap stacjonarny Politisa–Romano; MV – marginesy GARCH + R-vine na 9 szeregach SF "
-             "(strategia główna). ES ex ante – średnia prognoz modelu; ES hist. – z miesięcznych stóp netto. "
+             "SB – bootstrap stacjonarny Politisa–Romano; MV – marginesy GARCH + R-vine na szeregach SF "
+             "(strategia główna; SF10 – stopa deterministyczna, bez FHS). ES ex ante – średnia prognoz modelu; ES hist. – z miesięcznych stóp netto. "
              "Wartości w %. Szereg strategii o zmiennych wagach nie jest ściśle stacjonarny.", ""]
     for smp in SAMPLES:
         p = port[port["sample"] == smp]
@@ -195,7 +200,7 @@ def main() -> None:
     alpha = float(cfg["rebalance"]["es_alpha"])
     out_path = run_dir / "es_mc.parquet"
     if not args.report_only:
-        uni, multi = build_tasks(run_dir, bcfg, ecfg, alpha, cfg)
+        uni, multi = build_tasks(run_dir, bcfg, ecfg, alpha, cfg, deterministic_subfunds(subfunds))
         log.info("Zadania: %d jednowymiarowych, %d wielowymiarowych", len(uni), len(multi))
         rows, t0 = [], time.time()
         with ProcessPoolExecutor(max_workers=max(args.jobs, 1), mp_context=mp.get_context("spawn")) as ex:

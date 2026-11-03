@@ -56,6 +56,11 @@ grid:
   benchmarks: [ew, mv_hist]
 forecast_model: rvine          # scenariusze dla prognoz ex ante benchmarków (ew, mv_hist)
 transaction_cost: 0.001        # koszt c·Σ|x − x̃| (zakup początkowy: c)
+# Opłata za wcześniejszy wykup obligacji oszczędnościowych (SF10) przy zmniejszeniu pozycji: Σ f_i(t)·(x̃_i − x_i)⁺,
+# f_i(t) – ułamek wartości obligacji (data_manipulation.py, pf.data.savings_bonds).
+redemption_cost:
+  enabled: true
+  path: "data/processed/savings_bonds_redemption_cost.csv"
 pit_grid_step: 0.005           # siatka kwantyli rozkładu strat (PIT poniżej VaR)
 
 # Analiza wrażliwości (tylko daty próby kalibracyjnej), liczona w tym samym przebiegu na tych samych

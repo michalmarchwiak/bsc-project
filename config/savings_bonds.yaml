@@ -1,0 +1,34 @@
+# Obligacje oszczędnościowe Skarbu Państwa (SF10) – źródło danych i budowa indeksów wartości.
+#
+# Źródło: Błażewski, R. (2026). Obligacje oszczędnościowe Skarbu Państwa: emisje i oprocentowanie
+# [Zbiór danych]. obrotomierz.pl. Zenodo. https://doi.org/10.5281/zenodo.23208023 (licencja CC BY 4.0),
+# na podstawie danych Ministerstwa Finansów (dane.gov.pl) i list emisyjnych.
+source:
+  urls:
+    emisje: "https://raw.githubusercontent.com/obrotomierz/obligacje-skarbowe/main/emisje.csv"
+    oprocentowanie: "https://raw.githubusercontent.com/obrotomierz/obligacje-skarbowe/main/oprocentowanie.csv"
+  local_dir: "data/raw/savings_bonds"          # kopia lokalna (używana, gdy brak sieci)
+
+# Zakres indeksów (jak notowania w data_import.py).
+start: "2005-01-01"
+end: "2026-10-29"
+
+# Ticker → rodzina obligacji. Pominięte: ROS i ROD (sprzedawane wyłącznie beneficjentom programu
+# „Rodzina 800+”, niedostępne dla ogółu inwestorów).
+families:
+  OTS.SP: OTS     # 3-miesięczne, stałe, odsetki przy wykupie (od 2017-10)
+  DOS.SP: DOS     # 2-letnie, stałe, kapitalizacja roczna (do 2022-05)
+  DOR.SP: DOR     # 2-letnie, stopa referencyjna NBP, kupon miesięczny (od 2022-06)
+  ROR.SP: ROR     # roczne, stopa referencyjna NBP, kupon miesięczny (od 2022-06)
+  TOZ.SP: TOZ     # 3-letnie, WIBOR 6M, kupon półroczny (2012-05 – 2022-07)
+  TOS.SP: TOS     # 3-letnie, stałe, kapitalizacja roczna (od 2022-08)
+  COI.SP: COI     # 4-letnie, inflacja + marża, kupon roczny
+  EDO.SP: EDO     # 10-letnie, inflacja + marża, kapitalizacja roczna
+
+# Rolowanie przy wykupie: wartość wykupu reinwestowana w serię tej samej rodziny w sprzedaży w dniu wykupu
+# po cenie zamiany (cena_zamiany_zl; brak – nominał 100 zł). Brak serii w sprzedaży kończy indeks.
+use_exchange_price: true
+
+# Wyniki (kalendarz dzienny, 100 = wartość w dniu pierwszego zakupu).
+index_path: "data/raw/savings_bonds/index.csv"
+redemption_cost_path: "data/raw/savings_bonds/redemption_cost.csv"

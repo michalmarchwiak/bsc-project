@@ -11,6 +11,10 @@ Metodologia backtestu strategii opartych na modelach zależności (pakiet `pf`, 
   tickerów. AVB (AvalonBay) jest niedostępny: spółkę wycofano z obrotu w 2026 r., Yahoo i Nasdaq
   nie udostępniają już historii, a Stooq (`avb.us`) odrzuca połączenia z kontenera sesji. SF9 (REIT)
   ma więc 9 składników. Kontrola kompletności: `pf.data.quality`.
+- SF10: 8 rodzin obligacji oszczędnościowych Skarbu Państwa (tickery `*.SP`). Ich dzienne log-stopy pochodzą
+  z indeksów wartości rolowanych pozycji, zbudowanych z warunków emisji (zbiór obrotomierz.pl, dane MF
+  i listy emisyjne; `pf.data.savings_bonds`, opis: `docs/savings_bonds.md`). Aktywa SF10 wymagają
+  21 sesji w oknie (`min_obs_deterministic`) i notowania w sesji t−1.
 - Próby (`config/backtest.yaml`): kalibracyjna 2008-01-01 – 2020-12-31 (156 dat rebalansowania),
   hold-out 2021-01-01 – 2026-10-29 (70 dat; ostatnia, 2026-10-01, to bieżący skład bez okresu realizacji,
   więc ocena obejmuje 69 miesięcy). Data należy do próby, w której leży.
@@ -43,6 +47,8 @@ braki → ẑ = 0), pseudo-obserwacje z rang. Modele (`pf.models.dependence`): `
 i Frank), `gauss`, `student_t`, `indep`, `empirical`. Szczegóły i wzory: `docs/dependence_model.md`.
 Ocena: AIC/BIC i test Vuonga (R-vine vs pozostałe) na oknie; log-score poza próbą
 LS = Σ_t log ĉ(u_t) z PIT filtru GARCH naprzód (`MarginFit.pit_forward`) dla sesji [t, t_next).
+Obligacje SF10 mają margines deterministyczny (r_h = μ̂, średnia z 21 ostatnich sesji, σ = 0) i nie wchodzą
+do panelu reszt, modeli zależności ani ocen modeli.
 
 ## 4. Scenariusze ex ante (krok 3, część ex ante)
 
@@ -53,7 +59,8 @@ ostatnia data 0,01); portfele kontrolne: EW w każdym SF i EW między SF:
 
 Wspólne liczby losowe: W ~ U(0, 1) ze strumienia (ziarno, data) wspólnego dla modeli; losowość
 specyficzna dla modelu – ziarno (ziarno, data, CRC32(model)). Wszystkie strategie, profile i warianty
-danej daty korzystają z tych samych scenariuszy danego modelu.
+danej daty korzystają z tych samych scenariuszy danego modelu. Kopuła generuje wartości tylko dla aktywów
+stochastycznych; stopa aktywa SF10 jest stała we wszystkich scenariuszach, R_i = exp(H·μ̂_i) − 1.
 
 ## 5. Profile, ekwiwalent pewności i kara za zależność (krok 2)
 
@@ -102,8 +109,10 @@ Wagi w czasie: `artifacts/backtest/<run_id>/weights_tickers.parquet` (wszystkie 
 `artifacts/reports/weights/` (CSV dla strategii głównej, opis w `README.md`).
 
 Realizacja: kupno i trzymanie z dryfem wag look-through x = Σ_k W_k w_k; V_h = Σ_i x_i Π_{j≤h}(1 + r_ij);
-koszt c·Σ_i|x_i − x̃_i| (c = 0,1%; zakup początkowy c), x̃ – wagi po dryfie; stopy dzienne i miesięczne
-brutto/netto, analogicznie dla każdego SF.
+koszt c·Σ_i|x_i − x̃_i| + Σ_i f_i(t)·(x̃_i − x_i)⁺ (c = 0,1%; zakup początkowy c; f_i – opłata za wcześniejszy
+wykup obligacji SF10 jako ułamek wartości, dla pozostałych aktywów 0), x̃ – wagi po dryfie; stopy dzienne
+i miesięczne brutto/netto, analogicznie dla każdego SF. Tabela `periods.parquet` zawiera kolumnę
+`redemption_cost`.
 
 PIT zrealizowanej straty u_t = F̂_t(L_t) (dokładnie z ogona, poniżej VaR z siatki kwantyli). Testy
 (osobno kalibracja i hold-out, `pf.backtest.risk_tests`): Kupiec (LR i dokładny dwumianowy),
@@ -128,7 +137,7 @@ co miesiąc w oknie kroczącym – to część strategii.
 `pipelines.expost_mc`: dla każdego szeregu (portfele bazowe i ich SF) i próby, na dziennych stopach netto:
 FHS (GJR-GARCH(1,1) skew-t, bootstrap reszt, stan startowy z losowej daty) i bootstrap stacjonarny
 Politisa–Romano (`arch`, długość bloku max(b̂(r), b̂(r²)) z `optimal_block_length`); dla strategii głównej
-(rvine × ce_dep) także wielowymiarowe MC (marginesy GARCH + R-vine na 9 szeregach SF, wagi W z ostatniej
+(rvine × ce_dep) także wielowymiarowe MC (marginesy GARCH + R-vine na szeregach SF, SF10 ze stałą stopą; wagi W z ostatniej
 daty i średnie). N adaptacyjnie (SE(ÊS)/|ÊS| ≤ 0,01, N ≤ 200 000). Wynik: miesięczne VaR i ES 97,5% z SE,
 porównanie z ES ex ante (średnia prognoz) i historycznym. Szereg strategii o zmiennych wagach nie jest
 ściśle stacjonarny.
@@ -190,6 +199,10 @@ python -m pipelines.ranking                                   # ranking, raporty
 - **Stopa wolna od ryzyka.** Dzienny WIBOR 1M był niedostępny, więc r_f to średnia miesięczna
   (Eurostat), a w 10.2026 stopa referencyjna NBP.
 - **Brak AVB** w SF9.
+- **Obligacje SF10.** Indeks odzwierciedla rolowaną pozycję jednego rocznika, a nie serię bieżącą. Prognoza
+  stopy z 21 sesji pomija zmianę stopy w nowym okresie odsetkowym. W miesiącu wygaśnięcia indeksu
+  (DOS 2023-01, TOZ 2024-05) środki po wykupie nie są oprocentowane do następnej daty rebalansowania.
+  Szczegóły: `docs/savings_bonds.md`.
 - **Stały horyzont.** Horyzont scenariuszy H = 21 sesji jest stały, a okres realizacji ma 19–23 sesje.
 - **Zależność ścieżek w bootstrapie.** W bootstrapie stacjonarnym sąsiednie ścieżki 21-dniowe z jednej
   replikacji są słabo zależne, więc SE jest lekko zaniżony.

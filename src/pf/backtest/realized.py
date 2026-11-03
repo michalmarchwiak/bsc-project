@@ -8,6 +8,9 @@ Szereg s ma w dacie rebalansowania t wagi look-through x_t (tickery) i opóźnie
 a wagi po dryfie x̃_{t+1,i} = x_{t,i} Π_j (1 + r_{i,j}) / V_{T_t}. Koszt w dniu rebalansowania
 k_t = c·Σᵢ |x_{t,i} − x̃_{t,i}| (zakup początkowy: k = c), stopa netto okresu (1 − k_t)(1 + r^gross_t) − 1,
 a dzienna – koszt w pierwszej sesji okresu. Brak notowania aktywa w sesji → r = 0.
+Sprzedaż obligacji oszczędnościowych (SF10) przed wykupem obciąża dodatkowo opłata za wcześniejszy wykup
+f_i(t) (ułamek wartości, ``pf.data.savings_bonds``): k_t = c·Σᵢ |x_{t,i} − x̃_{t,i}| + Σᵢ f_i(t)·(x̃_{t,i} − x_{t,i})⁺,
+f_i(t) z zamknięcia sesji transakcji.
 Stopa wolna od ryzyka okresu: r_f(t0, t1) = WIBOR1M(t0)·(t1 − t0)/365, t0, t1 – zamknięcia otwarcia i
 zamknięcia pozycji.
 
@@ -47,12 +50,22 @@ def add_sid(df: pd.DataFrame, extra: str | None = None) -> pd.DataFrame:
     return df.assign(sid=sid)
 
 
+def sell_cost_at(sell_cost: pd.DataFrame | None, t: pd.Timestamp) -> pd.Series:
+    """f_i(t): ostatni wiersz tabeli opłat za wcześniejszy wykup z datą ≤ t (brak – pusta seria)."""
+    if sell_cost is None or sell_cost.empty:
+        return pd.Series(dtype=float)
+    part = sell_cost.loc[sell_cost.index <= pd.Timestamp(t)]
+    return part.iloc[-1].fillna(0.0) if len(part) else pd.Series(dtype=float)
+
+
 def realize(returns: pd.DataFrame, weights: pd.DataFrame, lags: pd.Series, dates: pd.DatetimeIndex,
-            cost: float, rf: pd.Series | None = None, day_count: int = 365) -> tuple[pd.DataFrame, pd.DataFrame]:
+            cost: float, rf: pd.Series | None = None, day_count: int = 365,
+            sell_cost: pd.DataFrame | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Dzienne i okresowe stopy szeregów (``weights``: date, sid, ticker, weight; ``lags``: sid → L).
 
+    ``sell_cost`` – opłaty za wcześniejszy wykup f_i(t) (sesje × tickery, ułamek wartości sprzedanej pozycji).
     Zwraca (daily: session, date, sid, r_gross, r_net; periods: date, end, sid, lag, r_gross, r_net, cost,
-    traded, turnover, rf, n_sessions). Ostatnia data (bez t_next) nie jest realizowana.
+    redemption_cost, traded, turnover, rf, n_sessions). Ostatnia data (bez t_next) nie jest realizowana.
     """
     dates = pd.DatetimeIndex(sorted(dates))
     simple = np.expm1(returns)
@@ -82,22 +95,28 @@ def realize(returns: pd.DataFrame, weights: pd.DataFrame, lags: pd.Series, dates
             drift = X.to_numpy() * G[-1] / V[:, -1:]
             t0, t1 = holding_bounds(returns.index, t, t_next, L)
             rf_p = period_rate(rf, t0, t1, day_count) if rf is not None else 0.0
+            fee = sell_cost_at(sell_cost, t0)
             costs = np.zeros(len(X))
             for j, sid in enumerate(X.index):
                 x = X.iloc[j]
                 x = x[x > 0]
                 prev = prev_drift.get(sid)
+                redemption = 0.0
                 if prev is None:
                     traded = float(x.sum())
                 else:
                     idx = x.index.union(prev.index)
-                    traded = float((x.reindex(idx, fill_value=0.0) - prev.reindex(idx, fill_value=0.0)).abs().sum())
-                k = cost * traded
+                    diff = x.reindex(idx, fill_value=0.0) - prev.reindex(idx, fill_value=0.0)
+                    traded = float(diff.abs().sum())
+                    if len(fee):
+                        redemption = float(((-diff).clip(lower=0.0) * fee.reindex(idx).fillna(0.0)).sum())
+                k = cost * traded + redemption
                 costs[j] = k
                 new_drift[sid] = pd.Series(drift[j], index=X.columns)[lambda s: s > 0]
                 net = (1.0 - k) * (1.0 + gross[j]) - 1.0
                 period_rows.append({"date": t, "end": t_next, "sid": sid, "lag": L, "r_gross": gross[j],
-                                    "r_net": net, "cost": k, "traded": traded, "turnover": 0.5 * traded,
+                                    "r_net": net, "cost": k, "redemption_cost": redemption, "traded": traded,
+                                    "turnover": 0.5 * traded,
                                     "rf": rf_p, "n_sessions": len(sessions)})
             rn = r_daily.copy()
             rn[:, 0] = (1.0 - costs) * (1.0 + rn[:, 0]) - 1.0

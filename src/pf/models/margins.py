@@ -18,6 +18,14 @@ Panel reszt łączy GPW i giełdy USA: zaczyna się od dnia, w którym notowane 
 usuwane, a pojedyncze braki (dni bez obrotu danego instrumentu) wypełniane są ẑ = 0.
 Zamknięcie GPW (17:00) i NYSE (22:00 czasu polskiego) nie są synchroniczne, co zaniża
 dzienną zależność między rynkami.
+
+Margines deterministyczny (``kind = "deterministic"``, obligacje oszczędnościowe SF10): stopa aktywa
+w horyzoncie jest znana ex ante (oprocentowanie bieżącego okresu odsetkowego), więc rozkład brzegowy
+jest zdegenerowany (punktowy). Prognoza dziennej log-stopy to średnia z ostatnich ``n_last`` sesji okna,
+    μ̂ = (1/n) Σ_{t=T−n+1}^{T} r_t,   r_h = μ̂ dla h = 1, …, H,
+bez innowacji (σ = 0). Dla rozkładu niecągłego kopuła nie jest jednoznaczna (tw. Sklara), a aktywo
+o stopie stałej w scenariuszach jest niezależne od pozostałych – aktywa deterministyczne nie wchodzą
+do panelu reszt ani do modeli zależności.
 """
 
 from __future__ import annotations
@@ -52,6 +60,11 @@ class MarginFit:
     n_obs: int
     converged: bool
     eps_absmax: float = float("nan")   # max_t |ε̂_t| w oknie (×scale) – winsoryzacja innowacji w symulacji
+    kind: str = "garch"                # "garch" | "deterministic" (stopa znana ex ante, σ = 0)
+
+    @property
+    def deterministic(self) -> bool:
+        return self.kind == "deterministic"
 
     def next_sigma2(self) -> float:
         lev = self.gamma if self.last_eps < 0 else 0.0
@@ -61,6 +74,8 @@ class MarginFit:
         """ε_t / σ_t dla nowych sesji (filtr GARCH naprzód od stanu na koniec okna; NaN – brak sesji)."""
         y = self.scale * np.asarray(r_new, dtype=float)
         z = np.full(len(y), np.nan)
+        if self.deterministic:
+            return z
         r_prev, eps_prev, s2_prev = self.last_r, self.last_eps, self.last_sigma2
         for t, yt in enumerate(y):
             if not np.isfinite(yt):
@@ -108,25 +123,44 @@ def fit_margin(r: pd.Series, scale: float = 100.0) -> tuple[MarginFit, pd.Series
     return fit, z.rename(r.name)
 
 
+DETERMINISTIC_SESSIONS = 21   # n w prognozie μ̂ marginesu deterministycznego
+
+
+def fit_deterministic(r: pd.Series, scale: float = 100.0, n_last: int = DETERMINISTIC_SESSIONS) -> MarginFit:
+    """Margines deterministyczny: r_h = μ̂ (średnia ostatnich ``n_last`` sesji), σ = 0."""
+    y = scale * r.dropna()
+    mu = float(y.iloc[-n_last:].mean()) if len(y) else 0.0
+    return MarginFit(name=str(r.name), mu=mu, phi=0.0, omega=0.0, alpha=0.0, gamma=0.0, beta=0.0,
+                     eta=float("nan"), lam=float("nan"), scale=scale, last_r=mu, last_eps=0.0, last_sigma2=0.0,
+                     loglik=float("nan"), n_obs=int(len(y)), converged=True, eps_absmax=0.0, kind="deterministic")
+
+
 def _fit_one(args):
     r, scale = args
     return fit_margin(r, scale)
 
 
-def fit_margins(returns: pd.DataFrame, scale: float = 100.0, jobs: int | None = None
-                ) -> tuple[dict[str, MarginFit], pd.DataFrame]:
-    """Dopasowanie marginesów dla wszystkich kolumn; zwraca parametry i panel reszt ẑ."""
-    tasks = [(returns[c], scale) for c in returns.columns]
-    if jobs == 1:
+def fit_margins(returns: pd.DataFrame, scale: float = 100.0, jobs: int | None = None, deterministic=(),
+                n_last: int = DETERMINISTIC_SESSIONS) -> tuple[dict[str, MarginFit], pd.DataFrame]:
+    """Dopasowanie marginesów dla wszystkich kolumn; zwraca parametry i panel reszt ẑ.
+
+    Kolumny z ``deterministic`` dostają margines deterministyczny (``fit_deterministic``) i nie wchodzą
+    do panelu reszt (kolumny panelu: pozostałe aktywa w kolejności ``returns``)."""
+    det = set(deterministic)
+    stoch = [c for c in returns.columns if c not in det]
+    tasks = [(returns[c], scale) for c in stoch]
+    if jobs == 1 or len(tasks) <= 1:
         out = [_fit_one(t) for t in tasks]
     else:
         with ProcessPoolExecutor(max_workers=jobs) as ex:
             out = list(ex.map(_fit_one, tasks))
-    fits = {f.name: f for f, _ in out}
+    fitted = {f.name: f for f, _ in out}
+    fitted.update({c: fit_deterministic(returns[c], scale, n_last) for c in returns.columns if c in det})
+    fits = {str(c): fitted[str(c)] for c in returns.columns}
     bad = [n for n, f in fits.items() if not f.converged]
     if bad:
         log.warning("Brak zbieżności estymacji GARCH: %s", ", ".join(bad))
-    z = pd.concat([z for _, z in out], axis=1).reindex(columns=returns.columns)
+    z = (pd.concat([z for _, z in out], axis=1) if out else pd.DataFrame(index=returns.index)).reindex(columns=stoch)
     return fits, z
 
 
@@ -173,14 +207,16 @@ def simulate_daily(fits: list[MarginFit], U: np.ndarray, eps_cap: float | None =
     eksplozję rekursji σ² w symulacji (np. LPP.WA, okno do 2013-10: η = 2,79, α + γ = 0,33 → miesięczna stopa
     rzędu 10¹⁹); ograniczenie do k-krotności największej innowacji z 5 lat okna zachowuje grube ogony, ale
     wyklucza ścieżki bez sensu ekonomicznego.
+    Aktywa deterministyczne (``MarginFit.deterministic``): r_h = μ̂ niezależnie od U (kolumna U ignorowana).
     """
     S, H, d = U.shape
     assert d == len(fits)
     par = {k: np.array([getattr(f, k) for f in fits]) for k in
            ("mu", "phi", "omega", "alpha", "gamma", "beta", "scale", "last_r")}
-    Z = np.empty_like(U)
+    Z = np.zeros_like(U)
     for j, f in enumerate(fits):
-        Z[:, :, j] = skewt_ppf(U[:, :, j].ravel(), f.eta, f.lam).reshape(S, H)
+        if not f.deterministic:
+            Z[:, :, j] = skewt_ppf(U[:, :, j].ravel(), f.eta, f.lam).reshape(S, H)
     sigma2 = np.tile(np.array([f.next_sigma2() for f in fits]), (S, 1))
     r_prev = np.tile(par["last_r"], (S, 1))
     cap = None

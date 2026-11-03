@@ -8,6 +8,9 @@ Dla każdej daty t (dane ≤ t−1):
     4. scenariusze miesięczne każdego modelu z adaptacyjną liczbą N (``simulate_adaptive``),
        ze wspólnymi wejściowymi W ~ U(0, 1) dla wszystkich modeli w dacie t.
 
+Aktywa deterministyczne (SF10, ``deterministic``) mają margines o stopie znanej ex ante (``fit_deterministic``),
+nie wchodzą do panelu reszt ani modeli zależności, a w scenariuszach ich stopa jest stała.
+
 Pamięć podręczna (``artifacts/backtest/cache/``, poza repozytorium): klucz marginesów to skrót SHA-256
 danych okna i konfiguracji marginesów, klucz modeli zależności – dodatkowo konfiguracji ``rvine`` i
 ``dependence``. Zmiana danych spoza okna (np. dopisanie nowych sesji) nie unieważnia wyników
@@ -36,6 +39,7 @@ from pf.models.rvine import pseudo_observations
 from pf.opt.mv import mv_two_level
 from pf.opt.profiles import TwoLevelResult, equal_weight, load_profiles, optimize_two_level, subfund_data
 from pf.opt.utility import certainty_equivalent
+from pf.portfolio import deterministic_tickers
 from pf.sim.scenarios import ScenarioSet, control_portfolios, es_with_se, model_seed, simulate_adaptive
 
 log = logging.getLogger(__name__)
@@ -54,7 +58,7 @@ class DateModels:
     t: pd.Timestamp
     assets: list[str]
     margins: dict[str, MarginFit]
-    panel: pd.DataFrame                    # reszty ẑ (sesje × aktywa)
+    panel: pd.DataFrame                    # reszty ẑ (sesje × aktywa stochastyczne)
     U: np.ndarray                          # pseudo-obserwacje panelu
     models: dict[str, DependenceModel] = field(default_factory=dict)
     timings: dict[str, float] = field(default_factory=dict)
@@ -64,13 +68,20 @@ class DateModels:
     def window_end(self) -> pd.Timestamp:
         return self.panel.index.max()
 
+    @property
+    def stochastic(self) -> list[str]:
+        """Aktywa modeli zależności (kolumny panelu reszt; bez aktywów deterministycznych)."""
+        return list(self.panel.columns)
 
-PANEL_VERSION = "trim_leading-v2+eps_absmax"   # zmiana panelu/marginesów unieważnia pamięć podręczną
+
+PANEL_VERSION = "trim_leading-v2+eps_absmax+deterministic"   # zmiana panelu/marginesów unieważnia pamięć podręczną
 
 
-def margins_key(window: pd.DataFrame, cfg: dict) -> str:
+def margins_key(window: pd.DataFrame, cfg: dict, deterministic=()) -> str:
     return config_digest({"window": window_digest(window), "margins": cfg["margins"],
-                          "min_obs": cfg["rebalance"]["min_obs"], "panel": PANEL_VERSION})[:16]
+                          "min_obs": cfg["rebalance"]["min_obs"],
+                          "min_obs_deterministic": cfg["rebalance"].get("min_obs_deterministic"),
+                          "deterministic": sorted(deterministic), "panel": PANEL_VERSION})[:16]
 
 
 def dependence_key(cfg: dict) -> str:
@@ -78,14 +89,17 @@ def dependence_key(cfg: dict) -> str:
 
 
 def fit_margins_step(t: pd.Timestamp, returns: pd.DataFrame, cfg: dict, jobs: int | None = 1,
-                     cache_dir: Path | None = CACHE_DIR) -> DateModels:
-    """Marginesy i pseudo-obserwacje dla daty t (wczytywane z pamięci podręcznej, jeśli istnieją)."""
+                     cache_dir: Path | None = CACHE_DIR, deterministic=()) -> DateModels:
+    """Marginesy i pseudo-obserwacje dla daty t (wczytywane z pamięci podręcznej, jeśli istnieją).
+
+    ``deterministic`` – tickery o stopie znanej ex ante (SF10): margines deterministyczny, poza panelem reszt."""
     rcfg = cfg["rebalance"]
     window = estimation_window(returns, t, rcfg["window_days"])
-    assets = eligible_assets(window, rcfg["min_obs"])
+    assets = eligible_assets(window, rcfg["min_obs"], deterministic, rcfg.get("min_obs_deterministic"))
+    det = [a for a in assets if a in set(deterministic)]
     window = window[assets]
     tag = pd.Timestamp(t).strftime("%Y-%m-%d")
-    folder = None if cache_dir is None else Path(cache_dir) / tag / margins_key(window, cfg)
+    folder = None if cache_dir is None else Path(cache_dir) / tag / margins_key(window, cfg, det)
     t0 = time.time()
     if folder is not None and (folder / "margins.parquet").exists() and (folder / "panel.parquet").exists():
         rows = pd.read_parquet(folder / "margins.parquet").to_dict(orient="records")
@@ -93,7 +107,8 @@ def fit_margins_step(t: pd.Timestamp, returns: pd.DataFrame, cfg: dict, jobs: in
         panel = pd.read_parquet(folder / "panel.parquet")
         cached = True
     else:
-        margins, z = fit_margins(window, scale=cfg["margins"]["scale"], jobs=jobs)
+        margins, z = fit_margins(window, scale=cfg["margins"]["scale"], jobs=jobs, deterministic=det,
+                                 n_last=cfg["margins"].get("deterministic_sessions", 21))
         panel = residual_panel(z)
         cached = False
         if folder is not None:
@@ -118,7 +133,7 @@ def fit_models_step(dm: DateModels, cfg: dict, names: list[str]) -> DateModels:
             dm.models[name] = load_model(path)
             dm.cached[name] = True
         else:
-            dm.models[name] = fit_model(name, dm.U, dm.assets, cfg)
+            dm.models[name] = fit_model(name, dm.U, dm.stochastic, cfg)
             dm.cached[name] = False
             if path is not None:
                 save_model(dm.models[name], path)
@@ -241,7 +256,8 @@ def run_date(t: pd.Timestamp, t_next: pd.Timestamp | None, returns: pd.DataFrame
     profiles = {k: v for k, v in load_profiles(pcfg).items() if k in grid_cfg["profiles"]}
     qgrid = np.arange(bcfg["pit_grid_step"], 1.0, bcfg["pit_grid_step"])
 
-    dm = fit_margins_step(t, returns, cfg, jobs=1, cache_dir=cache_dir)
+    dm = fit_margins_step(t, returns, cfg, jobs=1, cache_dir=cache_dir,
+                          deterministic=deterministic_tickers(subfunds_all))
     fit_models_step(dm, cfg, model_names)
     subfunds = {sf: spec for sf, spec in subfunds_all.items() if set(spec["tickers"]) & set(dm.assets)}
     sfs_tickers = {sf: [a for a in spec["tickers"] if a in dm.assets] for sf, spec in subfunds.items()}
@@ -351,6 +367,7 @@ def run_date(t: pd.Timestamp, t_next: pd.Timestamp | None, returns: pd.DataFrame
     tail_dir = Path(run_dir) / "tails"
     write_parquet(pd.DataFrame(tails), tail_dir / f"{tag}.parquet")
     summary = {"date": tag, "seconds": time.time() - t_start, "n_assets": len(dm.assets),
+               "n_deterministic": len(dm.assets) - len(dm.stochastic),
                "subfunds": list(subfunds), "n_series": len(fc_rows), "timings": dm.timings,
                "cached": dm.cached, "latest": bool(latest), "t_next": None if t_next is None else str(t_next.date()),
                "n_scenarios": {r["model"].iloc[0]: int(r["n"].iloc[0]) for r in scen_rows}}

@@ -1,6 +1,7 @@
 # Sub-fundusze (SF) i ich skład. Wewnątrz SF wagi równe między tickerami dostępnymi
-# w dniu rebalansowania (macierz A, look-through x = AᵀW). Grupy odpowiadają listom
-# tickerów w data_import.py.
+# w dniu rebalansowania (macierz A, look-through x = AᵀW). Grupy SF1–SF9 odpowiadają listom
+# tickerów w data_import.py, SF10 – rodzinom obligacji z config/savings_bonds.yaml.
+# deterministic: true – stopa zwrotu w horyzoncie znana ex ante (margines deterministyczny, poza kopułą).
 
 subfunds:
   SF1:
@@ -30,3 +31,7 @@ subfunds:
   SF9:
     name: "Nieruchomości (REIT)"
     tickers: [PLD, AMT, EQIX, O, SPG, PSA, WELL, DLR, AVB, EXR]
+  SF10:
+    name: "Obligacje oszczędnościowe Skarbu Państwa"
+    deterministic: true
+    tickers: [OTS.SP, DOS.SP, DOR.SP, ROR.SP, TOZ.SP, TOS.SP, COI.SP, EDO.SP]

@@ -1,6 +1,7 @@
 """Estymacja marginesów AR(1)–GJR-GARCH(1,1) skew-t i modeli zależności na próbie kalibracyjnej (PLN).
 
-Próba: ``calibration`` z ``config/backtest.yaml`` (przecięcie z zakresem danych). Marginesy estymowane są
+Próba: ``calibration`` z ``config/backtest.yaml`` (przecięcie z zakresem danych). Obligacje oszczędnościowe
+(SF10, stopa znana ex ante – margines deterministyczny) nie wchodzą do modeli zależności. Marginesy estymowane są
 raz; wszystkie modele zależności z ``dependence.models`` (``config/models.yaml``) – na tych samych
 pseudo-obserwacjach panelu reszt. Porównanie: log-wiarygodność, AIC, BIC i test Vuonga (z poprawką
 Schwarza) modelu ``dependence.reference`` (R-vine) względem pozostałych modeli z gęstością.
@@ -32,7 +33,7 @@ from pf.models.dependence import fit_model, save_model
 from pf.models.gof import compare_with_reference
 from pf.models.margins import fit_margins, residual_panel
 from pf.models.rvine import pseudo_observations
-from pf.portfolio import load_subfunds
+from pf.portfolio import deterministic_tickers, load_subfunds
 
 log = logging.getLogger("fit_rvine_full_sample")
 
@@ -155,7 +156,8 @@ def main() -> None:
     # ``full_sample_min_coverage`` sesji, aby nie skracać panelu do kilku ostatnich lat
     min_obs = max(cfg["rebalance"]["min_obs"], int(np.ceil(dcfg["full_sample_min_coverage"]
                                                            * returns.notna().sum().max())))
-    assets = eligible_assets(returns, min_obs)
+    det = set(deterministic_tickers(load_subfunds()))
+    assets = [a for a in eligible_assets(returns, min_obs) if a not in det]
 
     t0 = time.time()
     margins, z = fit_margins(returns[assets], scale=cfg["margins"]["scale"], jobs=args.jobs)
