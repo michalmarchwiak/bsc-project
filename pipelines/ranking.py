@@ -105,7 +105,7 @@ def ranking_markdown(tab: pd.DataFrame, sample: str, profiles, rcfg, n_months: i
         lines += [f"## {p} – {prof.name} (γ = {prof.gamma:g}, κ = {prof.kappa:g})", "",
                   "| # | szereg | CE [%] | zwrot [%] | zmienn. [%] | Sharpe (SE) | p(SR) | Sortino | max DD [%] | "
                   "Calmar | Omega | STARR | obrót [%] | MCS | przekr. | p uc | p cc | p Z₂ | p DE | r. Sharpe | "
-                  "r. DD | r. złożona |", "|---:|---|" + "---:|" * 15 + "---:|---:|---:|---:|"]
+                  "r. DD | r. złożona |", "|---:|---|" + "---:|" * 20]
         for i, r in enumerate(t.itertuples(), 1):
             lines.append(
                 f"| {i} | {short(r.sid)} | {pct(r.ce_ann)} | {pct(r.ann_return)} | {pct(r.ann_vol)} | "
