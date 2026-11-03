@@ -17,9 +17,17 @@ kupionej w pierwszej serii F w sprzedaży od ``start`` i rolowanej przy wykupie:
   tj. odsetki narastają liniowo w okresie, a na jego końcu są kapitalizowane (EDO, DOS, TOS) albo
   wypłacane jako kupon (COI, TOZ, ROR, DOR) i – w indeksie całkowitego zwrotu – reinwestowane
   w tę samą pozycję;
-* w dniu wykupu b_K wartość pozycji V jest reinwestowana w serię tej rodziny w sprzedaży w tym dniu
-  po cenie zamiany c (``cena_zamiany_zl``, brak – 100 zł): V⁺ = V · 100 / c. Gdy sprzedaż kolejnej serii
-  zaczyna się kilka dni później, środki do tego dnia nie są oprocentowane; brak serii kończy indeks.
+* w dniu wykupu b_K pozycja jest rolowana w serię tej rodziny w sprzedaży w tym dniu. Zamiana odbywa się
+  1:1 na sztuki po cenie zamiany c (``cena_zamiany_zl``, brak – 100 zł): każda z n wykupywanych obligacji
+  daje nową za c zł, a reszta (odsetki i dyskonto 100 − c) jest reinwestowana w zwykłym zakupie po 100 zł:
+
+      V⁺ = V + n · (100 − c),
+
+  n – liczba obligacji serii wykupywanej: przy kapitalizacji (EDO, DOS, TOS) i OTS n = liczba kupionych
+  obligacji (odsetki wypłacane przy wykupie nie podlegają zamianie), przy kuponie n obejmuje też obligacje
+  dokupione z reinwestowanych kuponów (n = jednostki · Π_{j<K}(1 + r_j τ_j)), bez kuponu ostatniego okresu.
+  Gdy sprzedaż kolejnej serii zaczyna się kilka dni później, środki do tego dnia nie są oprocentowane;
+  brak serii kończy indeks.
 
 Stopy okresów, które zaczęły się po dacie danych MF (brak w ``oprocentowanie.csv``), przyjmowane są
 równe stopie poprzedniego okresu (pierwszego okresu: ``oprocentowanie_1_okres_pct``).
@@ -142,6 +150,13 @@ class Holding:
         acc = u - 100.0 if (self.capitalized or self.no_interest_on_early) else 100.0 * coupon
         return u, acc
 
+    def exchangeable_per_unit(self) -> float:
+        """Liczba obligacji podlegających zamianie przy wykupie na jednostkę pozycji: kapitalizacja i OTS – 1,
+        kupon – Π_{j<K}(1 + r_j τ_j) (obligacje dokupione z kuponów, bez kuponu ostatniego okresu)."""
+        if self.capitalized or self.no_interest_on_early:
+            return 1.0
+        return float(np.prod(1.0 + self.rates[:-1] * self.tau[:-1]))
+
     def redemption_cost(self, d: pd.DatetimeIndex) -> np.ndarray:
         """f(d) = min(o, a) / (100 + a); OTS: a / (100 + a)."""
         _, acc = self.unit_value(d)
@@ -202,7 +217,7 @@ def chain(issues: pd.DataFrame, rates: pd.DataFrame, family: str, start, end,
     if first.empty:
         return V, F, []
     t = max(start, pd.Timestamp(first["sprzedaz_od"].iloc[0]))
-    level, holdings, initial = 100.0, [], True
+    level, holdings, initial, n_exch = 100.0, [], True, 0.0   # n_exch – obligacje do zamiany przy wykupie
     while t <= end:
         found = series_on_sale(issues, family, t)
         if found is None:
@@ -215,13 +230,15 @@ def chain(issues: pd.DataFrame, rates: pd.DataFrame, family: str, start, end,
             V[gap], F[gap] = level, 0.0
         h = make_holding(row, rates, p)
         price = h.exchange_price if (use_exchange_price and not initial and np.isfinite(h.exchange_price)) else 100.0
-        units = level / price
+        level += n_exch * (100.0 - price)           # dyskonto zamiany 1:1 na sztuki, reszta po nominale
+        units = level / 100.0
         seg = days[(days >= p) & (days <= min(h.maturity, end))]
         u, _ = h.unit_value(seg)
         V[seg] = units * u
         F[seg] = h.redemption_cost(seg)
         holdings.append(h)
         level = units * h.unit_value(pd.DatetimeIndex([h.maturity]))[0][0]
+        n_exch = units * h.exchangeable_per_unit()
         if h.maturity in V.index:
             F[h.maturity] = 0.0                    # wykup w terminie – bez opłaty
         t, initial = h.maturity, False

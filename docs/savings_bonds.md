@@ -43,8 +43,17 @@ Wartość jednej obligacji o nominale 100 zł w dniu d ∈ [b_{k−1}, b_k) wyno
 Odsetki narastają więc liniowo w okresie. Na jego końcu są kapitalizowane (EDO, DOS, TOS) albo wypłacane
 jako kupon (COI, TOZ, ROR, DOR), który w indeksie całkowitego zwrotu jest reinwestowany w tę samą pozycję.
 
-W dniu wykupu b_K wartość pozycji V jest reinwestowana w serię tej rodziny w sprzedaży, po cenie zamiany
-c (zwykle 99,90 zł; brak danych – 100 zł): V⁺ = V · 100 / c. Jeśli sprzedaż serii
+W dniu wykupu b_K pozycja jest rolowana w serię tej rodziny w sprzedaży. Zamiana odbywa się 1:1 na sztuki
+po cenie zamiany c (zwykle 99,90 zł; brak danych – 100 zł). Dyskonto 100 − c przysługuje więc tylko
+wykupywanym obligacjom, a wypłacone odsetki są reinwestowane w zwykłym zakupie po 100 zł:
+
+  V⁺ = V + n · (100 − c),
+
+gdzie n to liczba wykupywanych obligacji. Przy kapitalizacji (EDO, DOS, TOS) i OTS n to liczba obligacji
+kupionych w poprzednim rolowaniu, bo skapitalizowane odsetki nie podlegają zamianie. Przy kuponie
+(COI, TOZ, ROR, DOR) n obejmuje też obligacje dokupione z reinwestowanych kuponów,
+n = jednostki · Π_{j<K}(1 + r_j τ_j), bez kuponu ostatniego okresu wypłacanego razem z wykupem.
+Ułamkowe części obligacji pominięto. Jeśli sprzedaż serii
 zaczyna się kilka dni po wykupie (≤ 10 dni), środki do tego dnia nie są oprocentowane. Brak serii
 w sprzedaży kończy indeks (DOS.SP: 2023-01-03, TOZ.SP: 2024-05-01).
 

@@ -21,6 +21,7 @@ EMISJE = """seria,rodzina,isin,sprzedaz_od,sprzedaz_do,miesiace_do_wykupu,okres_
 CAP0122,CAP,X,2020-01-01,2020-01-31,24,roczny,inflacja,true,5.0,1.0,,2.0,kwota z listu,,1,,1/2020,list
 CAP0124,CAP,X,2022-01-03,2022-01-31,24,roczny,inflacja,true,3.0,1.0,,2.0,kwota z listu,99.9,1,,1/2022,list
 CPN0221,CPN,X,2020-01-01,2020-01-31,12,miesięczny,stopa referencyjna NBP,false,6.0,0.0,,0.5,kwota z listu,,1,,2/2020,list
+CPN0222,CPN,X,2021-01-01,2021-01-31,12,miesięczny,stopa referencyjna NBP,false,6.0,0.0,,0.5,kwota z listu,99.8,1,,2/2021,list
 OTX0420,OTX,X,2020-01-01,2020-01-31,3,jednorazowo przy wykupie,stałe,false,2.0,,,,bez odsetek,,1,,3/2020,list
 """
 OPROC = """seria,okres,jednostka_okresu,oprocentowanie_pct
@@ -48,10 +49,11 @@ def test_capitalized_chain_value_roll_and_end(src):
     # wykup 2022-01-01: 100·1,05·1,07; brak serii w sprzedaży do 2022-01-03 – środki bez odsetek
     redemption = 100 * 1.05 * 1.07
     assert V["2022-01-01"] == pytest.approx(redemption) and V["2022-01-02"] == pytest.approx(redemption)
-    # zakup 2022-01-03 po cenie zamiany 99,9 zł
-    assert V["2022-01-03"] == pytest.approx(redemption * 100 / 99.9)
+    # zamiana 2022-01-03: 1 obligacja → 1 nowa po 99,9 zł, odsetki reinwestowane po 100 zł (dyskonto 0,1 zł)
+    rolled = redemption + 0.1
+    assert V["2022-01-03"] == pytest.approx(rolled)
     # drugi okres CAP0124 bez stopy w danych → stopa okresu 1 (3%); po wykupie 2024-01-03 brak serii – koniec
-    assert V["2024-01-03"] == pytest.approx(redemption * 100 / 99.9 * 1.03 ** 2)
+    assert V["2024-01-03"] == pytest.approx(rolled * 1.03 ** 2)
     assert V["2024-01-04":].isna().all()
     # opłata ≤ narosłe odsetki: tuż po zakupie f = a/(100 + a), później 2 zł / wartość
     assert F["2020-01-02"] == pytest.approx((V["2020-01-02"] - 100) / V["2020-01-02"])
@@ -67,6 +69,12 @@ def test_coupon_and_ots_chains(src):
     # opłata względem odsetek bieżącego okresu (kupon): w połowie lutego a = 100·1%·14/29
     a = 100 * 0.12 / 12 * 14 / 29
     assert F["2020-02-15"] == pytest.approx(min(0.5, a) / (100 + a))
+    # zamiana serii kuponowej: obligacje dokupione z kuponów 1–11 też podlegają dyskontu, kupon 12 – nie
+    V, _, hs = sb.chain(issues, rates, "CPN", "2020-01-01", "2021-03-01")
+    A = (1 + 0.06 / 12) * (1 + 0.12 / 12) ** 11
+    n = (1 + 0.06 / 12) * (1 + 0.12 / 12) ** 10
+    assert hs[0].exchangeable_per_unit() == pytest.approx(n)
+    assert V["2021-01-01"] == pytest.approx(100 * A + n * 0.2)
     V, F, _ = sb.chain(issues, rates, "OTX", "2020-01-01", "2020-12-31")
     assert V["2020-04-01"] == pytest.approx(100 * (1 + 0.02 * 0.25))
     a = V["2020-03-01"] - 100
