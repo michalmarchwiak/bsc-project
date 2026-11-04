@@ -177,12 +177,15 @@ python -m pipelines.fit_rvine_full_sample --jobs 4
 # 3. (opcjonalnie) pomiar kosztu i prognoza czasu backtestu → artifacts/reports/scenario_timing.md
 python -m pipelines.scenario_timing --jobs 3
 
-# 4. Backtest (ok. 42 h CPU; na 4 rdzeniach ok. 11,5 h): kalibracja, zamrożenie parametrów, hold-out
+# 4. Nakładka opcyjna (ok. 45 min) – pozycje opcyjne wymagane przez backtest (config/backtest.yaml: options_overlay)
+python -m pipelines.options_monthly --jobs 4
+
+# 5. Backtest (ok. 46 h CPU z wariantami _ov; na 4 rdzeniach ok. 12,5 h): kalibracja, zamrożenie parametrów, hold-out
 python -m pipelines.backtest --sample calibration --jobs 4
 python -m pipelines.backtest --sample holdout --jobs 4
 python -m pipelines.backtest --consolidate-only
 
-# 5. MC ex post (ok. 10 min) i ranking z raportami i wykresami (ok. 1 min)
+# 6. MC ex post (ok. 10 min) i ranking z raportami i wykresami (ok. 1 min)
 python -m pipelines.expost_mc --jobs 4
 python -m pipelines.ranking
 ```
@@ -259,7 +262,9 @@ jako kolumny poziomu 2 optymalizacji profili ≥ P3. Wycena jest walidowana repl
 python -m pipelines.options_monthly --jobs 4     # rejestr, polityki, NAV, portfele, walidacja, raport
 ```
 
-Wyniki: `artifacts/options/`, `artifacts/subfunds_overlay_nav.parquet`,
+Główny backtest uwzględnia nakładkę przy każdej reewaluacji (sekcja `options_overlay` w `config/backtest.yaml`):
+dla profili ≥ P3 każda strategia ma bliźniaka `<strategia>_ov` z kolumnami SFk_OV na poziomie 2, a kurs USD/PLN
+jest aktywem modelu. Wyniki: `artifacts/options/`, `artifacts/subfunds_overlay_nav.parquet`,
 `artifacts/reports/options_monthly_backtest.md`, `artifacts/reports/options_validation.md`.
 Metoda i ograniczenia: [`docs/options_monthly.md`](docs/options_monthly.md).
 

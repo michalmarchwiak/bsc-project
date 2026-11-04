@@ -155,3 +155,86 @@ def evaluate_forecasts(fc: pd.DataFrame, periods: pd.DataFrame, tails: pd.DataFr
     out["pit"] = [pit(L, n, tl, qq, grid) if np.isfinite(L) else np.nan
                   for L, n, tl, qq in zip(out["loss"], out["n"], out["tail"], out["quantiles"])]
     return out
+
+
+def realize_overlay(returns: pd.DataFrame, returns_local: pd.DataFrame, weights: pd.DataFrame, legs: pd.DataFrame,
+                    lags: pd.Series, dates: pd.DatetimeIndex, cost: float, rf: pd.Series | None = None,
+                    day_count: int = 365, sell_cost: pd.DataFrame | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Zrealizowane stopy szeregów z kolumnami SFk_OV (nakładka opcyjna, ``pf.options.portfolio``).
+
+    W dacie t: x_i – ekspozycja akcyjna (Σ_k W_k w_ki + Σ_k W_k^OV w_ki / D_k), B₀ = Σ_k W_k^OV (1 − 1/D_k) – koszt
+    nakładki (premie netto i κ), Σ x + B₀ = 1. Opcje nie są przeszacowywane w trakcie miesiąca (wartość księgowa B₀),
+    a w ostatniej sesji okresu zastępuje ją wypłata Σ_j a_j f_i [(m_j − g_i)⁺ lub −(g_i − m_j)⁺], a_j = W_k^OV w_ki h_j / D_k,
+    g_i – brutto-stopa w walucie notowania (``returns_local``), f_i = G_i / g_i – zmiana kursu USD/PLN tickera:
+
+        V_h = Σ_i x_i Π_{s ≤ h}(1 + r_is) + B₀  (h < T),    V_T = Σ_i x_i G_i + Σ_j a_j f_i Π_j.
+
+    Koszt obrotu c·Σ_i |x_{t,i} − x̃_{t,i}| na ekspozycji akcyjnej (x̃ – akcje po dryfie poprzedniego okresu; wypłaty opcji
+    są gotówką reinwestowaną przy rebalansowaniu), opłata za wcześniejszy wykup obligacji SF10 jak w ``realize``."""
+    dates = pd.DatetimeIndex(sorted(dates))
+    simple = np.expm1(returns)
+    by_date = {t: g for t, g in weights.groupby("date")}
+    legs_by = {k: g for k, g in legs.groupby(["date", "sid"])} if len(legs) else {}
+    prev_drift: dict[str, pd.Series] = {}
+    daily_parts, period_rows = [], []
+    for i, t in enumerate(dates[:-1]):
+        t_next = dates[i + 1]
+        g = by_date.get(t)
+        if g is None:
+            continue
+        new_drift = {}
+        for sid, gs in g.groupby("sid"):
+            L = int(lags[sid])
+            sessions = holding_sessions(returns.index, t, t_next, L)
+            if len(sessions) == 0:
+                continue
+            x = gs.groupby("ticker")["weight"].sum()
+            x = x[x > 0]
+            Rd = simple.loc[sessions, x.index].fillna(0.0).to_numpy()
+            Gc = np.cumprod(1.0 + Rd, axis=0)                         # (T × n)
+            lg = legs_by.get((t, sid))
+            B0, payoff = 0.0, 0.0
+            if lg is not None and len(lg):
+                per_sf = lg.drop_duplicates("subfund")
+                B0 = float((per_sf["W_ov"] * (1.0 - 1.0 / per_sf["D"])).sum())
+                tk = list(lg["ticker"].unique())
+                G_T = np.exp(returns.loc[sessions, tk].fillna(0.0).sum())
+                g_T = np.exp(returns_local.reindex(index=sessions, columns=tk).fillna(0.0).sum())
+                f_T = G_T / g_T
+                a = lg["W_ov"] * lg["w"] * lg["h"] / lg["D"]
+                gi, fi, m = lg["ticker"].map(g_T).to_numpy(), lg["ticker"].map(f_T).to_numpy(), lg["moneyness"].to_numpy()
+                call = (lg["type"] == "call").to_numpy()
+                pay = np.where(call, -np.maximum(gi - m, 0.0), np.maximum(m - gi, 0.0))
+                payoff = float((a.to_numpy() * fi * pay).sum())
+            V = Gc @ x.to_numpy() + B0
+            V[-1] = V[-1] - B0 + payoff
+            V0 = float(x.sum()) + B0
+            gross = V[-1] / V0 - 1.0
+            prev_v = np.concatenate([[V0], V[:-1]])
+            r_daily = V / prev_v - 1.0
+            t0, t1 = holding_bounds(returns.index, t, t_next, L)
+            rf_p = period_rate(rf, t0, t1, day_count) if rf is not None else 0.0
+            fee = sell_cost_at(sell_cost, t0)
+            prev = prev_drift.get(sid)
+            redemption = 0.0
+            if prev is None:
+                traded = float(x.sum())
+            else:
+                idx = x.index.union(prev.index)
+                diff = x.reindex(idx, fill_value=0.0) - prev.reindex(idx, fill_value=0.0)
+                traded = float(diff.abs().sum())
+                if len(fee):
+                    redemption = float(((-diff).clip(lower=0.0) * fee.reindex(idx).fillna(0.0)).sum())
+            k = cost * traded + redemption
+            new_drift[sid] = pd.Series(x.to_numpy() * Gc[-1] / V[-1], index=x.index)[lambda s: s > 0]
+            net = (1.0 - k) * (1.0 + gross) - 1.0
+            period_rows.append({"date": t, "end": t_next, "sid": sid, "lag": L, "r_gross": gross, "r_net": net,
+                                "cost": k, "redemption_cost": redemption, "traded": traded, "turnover": 0.5 * traded,
+                                "rf": rf_p, "n_sessions": len(sessions), "overlay_cost": B0, "overlay_payoff": payoff})
+            rn = r_daily.copy()
+            rn[0] = (1.0 - k) * (1.0 + rn[0]) - 1.0
+            daily_parts.append(pd.DataFrame({"session": sessions.to_numpy(), "date": t, "sid": sid,
+                                             "r_gross": r_daily.astype(np.float32), "r_net": rn.astype(np.float32)}))
+        prev_drift = new_drift
+    daily = pd.concat(daily_parts, ignore_index=True) if daily_parts else pd.DataFrame()
+    return daily, pd.DataFrame(period_rows)

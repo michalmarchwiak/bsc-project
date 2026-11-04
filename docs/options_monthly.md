@@ -162,6 +162,30 @@ to κ(P + C) i utracona premia za ryzyko. Warianty λ = 0,1 i 0,25 pokazują kom
   σ_imp⁽ˢ⁾ = m̄·σ̂⁽ˢ⁾ (m̄ to mediana historyczna m_t, σ̂⁽ˢ⁾ pochodzi z rekursji GARCH w ścieżce). Symulacja
   obejmuje polityki P0–P2 i `P3_frozen` (średnie h z backtestu P3); LP nie jest rozwiązywane w ścieżkach.
 
+## Nakładka w głównym backteście (`pipelines.backtest`)
+
+Sekcja `options_overlay` w `config/backtest.yaml` (domyślnie `enabled: true`) dodaje do głównego backtestu
+warianty z opcjami przy każdej reewaluacji:
+
+- **Bliźniaki strategii.** Dla każdego modelu zależności, profilu ≥ `min_profile` (P3) i strategii z listy
+  powstaje szereg `<strategia>_ov`, np. `rvine|ce_dep_ov|P4|base`. Jego poziom 2 ma kolumny SFk_OV, a poziom 1
+  jest wspólny ze strategią bazową. Pozycje opcyjne w t_j pochodzą z
+  `artifacts/options/overlay_decisions.parquet` (polityka `monthly_overlay.selected`, wariant bazowy).
+  Bez pozycji w t_j szereg `_ov` jest identyczny z bazowym.
+- **Kurs w modelu.** USD/PLN (`data/raw/fx_nbp.csv`) wchodzi do marginesów i kopuł jako aktywo spoza
+  sub-funduszy. Ze scenariuszy w PLN wynika wtedy g = (1 + R_PLN)/(1 + R_kurs) i f = 1 + R_kurs, więc wypłaty
+  opcji na tickery w USD liczone są od ceny w USD i kursu osobno. Zmienia to wymiar kopuł, a więc nieznacznie
+  także wyniki szeregów bazowych względem przebiegu bez kursu.
+- **Realizacja** (`pf.backtest.realized.realize_overlay`). Akcje są trzymane z dryfem jak w szeregach bazowych.
+  Opcje pozostają w wartości księgowej do wygaśnięcia, a w ostatniej sesji okresu zastępuje je wypłata w PLN.
+  Koszt obrotu liczony jest na ekspozycji akcyjnej, a κ jest już w koszcie nakładki. Prognozy ex ante (VaR,
+  ES, PIT) używają scenariuszowych stóp kolumn poziomu 2.
+- **Dalsze etapy.** Szeregi `_ov` mają wariant `base`, więc przechodzą przez testy VaR/ES, MC ex post
+  i ranking (MCS, test Sharpe'a). Tabela `periods_sf` ich nie obejmuje; stopy SF z nakładką są
+  w `subfunds_overlay_nav.parquet`. Pozycje użyte w dacie zapisuje `dates/<t>/overlay.parquet`.
+- **run_id** zawiera skróty pliku decyzji, kursu i stóp lokalnych. Nie uruchamiaj ponownie
+  `pipelines.options_monthly` między etapami kalibracji i hold-out tego samego przebiegu.
+
 ## Backtest i walidacja (`pf.backtest.overlay`, `pf.options.validation`)
 
 * **Miary SF × polityka × wariant:** zwrot i zmienność roczne, Sharpe i Sortino (r_f = WIBOR 1M okresu),

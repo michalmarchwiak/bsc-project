@@ -36,10 +36,10 @@ import numpy as np
 import pandas as pd
 
 from pf import ARTIFACTS_DIR, ROOT, config
-from pf.artifacts import update_manifest, write_parquet
+from pf.artifacts import sha256, update_manifest, write_parquet
 from pf.backtest import engine
 from pf.backtest.data import config_digest, eligible_dates, in_range, load_returns, run_id, sample_label
-from pf.backtest.realized import add_sid, collect, collect_tails, evaluate_forecasts, realize
+from pf.backtest.realized import add_sid, collect, collect_tails, evaluate_forecasts, realize, realize_overlay
 from pf.backtest.risk_tests import backtest_series
 from pf.data import riskfree
 from pf.portfolio import load_subfunds
@@ -56,10 +56,58 @@ def load_all() -> tuple[dict, dict, dict, dict]:
 POSTPROCESS_KEYS = ("risk_tests", "expost_mc", "ranking")
 
 
+def overlay_enabled(bcfg: dict) -> bool:
+    return bool((bcfg.get("options_overlay") or {}).get("enabled", False))
+
+
+def overlay_files(bcfg: dict) -> dict[str, Path]:
+    oc = bcfg["options_overlay"]
+    out = {"decisions": ROOT / oc["decisions"], "returns_local": ROOT / oc["returns_local"]}
+    if oc.get("fx_asset", True):
+        out["fx"] = ROOT / oc["fx_path"]
+    return out
+
+
 def current_run_id(cfg, bcfg, pcfg, subfunds) -> str:
     b = {k: v for k, v in bcfg.items() if k not in POSTPROCESS_KEYS}
-    return run_id({"models": cfg, "backtest": b, "profiles": pcfg, "subfunds": subfunds},
-                  ROOT / cfg["returns"]["path"], bcfg.get("run_id_length", 12))
+    configs = {"models": cfg, "backtest": b, "profiles": pcfg, "subfunds": subfunds}
+    if overlay_enabled(bcfg):                     # pozycje opcyjne, kurs i stopy lokalne wpływają na wyniki dat
+        configs["overlay_data"] = {k: sha256(f) if f.is_file() else None for k, f in overlay_files(bcfg).items()}
+        configs["options"] = config.load("options")["monthly_overlay"]["kappa"]
+    return run_id(configs, ROOT / cfg["returns"]["path"], bcfg.get("run_id_length", 12))
+
+
+def prepare_returns(cfg: dict, bcfg: dict) -> pd.DataFrame:
+    """Dzienne log-stopy w PLN; przy nakładce opcyjnej z kursem USD/PLN jako aktywem modelu (poza sub-funduszami)."""
+    returns = load_returns(ROOT / cfg["returns"]["path"])
+    if overlay_enabled(bcfg) and bcfg["options_overlay"].get("fx_asset", True):
+        from pf.options.market import fx_log_returns
+
+        fx = pd.read_csv(ROOT / bcfg["options_overlay"]["fx_path"], index_col=0, parse_dates=True).iloc[:, 0].dropna()
+        returns = returns.assign(USDPLN=fx_log_returns(fx, returns.index))
+    return returns
+
+
+def overlay_context(bcfg: dict) -> dict | None:
+    """Pozycje opcyjne polityki w datach t_j (plik decyzji ``pipelines.options_monthly``), κ i zakres bliźniaków _ov."""
+    if not overlay_enabled(bcfg):
+        return None
+    oc = bcfg["options_overlay"]
+    ocfg = config.load("options")["monthly_overlay"]
+    path = ROOT / oc["decisions"]
+    if not path.is_file():
+        raise SystemExit(f"Brak {path} – uruchom najpierw python -m pipelines.options_monthly "
+                         "albo wyłącz options_overlay w config/backtest.yaml")
+    pol = oc.get("policy") or ocfg["selected"]
+    d = pd.read_parquet(path)
+    d = d[(d["policy"] == pol) & (d["variant"] == "base") & (d["h"] > 0)]
+    cols = ["ticker", "type", "moneyness", "h", "premium_rel", "delta"]
+    positions = {pd.Timestamp(t): {sf: g[cols].reset_index(drop=True) for sf, g in gt.groupby("subfund")}
+                 for t, gt in d.groupby("date")}
+    excl = set(ocfg.get("exclude_subfunds", []))
+    sfs = [k for k, v in load_subfunds().items() if k not in excl and not v.get("deterministic", False)]
+    return {"positions": positions, "kappa": float(ocfg["kappa"]), "strategies": list(oc["strategies"]),
+            "min_profile": oc.get("min_profile", "P3"), "fx_name": "USDPLN", "policy": pol, "subfunds": sfs}
 
 
 def all_dates(returns, cfg, bcfg, subfunds) -> pd.DatetimeIndex:
@@ -88,12 +136,19 @@ def freeze(run_dir: Path, cfg, bcfg, pcfg, subfunds) -> dict:
     return rec
 
 
+_WORKER: dict = {}
+
+
 def _worker(args):
     t, t_next, run_dir, latest, force = args
-    cfg, bcfg, pcfg, subfunds = load_all()
-    returns = load_returns(ROOT / cfg["returns"]["path"])
+    if not _WORKER:                                 # dane i pozycje wczytywane raz na proces
+        cfg, bcfg, pcfg, subfunds = load_all()
+        _WORKER.update(cfg=cfg, bcfg=bcfg, pcfg=pcfg, subfunds=subfunds, returns=prepare_returns(cfg, bcfg),
+                       overlay=overlay_context(bcfg))
+    w = _WORKER
     logging.getLogger("pf").setLevel(logging.WARNING)
-    return engine.run_date(t, t_next, returns, cfg, bcfg, pcfg, subfunds, run_dir, engine.CACHE_DIR, latest, force)
+    return engine.run_date(t, t_next, w["returns"], w["cfg"], w["bcfg"], w["pcfg"], w["subfunds"], run_dir,
+                           engine.CACHE_DIR, latest, force, w["overlay"])
 
 
 def run_dates(dates: pd.DatetimeIndex, dates_all: pd.DatetimeIndex, run_dir: Path, jobs: int, force: bool) -> None:
@@ -178,7 +233,8 @@ def load_sell_cost(bcfg: dict) -> pd.DataFrame | None:
 
 
 def consolidate(run_dir: Path, returns: pd.DataFrame, cfg: dict, bcfg: dict, pcfg: dict, subfunds: dict,
-                rf: pd.Series | None = None, calendar: pd.DatetimeIndex | None = None) -> dict:
+                rf: pd.Series | None = None, calendar: pd.DatetimeIndex | None = None,
+                returns_local: pd.DataFrame | None = None) -> dict:
     """Tabele zbiorcze: stopy zrealizowane, prognozy z PIT, testy VaR/ES, oceny modeli.
 
     ``calendar`` – pełny kalendarz dat rebalansowania (koniec okresu realizacji ostatniej policzonej daty
@@ -199,12 +255,28 @@ def consolidate(run_dir: Path, returns: pd.DataFrame, cfg: dict, bcfg: dict, pcf
     sell_cost = load_sell_cost(bcfg)
 
     wx = weights[weights["level"] == "x"][["date", "sid", "ticker", "weight"]]
-    daily, periods = realize(returns, wx, lags, dates, cost, rf, bcfg["riskfree"]["day_count"], sell_cost)
+    is_ov = weights["strategy"].str.endswith(engine.OV_STRATEGY_SUFFIX)
+    ov_sids = set(weights.loc[is_ov, "sid"])
+    daily, periods = realize(returns, wx[~wx["sid"].isin(ov_sids)], lags, dates, cost, rf,
+                             bcfg["riskfree"]["day_count"], sell_cost)
+    if ov_sids:                                     # szeregi z nakładką opcyjną: akcje + wypłaty opcji w wygaśnięciu
+        legs = collect(run_dir, "overlay")
+        if len(legs):
+            num = ["W_ov", "D", "w", "moneyness", "h", "premium_rel", "delta"]
+            legs = add_sid(legs.astype({c: float for c in num}))
+        else:
+            legs = pd.DataFrame(columns=["date", "sid"])
+        local_path = ROOT / (bcfg.get("options_overlay") or {}).get("returns_local", "data/processed/log_returns_local.csv")
+        r_local = load_returns(local_path).reindex(index=returns.index) if returns_local is None else returns_local
+        d_ov, p_ov = realize_overlay(returns, r_local, wx[wx["sid"].isin(ov_sids)], legs, lags, dates, cost, rf,
+                                     bcfg["riskfree"]["day_count"], sell_cost)
+        daily = pd.concat([daily, d_ov], ignore_index=True)
+        periods = pd.concat([periods, p_ov], ignore_index=True)
     meta = flags.drop_duplicates("sid").set_index("sid")[["model", "strategy", "profile", "variant"]]
     periods = periods.join(meta, on="sid")
     periods["sample"] = [sample_label(t, bcfg) for t in periods["date"]]
 
-    wsf = weights[(weights["level"] == "sf") & (weights["variant"] == "base")]
+    wsf = weights[(weights["level"] == "sf") & (weights["variant"] == "base") & ~is_ov]   # SF z nakładką: subfunds_overlay_nav
     wsf = add_sid(wsf, "subfund")[["date", "sid", "ticker", "weight"]]
     lags_sf = pd.Series({s: lags[s.rsplit("|", 1)[0]] for s in wsf["sid"].unique()})
     daily_sf, periods_sf = realize(returns, wsf, lags_sf, dates, cost, rf, bcfg["riskfree"]["day_count"], sell_cost)
@@ -277,7 +349,12 @@ def main() -> None:
                                                      "subfunds": subfunds}, indent=1, ensure_ascii=False,
                                                     default=str), encoding="utf-8")
     log.info("run_id = %s", rid)
-    returns = load_returns(ROOT / cfg["returns"]["path"])
+    returns = prepare_returns(cfg, bcfg)
+    if overlay_enabled(bcfg):
+        ctx = overlay_context(bcfg)
+        log.info("Nakładka opcyjna: polityka %s, %d dat z pozycjami, bliźniaki %s (profile ≥ %s), kurs w modelu: %s",
+                 ctx["policy"], len(ctx["positions"]), ", ".join(s + engine.OV_STRATEGY_SUFFIX for s in ctx["strategies"]),
+                 ctx["min_profile"], "USDPLN" in returns.columns)
     dates_all = all_dates(returns, cfg, bcfg, subfunds)
     if not args.consolidate_only:
         if args.dates:

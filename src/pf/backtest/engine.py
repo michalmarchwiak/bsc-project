@@ -238,10 +238,76 @@ def _weights_rows(t, key: tuple, res: TwoLevelResult) -> list[dict]:
     return rows
 
 
+def _weights_rows_ov(t, key: tuple, res: TwoLevelResult, positions: dict, kappa: float) -> tuple[list, list]:
+    """Wiersze wag szeregu z kolumnami SFk_OV (W, skład SF i SFk_OV, ekspozycja akcyjna x) oraz pozycje nakładki."""
+    from pf.options.portfolio import OV_SUFFIX, ov_denominators, stock_exposure
+
+    rows = []
+    for k, wv in res.W.items():
+        rows.append({"date": t, **dict(zip(KEY_COLS, key)), "level": "W", "subfund": k, "ticker": "", "weight": wv})
+    cols = list(res.w) + [c for c in res.W.index if c.endswith(OV_SUFFIX)]
+    for k in cols:
+        w = res.w[k[:-len(OV_SUFFIX)] if k.endswith(OV_SUFFIX) else k]
+        rows += [{"date": t, **dict(zip(KEY_COLS, key)), "level": "sf", "subfund": k, "ticker": a, "weight": wv}
+                 for a, wv in w.items() if wv > 1e-12]
+    rows += [{"date": t, **dict(zip(KEY_COLS, key)), "level": "x", "subfund": "", "ticker": a, "weight": wv}
+             for a, wv in stock_exposure(res, positions, kappa).items() if wv > 1e-12]
+    D = ov_denominators(res.w, positions, kappa)
+    legs = []
+    for col, W in res.W.items():
+        if not col.endswith(OV_SUFFIX) or W <= 1e-12:
+            continue
+        sf = col[:-len(OV_SUFFIX)]
+        for leg in positions.get(sf, pd.DataFrame()).itertuples(index=False):
+            if leg.ticker not in res.w[sf].index or res.w[sf][leg.ticker] <= 1e-12:
+                continue                                   # noga bez ekspozycji (waga poziomu 1 równa 0)
+            legs.append({"date": t, **dict(zip(KEY_COLS, key)), "subfund": sf, "W_ov": float(W), "D": D[sf],
+                         "ticker": leg.ticker, "w": float(res.w[sf][leg.ticker]), "type": leg.type,
+                         "moneyness": float(leg.moneyness), "h": float(leg.h),
+                         "premium_rel": float(leg.premium_rel), "delta": float(leg.delta)})
+    return rows, legs
+
+
+OV_STRATEGY_SUFFIX = "_ov"
+OVERLAY_LEG_COLUMNS = ["date", *KEY_COLS, "subfund", "W_ov", "D", "ticker", "w", "type", "moneyness", "h", "premium_rel",
+                       "delta"]
+
+
+def overlay_step(t, name, dm, sset, sfs_by_lag, caches, base_variant, profiles, overlay, alpha, opt, subfunds,
+                 add_result, ov_legs) -> list:
+    """Bliźniaki ``<strategia>_ov``: poziom 2 z kolumnami SFk_OV (pozycje polityki w t) dla profili ≥ min_profile.
+
+    Brak pozycji w t (polityka bez aktywnej nakładki lub brak daty w pliku decyzji): SFk_OV ≡ SFk, szereg = bazowy."""
+    from pf.options import portfolio as port
+
+    L = base_variant["lag"]
+    positions = overlay["positions"].get(pd.Timestamp(t), {})
+    R = sset.for_lag(L)
+    gross = port.scenario_gross(R, dm.assets, overlay.get("fx_name", "USDPLN"))
+    ov_sfs = set(overlay.get("subfunds") or subfunds)
+    out = []
+    for strat in overlay["strategies"]:
+        for p in profiles.values():
+            if port.profile_rank(p.id) < port.profile_rank(overlay.get("min_profile", "P3")):
+                continue
+            res = port.optimize_with_overlay(sfs_by_lag[L], gross, positions, p, strat, alpha, opt, overlay["kappa"],
+                                             base_variant["measure"], base_variant["q"], caches[L], ov_sfs)
+            r2, Rc, names = res.get("ov", res["base"])
+            key = (name, strat + OV_STRATEGY_SUFFIX, p.id, base_variant["variant"])
+            rows, legs = _weights_rows_ov(t, key, r2, positions, overlay["kappa"])
+            add_result(key, L, r2, rows)
+            ov_legs.extend(legs)
+            out.append((key, L, Rc, r2.W.reindex(names).to_numpy(float), r2))
+    return out
+
+
 def run_date(t: pd.Timestamp, t_next: pd.Timestamp | None, returns: pd.DataFrame, cfg: dict, bcfg: dict,
              pcfg: dict, subfunds_all: dict, run_dir: Path, cache_dir: Path | None = CACHE_DIR,
-             latest: bool = False, force: bool = False) -> dict:
-    """Pełny krok daty t; zwraca podsumowanie (czasy, N). Wyniki: <run_dir>/dates/<t>/."""
+             latest: bool = False, force: bool = False, overlay: dict | None = None) -> dict:
+    """Pełny krok daty t; zwraca podsumowanie (czasy, N). Wyniki: <run_dir>/dates/<t>/.
+
+    ``overlay`` – nakładka opcyjna (``pipelines.backtest.overlay_context``): pozycje polityki w datach t_j, κ,
+    strategie i minimalny profil bliźniaków ``<strategia>_ov`` z kolumnami SFk_OV na poziomie 2 (wariant bazowy)."""
     t = pd.Timestamp(t)
     tag = t.strftime("%Y-%m-%d")
     out = Path(run_dir) / "dates" / tag
@@ -281,7 +347,7 @@ def run_date(t: pd.Timestamp, t_next: pd.Timestamp | None, returns: pd.DataFrame
             bench += [((BENCH_MODEL, "mv_hist", p.id, v["variant"]), v["lag"], mv) for v in bench_variants]
     dm.timings["benchmarks"] = time.time() - t0
 
-    weights, flags, fc_rows, tails, qrows, scen_rows = [], [], [], [], [], []
+    weights, flags, fc_rows, tails, qrows, scen_rows, ov_legs = [], [], [], [], [], [], []
 
     def add_forecasts(items: list[tuple[tuple, int, TwoLevelResult]], sset: ScenarioSet, fmodel: str):
         for L in sorted({L for _, L, _ in items}):
@@ -301,8 +367,8 @@ def run_date(t: pd.Timestamp, t_next: pd.Timestamp | None, returns: pd.DataFrame
                 tails.append({"date": t, **dict(zip(KEY_COLS, key)), "tail": tail})
                 qrows.append({"date": t, **dict(zip(KEY_COLS, key)), "quantiles": qq})
 
-    def add_result(key, L, res: TwoLevelResult):
-        weights.extend(_weights_rows(t, key, res))
+    def add_result(key, L, res: TwoLevelResult, rows: list | None = None):
+        weights.extend(_weights_rows(t, key, res) if rows is None else rows)
         l2 = res.info.get("level2", {})
         flags.append({"date": t, **dict(zip(KEY_COLS, key)), "lag": L, "lt_relaxed": bool(res.flags.get("lt_relaxed")),
                       "lt_factor": float(res.flags.get("lt_factor", 1.0)),
@@ -334,6 +400,19 @@ def run_date(t: pd.Timestamp, t_next: pd.Timestamp | None, returns: pd.DataFrame
                     add_result(key, v["lag"], res)
                     items.append((key, v["lag"], res))
         dm.timings[f"opt_{name}"] = time.time() - t0
+        if overlay is not None:
+            t1 = time.time()
+            ov_fc = overlay_step(t, name, dm, sset, sfs_by_lag, caches, variants[0], profiles, overlay, alpha, opt,
+                                 subfunds, add_result, ov_legs)
+            for key, L, Rc, W, res in ov_fc:
+                losses = -(Rc @ W)
+                st, tail, qq = loss_forecast(losses, alpha, qgrid)
+                gamma = profiles[key[2]].gamma
+                fc_rows.append({"date": t, **dict(zip(KEY_COLS, key)), "lag": L, "forecast_model": name, **st,
+                                "exp_return": -st["mean_loss"], "ce_exante": certainty_equivalent(-losses, None, gamma)})
+                tails.append({"date": t, **dict(zip(KEY_COLS, key)), "tail": tail})
+                qrows.append({"date": t, **dict(zip(KEY_COLS, key)), "quantiles": qq})
+            dm.timings[f"overlay_{name}"] = time.time() - t1
         t0 = time.time()
         add_forecasts(items, sset, name)
         if name == fm and bench:
@@ -362,6 +441,8 @@ def run_date(t: pd.Timestamp, t_next: pd.Timestamp | None, returns: pd.DataFrame
     write_parquet(pd.DataFrame(qrows), out / "quantiles.parquet")
     write_parquet(pd.concat(scen_rows, ignore_index=True), out / "scenario_stats.parquet")
     write_parquet(gof, out / "gof.parquet")
+    if overlay is not None:
+        write_parquet(pd.DataFrame(ov_legs, columns=OVERLAY_LEG_COLUMNS), out / "overlay.parquet")
     if ls_rows:
         write_parquet(pd.concat(ls_rows, ignore_index=True), out / "logscore.parquet")
     tail_dir = Path(run_dir) / "tails"

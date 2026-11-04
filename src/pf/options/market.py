@@ -125,11 +125,17 @@ class MarketData:
 
     def fx_log_returns(self) -> pd.Series:
         """Log-stopy USD/PLN na sesjach kalendarza (zmiana od poprzedniej sesji; NaN w dniach bez fixingu)."""
-        idx = self.index
-        lv = self._fx_ff.reindex(self._fx_ff.index.union(idx)).ffill().reindex(idx)
-        r = np.log(lv).diff()
-        has_fix = idx.isin(self._fx_ff.index)
-        return r.where(has_fix)
+        return fx_log_returns(self._fx_ff, self.index)
+
+
+def fx_log_returns(fx: pd.Series, index: pd.DatetimeIndex, name: str = "USDPLN") -> pd.Series:
+    """Log-stopy kursu na sesjach ``index``: ln fx(d) − ln fx(d′), d′ – poprzednia sesja (kurs z ostatniego fixingu);
+    NaN w sesjach bez fixingu (zmiana kursu przechodzi na następną sesję z fixingiem)."""
+    fx = fx.sort_index()
+    fx = fx[~fx.index.duplicated(keep="last")]
+    lv = fx.reindex(fx.index.union(index)).ffill().reindex(index)
+    r = np.log(lv).diff()
+    return r.where(index.isin(fx.index)).rename(name)
 
 
 def load_market(ocfg: dict, bcfg: dict, root: Path) -> MarketData:
