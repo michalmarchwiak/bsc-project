@@ -144,6 +144,8 @@ def date_step(period: dict, market: MarketData, cfg: dict, ocfg: dict, subfunds:
              "sigma_spx": sigma_spx, **{f"lvl_{k}": v for k, v in levels.items()}, "rate_pln": y_pln,
              "rate_usd": y_usd, "n_tickers": len(tickers), "dep_model": model.dep.name,
              "nu": float(getattr(model.dep, "nu", np.nan)), "model_cached": model.cached,
+             "n_refit": len(getattr(model, "refit", [])), "refit": ",".join(getattr(model, "refit", [])),
+             "n_scen_dropped": scen.n_dropped,
              "sec_fit": model.timings.get("fit", 0.0), "sec_ledger": t_led - t0, "sec_sim": scen.seconds,
              "sec_total": time.time() - t0}
     tick = sig.reset_index().assign(date=t, subfund=lambda d: d["ticker"].map(subfund_of),

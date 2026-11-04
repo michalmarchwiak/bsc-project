@@ -41,7 +41,7 @@ from pf.options.market import MarketData, currency
 from pf.sim.scenarios import full_uniforms, model_seed
 
 FX = "USDPLN"
-CACHE_VERSION = "overlay-v1"
+CACHE_VERSION = "overlay-v2"
 
 
 def market_of(name: str) -> str:
@@ -58,6 +58,7 @@ class OverlayModel:
     window_end: pd.Timestamp
     timings: dict = field(default_factory=dict)
     cached: bool = False
+    refit: list = field(default_factory=list)            # aktywa estymowane ponownie ze skalą 1/σ
 
     @property
     def stochastic(self) -> list[str]:
@@ -80,6 +81,49 @@ def _cache_folder(cache_dir, t, window, cfg, ocfg, det) -> Path | None:
     return Path(cache_dir) / pd.Timestamp(t).strftime("%Y-%m-%d") / key
 
 
+LOW_VOL_SCALED = 0.5      # 100·σ dzienne poniżej progu → ponowna estymacja ze skalą 1/σ
+
+
+def plausible(fit: MarginFit, std_scaled: float) -> bool:
+    """Czy dopasowanie GJR-GARCH jest wiarygodne: skończone, stacjonarne w sensie ograniczenia `arch`
+    (α + β + γ/2 < 1; trwałość ρ ze skośnym t może nieznacznie przekraczać 1), |μ| rzędu odchylenia stóp."""
+    if fit.deterministic:
+        return True
+    vals = [fit.mu, fit.phi, fit.omega, fit.alpha, fit.gamma, fit.beta, fit.eta, fit.lam, fit.loglik, fit.last_sigma2]
+    if not all(np.isfinite(v) for v in vals):
+        return False
+    from pf.options.implied_vol import persistence
+
+    return (fit.omega > 0 and 0 <= fit.alpha < 1 and 0 <= fit.beta < 1 and abs(fit.phi) < 1
+            and fit.alpha + fit.beta + 0.5 * fit.gamma < 1.0 + 1e-6 and persistence(fit) < 1.05
+            and abs(fit.mu) < 5 * std_scaled and fit.eta > 2.05 and abs(fit.lam) < 0.995)
+
+
+def robust_margins(window: pd.DataFrame, fits: dict[str, MarginFit], z: pd.DataFrame, scale: float
+                   ) -> tuple[dict[str, MarginFit], pd.DataFrame, list[str]]:
+    """Ponowna estymacja ze skalą 1/σ dla aktywów o małej zmienności lub niewiarygodnym dopasowaniu.
+
+    Optymalizacja wiarygodności AR–GJR-GARCH na stopach ×100 jest źle uwarunkowana przy dziennym σ ≈ 0,1%
+    (np. krótkoterminowe obligacje USA w USD) i bywa rozbieżna zależnie od liczby wątków BLAS, mimo
+    flagi zbieżności. Skala s = 1/σ (σ stóp skalowanych = 1) usuwa problem; reszty ẑ nie zależą od skali."""
+    refit = []
+    z = z.copy()
+    for name, f in list(fits.items()):
+        if f.deterministic or name not in window.columns:
+            continue
+        r = window[name].dropna()
+        sd = float(r.std())
+        if not np.isfinite(sd) or sd <= 0:
+            continue
+        if scale * sd >= LOW_VOL_SCALED and plausible(f, scale * sd):
+            continue
+        f2, z2 = fit_margin(r.rename(name), 1.0 / sd)
+        fits[name] = f2
+        z[name] = z2.reindex(z.index)
+        refit.append(name)
+    return fits, z, refit
+
+
 def fit_spx(market: MarketData, t: pd.Timestamp, window_days: int, min_obs: int, scale: float) -> MarginFit | None:
     if market.spx is None:
         return None
@@ -87,7 +131,11 @@ def fit_spx(market: MarketData, t: pd.Timestamp, window_days: int, min_obs: int,
     r = r[r.index < pd.Timestamp(t)].iloc[-window_days:]
     if len(r) < min_obs:
         return None
-    return fit_margin(r.rename("SPX"), scale)[0]
+    fit = fit_margin(r.rename("SPX"), scale)[0]
+    sd = float(r.std())
+    if not plausible(fit, scale * sd):
+        fit = fit_margin(r.rename("SPX"), 1.0 / sd)[0]
+    return fit
 
 
 def fit_overlay_model(market: MarketData, t: pd.Timestamp, cfg: dict, ocfg: dict, tickers: list[str],
@@ -109,9 +157,11 @@ def fit_overlay_model(market: MarketData, t: pd.Timestamp, cfg: dict, ocfg: dict
         meta = json.loads((folder / "done.json").read_text())
         spx = MarginFit(**meta["spx"]) if meta.get("spx") else None
         model = OverlayModel(t, assets, margins, dep, spx, pd.Timestamp(meta["window_end"]), cached=True)
+        model.refit = meta.get("refit", [])
     else:
         margins, z = fit_margins(window, scale=mcfg["scale"], jobs=jobs, deterministic=det,
                                  n_last=mcfg.get("deterministic_sessions", 21))
+        margins, z, refit = robust_margins(window, margins, z, mcfg["scale"])
         panel = residual_panel(z, market_of=market_of)
         dep = fit_model(name, pseudo_observations(panel.to_numpy()), list(panel.columns), cfg)
         spx = fit_spx(market, t, rcfg["window_days"], rcfg["min_obs"], mcfg["scale"])
@@ -120,8 +170,9 @@ def fit_overlay_model(market: MarketData, t: pd.Timestamp, cfg: dict, ocfg: dict
             folder.mkdir(parents=True, exist_ok=True)
             pd.DataFrame([f.to_dict() for f in margins.values()]).to_parquet(folder / "margins.parquet")
             save_model(dep, folder / f"{name}.json.gz")
-            (folder / "done.json").write_text(json.dumps({"window_end": str(model.window_end.date()),
+            (folder / "done.json").write_text(json.dumps({"window_end": str(model.window_end.date()), "refit": refit,
                                                           "spx": spx.to_dict() if spx else None}, default=float))
+        model.refit = refit
     model.timings["fit"] = time.time() - t0
     return model
 
@@ -131,6 +182,7 @@ class Scenarios:
     assets: list[str]
     gross: np.ndarray                        # brutto-stopy w horyzoncie (S × d), waluta notowania (USDPLN: kurs)
     seconds: float = 0.0
+    n_dropped: int = 0                       # scenariusze z nieskończoną stopą (eksplozja rekursji) – usunięte
 
     def col(self, name: str) -> np.ndarray:
         return self.gross[:, self.assets.index(name)]
@@ -158,8 +210,10 @@ def simulate(model: OverlayModel, n_scenarios: int, horizon: int, skip: int, see
     U = model.dep.simulate(n_scenarios * H, m_rng, W=W).reshape(n_scenarios, H, d_s)
     U = full_uniforms(U, margins, model.dep.names)
     daily = simulate_daily(margins, U, eps_cap)
-    gross = np.exp(daily[:, skip:H, :].sum(axis=1))
-    return Scenarios(list(model.assets), gross, time.time() - t0)
+    with np.errstate(over="ignore", invalid="ignore"):
+        gross = np.exp(daily[:, skip:H, :].sum(axis=1))
+    ok = np.isfinite(gross).all(axis=1)
+    return Scenarios(list(model.assets), gross[ok], time.time() - t0, int((~ok).sum()))
 
 
 def drift_adjust(g: np.ndarray, f: np.ndarray, tickers: list[str], r: pd.Series, sigma_hat: pd.Series, tau: float,

@@ -165,3 +165,24 @@ def test_consolidation_p012_and_nav(setup):
     k5 = per[(per["policy"] == "P1") & (per["variant"] == "kappa=0.05")]
     assert (k5["kappa_cost"].to_numpy() > p1["kappa_cost"].to_numpy()).all()
     assert {"w", "e", "kind"} <= set(dout.columns) and (dout["e"] >= -1e-12).all()   # K^P ≤ K^C ⇒ e ≥ 0
+
+
+def test_robust_margins_refit_low_volatility():
+    from pf.models.margins import fit_margins
+    from pf.options import scenarios
+
+    rng = np.random.default_rng(8)
+    idx = pd.bdate_range("2015-01-01", periods=900)
+    vol = 0.0008 * np.exp(0.3 * np.sin(np.arange(900) / 50))
+    w = pd.DataFrame({"LOW": vol * rng.standard_t(6, 900) + 0.00005, "HIGH": 0.015 * rng.standard_t(6, 900)},
+                     index=idx)
+    fits, z = fit_margins(w, scale=100.0, jobs=1)
+    fits, z2, refit = scenarios.robust_margins(w, fits, z, 100.0)
+    assert refit == ["LOW"]
+    f = fits["LOW"]
+    assert f.scale == pytest.approx(1 / w["LOW"].std()) and scenarios.plausible(f, 1.0)
+    assert z2["LOW"].std() == pytest.approx(1.0, abs=0.1)
+    from pf.options.implied_vol import garch_vol
+    assert garch_vol(f, 21) == pytest.approx(w["LOW"].std() * np.sqrt(252), rel=0.5)
+    bad = fits["HIGH"].__class__(**{**fits["HIGH"].to_dict(), "mu": -3.5e6, "alpha": 1.0})
+    assert not scenarios.plausible(bad, 1.5)
