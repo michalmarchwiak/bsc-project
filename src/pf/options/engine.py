@@ -249,3 +249,128 @@ def nav_table(ledger: pd.DataFrame, decisions: pd.DataFrame, ocfg: dict, variant
         periods["nav_ov"] = grp["r_ov"].transform(lambda r: np.cumprod(1 + r))
     dec = pd.concat(dec_out, ignore_index=True) if dec_out else pd.DataFrame(columns=DECISION_COLUMNS + ["w", "e"])
     return periods, dec
+
+
+# --------------------------------------------------------------------------- integracja z portfelem (Etap 5)
+
+def positions_with_premia(decisions: pd.DataFrame, ledger_t: pd.DataFrame, policy_name: str) -> dict[str, pd.DataFrame]:
+    """Pozycje polityki w dacie (wariant bazowy) z premiami z rejestru: SF → DataFrame nóg."""
+    d = decisions[(decisions["policy"] == policy_name) & (decisions["variant"] == "base")]
+    if d.empty:
+        return {}
+    key = ["ticker", "type", "moneyness"]
+    prem = ledger_t.set_index(key)[["premium_rel", "delta"]]
+    d = d.drop(columns=["premium_rel", "delta"], errors="ignore").join(prem, on=key)
+    return {sf: g[policy.LEG_COLUMNS].reset_index(drop=True) for sf, g in d.groupby("subfund") if len(g)}
+
+
+def portfolio_step(period: dict, market: MarketData, model, cfg: dict, ocfg: dict, pcfg: dict, subfunds: dict,
+                   positions: dict[str, pd.DataFrame], seed: int) -> dict:
+    """Wagi poziomów 1–2 bez i z kolumnami SFk_OV dla profili i strategii z ``monthly_overlay.portfolio``."""
+    from pf.opt.profiles import load_profiles, subfund_data
+    from pf.options import portfolio as port
+
+    t0 = time.time()
+    t = pd.Timestamp(period["date"])
+    pc = ocfg["portfolio"]
+    alpha = float(cfg["rebalance"]["es_alpha"])
+    scen = scenarios.simulate(model, int(pc["n_scenarios"]), int(period["n_sessions"]), int(period["skip"]), seed,
+                              ocfg["lp"].get("seed_tag", "options_overlay"), cfg["margins"].get("sim_eps_cap"))
+    assets = [a for a in model.assets if a != scenarios.FX]
+    g, f, G = scen.panels(assets)
+    R = G - 1.0
+    sfs_all = {sf: spec for sf, spec in subfunds.items() if set(spec["tickers"]) & set(assets)}
+    sfs = subfund_data(R, assets, sfs_all)
+    gross = {a: (g[:, k], f[:, k]) for k, a in enumerate(assets)}
+    profiles = load_profiles(pcfg)
+    opt = pcfg.get("optimizer", {})
+    measure, q = pcfg["dependence_measure"], float(pcfg["tail_q"])
+    ov_sfs = set(overlay_subfunds(subfunds, ocfg))
+    wrows, lrows, xrows = [], [], []
+    cache: dict = {}
+    for pid in pc["profiles"]:
+        prof = profiles[pid]
+        for strat in pc["strategies"]:
+            pos = positions if port.ov_allowed(pid, ocfg) else {}
+            res = port.optimize_with_overlay(sfs, gross, pos, prof, strat, alpha, opt, float(ocfg["kappa"]), measure,
+                                             q, cache, ov_sfs)
+            if port.ov_allowed(pid, ocfg) and "ov" not in res:
+                res["ov"] = res["base"]          # brak aktywnej nakładki w t_j: SFk_OV ≡ SFk
+            for variant, (r2, Rc, names) in res.items():
+                W = r2.W.reindex(names).to_numpy(float)
+                ea = port.ex_ante(Rc, W, alpha, prof.gamma)
+                xrows.append({"date": t, "profile": pid, "strategy": strat, "variant": variant, **ea,
+                              "n_ov_columns": int(sum(nm.endswith(port.OV_SUFFIX) for nm in names)),
+                              "w_ov": float(sum(w for nm, w in zip(names, W) if nm.endswith(port.OV_SUFFIX))),
+                              "lt_relaxed": bool(r2.flags.get("lt_relaxed", False))})
+                wrows += [{"date": t, "profile": pid, "strategy": strat, "variant": variant, "column": nm, "W": w}
+                          for nm, w in zip(names, W)]
+            base = res["base"][0]
+            lrows += [{"date": t, "profile": pid, "strategy": strat, "subfund": sf, "ticker": tk, "w": wv}
+                      for sf, ws in base.w.items() for tk, wv in ws.items() if wv > 1e-12]
+    return {"weights": pd.DataFrame(wrows), "level1": pd.DataFrame(lrows), "exante": pd.DataFrame(xrows),
+            "seconds": time.time() - t0}
+
+
+def portfolio_realize(periods: pd.DataFrame, market: MarketData, weights: pd.DataFrame, level1: pd.DataFrame,
+                      exante: pd.DataFrame, positions_by_date: dict, ocfg: dict, cost: float, lag: int,
+                      day_count: int = 365) -> pd.DataFrame:
+    """Zrealizowane stopy portfeli (brutto, netto po kosztach obrotu akcji, wariant o tym samym ÊS).
+
+    Koszt obrotu: c·Σ_i |x_{t,i} − x̃_{t,i}| na ekspozycji akcyjnej look-through (SFk: W_k w_ki,
+    SFk_OV: W_k^OV w_ki / Σ w D), x̃ – ekspozycja po dryfie poprzedniego okresu; koszt κ premii jest w stopie SFk_OV."""
+    from pf.data.riskfree import period_rate
+    from pf.options import calendar as cal
+    from pf.options import portfolio as port
+
+    kappa = float(ocfg["kappa"])
+    rows = []
+    prev_drift: dict[tuple, pd.Series] = {}
+    w1 = {k: g for k, g in level1.groupby(["date", "profile", "strategy"])}
+    xa = exante.set_index(["date", "profile", "strategy", "variant"])["es"]
+    for per in periods.sort_values("date").to_dict("records"):
+        if pd.isna(per["t_next"]):
+            continue
+        d = per["date"]
+        Wd = weights[weights["date"] == d]
+        if Wd.empty:
+            continue
+        sessions = cal.sessions_of(market.index, per, lag)
+        tick_all = sorted(level1.loc[level1["date"] == d, "ticker"].unique())
+        Gr = market.gross(sessions, tick_all, pln=True)
+        gr = market.gross(sessions, tick_all, pln=False)
+        fr = Gr / gr
+        rf = period_rate(market.rate_pln, per["open"], per["close"], day_count)
+        pos_d = positions_by_date.get(d, {})
+        for (pid, strat, variant), Wg in Wd.groupby(["profile", "strategy", "variant"]):
+            l1 = w1.get((d, pid, strat))
+            if l1 is None:
+                continue
+            wsf = {sf: g.set_index("ticker")["w"] for sf, g in l1.groupby("subfund")}
+            r_p, x, end_val = 0.0, pd.Series(0.0, index=tick_all), pd.Series(0.0, index=tick_all)
+            for col, W in zip(Wg["column"], Wg["W"]):
+                if W <= 0:
+                    continue
+                sf = col[:-len(port.OV_SUFFIX)] if col.endswith(port.OV_SUFFIX) else col
+                w = wsf[sf]
+                if col.endswith(port.OV_SUFFIX):
+                    out = nav.period_return(w, Gr, gr, fr, pos_d.get(sf), kappa)
+                    r_col, stock = out["r_ov"], w / out["denominator"]
+                else:
+                    r_col, stock = float(w @ Gr.reindex(w.index)) - 1.0, w
+                r_p += W * r_col
+                x = x.add(W * stock, fill_value=0.0)
+                end_val = end_val.add(W * stock * Gr.reindex(stock.index), fill_value=0.0)
+            key = (pid, strat, variant)
+            prev = prev_drift.get(key)
+            traded = float(x.sum()) if prev is None else float(x.sub(prev, fill_value=0.0).abs().sum())
+            k = cost * traded
+            prev_drift[key] = end_val / (1.0 + r_p)
+            r_net = (1.0 - k) * (1.0 + r_p) - 1.0
+            es_v = xa.get((d, pid, strat, variant), np.nan)
+            es_other = [xa.get((d, pid, strat, v), np.nan) for v in ("base", "ov")]
+            a = port.es_scale(es_v, np.nanmin(es_other), rf) if np.isfinite(es_other).all() else 1.0
+            rows.append({"date": d, "end": per["t_next"], "profile": pid, "strategy": strat, "variant": variant,
+                         "r_gross": r_p, "r_net": r_net, "cost": k, "turnover": 0.5 * traded, "rf": rf,
+                         "es_exante": es_v, "es_scale": a, "r_es_matched": a * r_net + (1 - a) * rf})
+    return pd.DataFrame(rows)

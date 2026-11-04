@@ -40,7 +40,9 @@ def empirical_es(losses: np.ndarray, alpha: float) -> float:
     return float(tail / k)
 
 
-def _solve(R: np.ndarray, alpha: float, es_limit: float | None, w_max, minimize_es: bool):
+def _solve(R: np.ndarray, alpha: float, es_limit: float | None, w_max, minimize_es: bool,
+           A_extra: np.ndarray | None = None, b_extra: np.ndarray | None = None):
+    """LP R–U; opcjonalne dodatkowe ograniczenia liniowe na wagi A_extra W ≤ b_extra (np. limity grup kolumn)."""
     S, K = R.shape
     ub = np.broadcast_to(np.asarray(w_max, dtype=float), (K,))
     n = K + 1 + S                       # [W, ζ, u]
@@ -57,6 +59,10 @@ def _solve(R: np.ndarray, alpha: float, es_limit: float | None, w_max, minimize_
         es_row = np.concatenate([np.zeros(K), [1.0], np.full(S, 1.0 / ((1.0 - alpha) * S))])
         rows.append(sparse.csr_matrix(es_row))
         b.append([es_limit])
+    if A_extra is not None and len(A_extra):
+        A_extra = np.atleast_2d(np.asarray(A_extra, dtype=float))
+        rows.append(sparse.hstack([sparse.csr_matrix(A_extra), sparse.csr_matrix((len(A_extra), 1 + S))]))
+        b.append(np.asarray(b_extra, dtype=float))
     A_ub = sparse.vstack(rows).tocsr()
     A_eq = sparse.csr_matrix(np.concatenate([np.ones(K), np.zeros(1 + S)]))
     bounds = [(0.0, float(u)) for u in ub] + [(None, None)] + [(0.0, None)] * S
@@ -65,13 +71,13 @@ def _solve(R: np.ndarray, alpha: float, es_limit: float | None, w_max, minimize_
 
 
 def max_return_es(R: np.ndarray, alpha: float = 0.975, es_limit: float = 0.08,
-                  w_max=1.0) -> Solution:
-    """Portfel maksymalnego oczekiwanego zwrotu przy ES_α(−R W) ≤ ``es_limit``."""
+                  w_max=1.0, A_extra: np.ndarray | None = None, b_extra: np.ndarray | None = None) -> Solution:
+    """Portfel maksymalnego oczekiwanego zwrotu przy ES_α(−R W) ≤ ``es_limit`` (opcjonalnie A_extra W ≤ b_extra)."""
     K = R.shape[1]
-    res = _solve(R, alpha, es_limit, w_max, minimize_es=False)
+    res = _solve(R, alpha, es_limit, w_max, minimize_es=False, A_extra=A_extra, b_extra=b_extra)
     feasible = res.status == 0
     if not feasible:
-        res = _solve(R, alpha, None, w_max, minimize_es=True)
+        res = _solve(R, alpha, None, w_max, minimize_es=True, A_extra=A_extra, b_extra=b_extra)
         if res.status != 0:
             raise RuntimeError(f"LP nierozwiązywalny: {res.message}")
     w = np.clip(res.x[:K], 0.0, None)

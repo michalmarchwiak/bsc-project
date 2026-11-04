@@ -88,8 +88,11 @@ def feasible_start(ub: np.ndarray) -> np.ndarray:
 
 
 def solve_ce(R: np.ndarray, gamma: float, kappa: float, ub, M: np.ndarray | None = None,
-             sigma: float | None = None, opt: dict | None = None) -> tuple[np.ndarray, dict]:
-    """max CE_γ(w) − κ·σ·wᵀMw przy Σw = 1, 0 ≤ w ≤ ub (SLSQP, gradient analityczny)."""
+             sigma: float | None = None, opt: dict | None = None, A_ub: np.ndarray | None = None,
+             b_ub: np.ndarray | None = None, w0: np.ndarray | None = None) -> tuple[np.ndarray, dict]:
+    """max CE_γ(w) − κ·σ·wᵀMw przy Σw = 1, 0 ≤ w ≤ ub (SLSQP, gradient analityczny).
+
+    Opcjonalnie ograniczenia liniowe A_ub w ≤ b_ub (np. wspólny limit wariantów SF) i dopuszczalny punkt startowy w0."""
     opt = opt or {}
     R = np.asarray(R, dtype=float)
     n = R.shape[1]
@@ -107,13 +110,19 @@ def solve_ce(R: np.ndarray, gamma: float, kappa: float, ub, M: np.ndarray | None
             return -(ce - k * d), -(g - k * gd)
         return -ce, -g
 
-    w0 = feasible_start(ub)
+    w0 = feasible_start(ub) if w0 is None else np.asarray(w0, dtype=float)
+    cons = [{"type": "eq", "fun": lambda w: w.sum() - 1.0, "jac": lambda w: np.ones_like(w)}]
+    if A_ub is not None and len(A_ub):
+        A_ub, b_ub = np.atleast_2d(np.asarray(A_ub, dtype=float)), np.asarray(b_ub, dtype=float)
+        cons.append({"type": "ineq", "fun": lambda w: b_ub - A_ub @ w, "jac": lambda w: -A_ub})
     res = optimize.minimize(f, w0, jac=True, method="SLSQP", bounds=[(0.0, float(u)) for u in ub],
-                            constraints=[{"type": "eq", "fun": lambda w: w.sum() - 1.0,
-                                          "jac": lambda w: np.ones_like(w)}],
+                            constraints=cons,
                             options={"maxiter": opt.get("maxiter", 500), "ftol": opt.get("ftol", 1e-12)})
     w = np.clip(res.x, 0.0, ub)
     w = w / w.sum()
+    if A_ub is not None and len(A_ub) and np.any(A_ub @ w > b_ub + 1e-8):
+        res.success = False
+        w = w0
     # rozwiązanie nie gorsze od punktu startowego (zabezpieczenie przy braku zbieżności)
     if f(w)[0] > f(w0)[0] + 1e-12:
         w, res_success = w0, False
