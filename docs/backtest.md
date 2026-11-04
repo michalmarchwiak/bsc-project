@@ -92,7 +92,9 @@ Strategie (każdy model × profil): `ce_dep` (proponowana), `ce` (κ = 0), `maxr
 ES_α ≤ ES(EW), LP Rockafellara–Uryaseva), `min_es` (min ES_α, LP); benchmarki bez kopuły: `ew`
 (1/N w SF i między SF, bez limitów) i `mv_hist` (max μᵀw − (γ/2) wᵀΣw, μ, Σ = 21·średnia/kowariancja
 dziennych stóp okna, Σ z shrinkage Ledoita–Wolfa do m·I, oba poziomy, limity profilu). Siatka:
-7 × 4 × 5 + 1 + 5 = 146 szeregów. Prognozy ex ante benchmarków – ze scenariuszy R-vine.
+7 × 4 × 5 + 1 + 5 = 146 szeregów. Przy włączonej nakładce opcyjnej (`options_overlay` w
+`config/backtest.yaml`) dochodzą warianty `<strategia>_ov` dla P3–P5: 7 × 4 × 3 = 84, razem 230 szeregów
+(`docs/options_monthly.md`). Prognozy ex ante benchmarków – ze scenariuszy R-vine.
 
 **Założenie.** Dekompozycja dwupoziomowa optymalizuje CE pojedynczego SF z γ inwestora. To heurystyka,
 a nie optimum łączne względem wag look-through.
@@ -154,24 +156,26 @@ blokowy cykliczny, blok 3 mies.). Ranga złożona – średnia ważona rang (wag
 Ranking modeli zależności: średnie AIC/BIC, wygrane w teście Vuonga, MCS na dziennej stracie −log-score,
 odsetek zaliczonych testów VaR/ES, średnia ranga CE portfeli.
 
-## 9. Wyniki (przebieg `4010467a06e7`)
+## 9. Wyniki (przebieg `83254f06e339`)
 
-226 dat (kalibracja 156, hold-out 70; ocena 156 + 69 miesięcy), 146 szeregów bazowych + 391 wariantów
-wrażliwości, 42 h CPU (4 procesy: ok. 11,5 h). Mediana N = 12 500 scenariuszy (ostatnia data 35–50 tys.).
-Luzowanie limitów c_LT/W_max nie było potrzebne.
+226 dat (kalibracja 156, hold-out 70; ocena 156 + 69 miesięcy), 230 szeregów bazowych (146 bez nakładki
+i 84 warianty `_ov` dla P3–P5) + 391 wariantów wrażliwości, 52,6 h CPU. Mediana N = 12 500 scenariuszy
+(ostatnia data 35–50 tys.). Luzowanie limitów c_LT/W_max nie było potrzebne.
 
 Średni zrealizowany CE [% rocznie] po 7 modelach (hold-out; kalibracja w nawiasie):
 
-| profil | ce_dep | ce | maxret_es | min_es | ew | mv_hist |
-|---|---:|---:|---:|---:|---:|---:|
-| P1 | 3,76 (5,32) | 4,32 (4,77) | 2,29 (3,42) | −0,23 (1,58) | 3,52 (3,30) | 1,85 (5,13) |
-| P2 | 5,79 (9,00) | 6,19 (8,54) | 4,15 (7,23) | 0,19 (3,25) | 4,56 (5,25) | 4,39 (7,45) |
-| P3 | 6,87 (11,86) | 7,03 (11,69) | 5,06 (8,88) | 0,81 (4,32) | 5,26 (6,58) | 5,18 (11,13) |
-| P4 | 9,96 (15,83) | 10,93 (16,05) | 6,12 (10,22) | 1,39 (5,11) | 5,96 (7,95) | 8,21 (15,06) |
-| P5 | 15,04 (21,90) | 15,43 (21,54) | 6,84 (12,00) | 1,58 (5,78) | 6,49 (9,00) | 12,11 (17,56) |
+| profil | ce_dep | ce | maxret_es | min_es | ce_dep_ov | ce_ov | ew | mv_hist |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| P1 | 4,53 (5,54) | 3,86 (5,04) | 3,35 (3,47) | 0,36 (1,98) | – | – | 3,52 (3,65) | 2,37 (5,12) |
+| P2 | 5,48 (8,06) | 6,25 (7,76) | 4,75 (6,21) | 0,74 (3,40) | – | – | 4,37 (5,23) | 3,52 (6,69) |
+| P3 | 7,62 (10,99) | 7,21 (11,39) | 5,47 (7,82) | 1,22 (3,72) | 8,14 (12,13) | 7,33 (12,48) | 4,93 (6,30) | 4,89 (10,89) |
+| P4 | 10,25 (16,13) | 10,93 (16,02) | 7,02 (9,22) | 1,73 (3,88) | 10,69 (17,21) | 11,54 (17,08) | 5,50 (7,39) | 8,21 (15,05) |
+| P5 | 16,10 (22,19) | 16,19 (21,95) | 8,41 (10,61) | 2,20 (3,64) | 17,31 (23,70) | 17,49 (23,33) | 5,92 (8,23) | 12,11 (17,56) |
 
-Strategie CE dominują pozostałe reguły w obu próbach. Kara za zależność podnosi CE w kalibracji
-(P1–P3, P5), ale nie w hold-out. MCS obejmuje 24–27 z 30 szeregów każdego profilu w hold-out, a test
+Strategie CE dominują pozostałe reguły w hold-out. W kalibracji `mv_hist` wyprzedza `ce` w P1. Kara za
+zależność podnosi CE w kalibracji (P1, P2, P4, P5), a w hold-out tylko w P1 i P3. Nakładka opcyjna
+podnosi średni CE strategii `ce`, `ce_dep` i `maxret_es` w P3–P5 w obu próbach, a obniża CE `min_es`.
+MCS w hold-out obejmuje wszystkie 30 szeregów w P1–P2 oraz 34–55 z 58 szeregów w P3–P5. Test
 Ledoita–Wolfa nie odrzuca równości Sharpe'a z `ew` dla strategii głównej. Przy 69 miesiącach różnice
 między strategiami CE są statystycznie nierozróżnialne. Szczegóły: `artifacts/reports/`.
 

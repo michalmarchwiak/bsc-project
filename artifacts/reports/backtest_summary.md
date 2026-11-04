@@ -1,7 +1,7 @@
 # Backtest – podsumowanie
 
 Przebieg `83254f06e339`; daty rebalansowania 2008-01-02 – 2026-10-01 (226), w tym okresy realizacji: kalibracja 156 mies., hold-out 69 mies. Opóźnienie wykonania 1 sesja, koszt 0.1% wartości transakcji, r_f – WIBOR 1M.
-Szeregi bazowe: 230 (7 modeli × 4 strategie × 5 profili + ew + 5 × mv_hist).
+Szeregi bazowe: 230 (7 modeli × 4 strategie × 5 profili + 7 modeli × 4 strategie × 3 profile z nakładką opcyjną `_ov` + ew + 5 × mv_hist).
 Scenariusze: mediana N = 12500, maks. 50000; odsetek par (data, model) z N = n_max: 0.2%.
 Czas: średnio 838 s/datę (1 proces), łącznie 52.6 h CPU.
 Luzowanie c_LT: 0.00% problemów poziomu 2; W_max: 0.00%; maxret_es bez rozwiązania przy ES ≤ ES(EW) (min ES): 0.00%.
