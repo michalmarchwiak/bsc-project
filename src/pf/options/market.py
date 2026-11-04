@@ -86,7 +86,7 @@ class MarketData:
     @staticmethod
     def _row(df: pd.DataFrame, d, tickers) -> pd.Series:
         pos = df.index.searchsorted(pd.Timestamp(d), side="right") - 1
-        if pos < 0:
+        if pos < 0 or len(df.index) == 0 or pd.Timestamp(d) > df.index[-1]:   # dane nie sięgają d
             return pd.Series(np.nan, index=list(tickers))
         return df.iloc[pos].reindex(list(tickers))
 
