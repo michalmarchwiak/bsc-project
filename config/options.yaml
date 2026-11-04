@@ -125,6 +125,10 @@ monthly_overlay:
     P3: {kind: lp, lambda: 2.0}
     P3_lam1: {kind: lp, lambda: 1.0}
     P3_lam3: {kind: lp, lambda: 3.0}
+    # Wrażliwość na skalę λ: w horyzoncie miesiąca λ·CVaR (≈ 10–17% dla akcji) dominuje E[R] (≈ 0,5–1%), więc przy
+    # λ ≥ 1 LP wybiera zwykle pełne zabezpieczenie (sprzedany call ATM + put); niższe λ pokazują kompromis.
+    P3_lam0.1: {kind: lp, lambda: 0.1}
+    P3_lam0.25: {kind: lp, lambda: 0.25}
   selected: P3                        # polityka wariantów SFk_OV w portfelu
   rules:                              # progi P2 ustalone ex ante (bez dostrajania)
     q_cheap: 0.3                      # put: Q ≤ q_cheap lub (T < 0 i Q ≤ q_expensive)

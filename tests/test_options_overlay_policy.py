@@ -133,7 +133,7 @@ def test_date_step_deterministic_and_no_lookahead(setup):
     pd.testing.assert_frame_equal(a["decisions"], trunc["decisions"])
     assert trunc["ledger"]["S_next"].isna().all()
     lp = a["lp_info"]
-    assert set(lp["policy"]) == {"P3", "P3_lam1", "P3_lam3"}
+    assert set(lp["policy"]) == set(engine.lp_policies(ocfg)) >= {"P3", "P3_lam1", "P3_lam3"}
     assert {"base", "sigma+3pp", "kappa=0.05"} <= set(lp["variant"])
     assert np.isfinite(a["state"]["m"].iloc[0])
 

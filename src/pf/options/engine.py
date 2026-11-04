@@ -211,9 +211,11 @@ def nav_table(ledger: pd.DataFrame, decisions: pd.DataFrame, ocfg: dict, variant
         Lv = led[spec["variant"]]
         key = ["date", "ticker", "type", "moneyness"]
         prem = Lv.set_index(key)[["premium_rel", "delta", "K"]]
+        dec_by_date = {d: g for d, g in decisions.groupby("date")}
         for d, Ld in Lv.groupby("date"):
             first = Ld.drop_duplicates("ticker").set_index("ticker")
-            dd = decisions[decisions["date"] == d]
+            dd = dec_by_date.get(d, decisions.iloc[:0])
+            prem_d = prem.loc[d]
             for sf, members in first.groupby("subfund"):
                 ok = members[np.isfinite(members["S_next"])]
                 if ok.empty:
@@ -230,7 +232,7 @@ def nav_table(ledger: pd.DataFrame, decisions: pd.DataFrame, ocfg: dict, variant
                     pos = pos[pos["ticker"].isin(tks)]
                     if len(pos):
                         j = pos.set_index(key[1:]).index
-                        pr = prem.loc[d].reindex(j)
+                        pr = prem_d.reindex(j)
                         pos = pos.assign(premium_rel=pr["premium_rel"].to_numpy(), delta=pr["delta"].to_numpy(),
                                          K=pr["K"].to_numpy())
                     out = nav.period_return(w, GG, gg, ff, pos, spec["kappa"])
