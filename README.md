@@ -22,32 +22,33 @@ Szczegóły metody i wzory: [`docs/backtest.md`](docs/backtest.md),
 
 ## Najważniejsze wyniki
 
-Wyniki pochodzą z przebiegu `4010467a06e7`, policzonego przed dodaniem SF10 (9 sub-funduszy). Po dodaniu
-SF10 zmienia się `run_id`, więc wyniki wymagają ponownego przebiegu backtestu (sekcja „Uruchomienie”).
-Przebieg `4010467a06e7`: 226 dat rebalansowania 2008-01 – 2026-10, okres
-kalibracji 156 miesięcy, hold-out 69 miesięcy (2021-01 – 2026-09). Wszystkie stopy są miesięczne,
-netto po kosztach 0,1% wartości transakcji. Zrealizowany ekwiwalent pewności (CE) liczono od stóp
-nadwyżkowych nad WIBOR 1M, w skali rocznej, przy γ danego profilu.
+Przebieg `83254f06e339` (10 sub-funduszy z SF10, nakładka opcyjna `_ov`): 226 dat rebalansowania
+2008-01 – 2026-10, okres kalibracji 156 miesięcy, hold-out 69 miesięcy (2021-01 – 2026-09). Wszystkie
+stopy są miesięczne, netto po kosztach 0,1% wartości transakcji. Zrealizowany ekwiwalent pewności (CE)
+liczono od stóp nadwyżkowych nad WIBOR 1M, w skali rocznej, przy γ danego profilu.
 
-| hold-out, CE [% rocznie] | `ce_dep`* | `ce`* | R-vine × `ce_dep` | `ew` | `mv_hist` | `maxret_es`* | `min_es`* |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| P1 konserwatywny (γ = 10) | 3,76 | 4,32 | 4,46 | 3,52 | 1,85 | 2,29 | −0,23 |
-| P3 zrównoważony (γ = 5) | 6,87 | 7,03 | 6,82 | 5,26 | 5,18 | 5,06 | 0,81 |
-| P5 agresywny (γ = 1,5) | 15,04 | 15,43 | 15,29 | 6,49 | 12,11 | 6,84 | 1,58 |
+| hold-out, CE [% rocznie] | `ce_dep`* | `ce`* | R-vine × `ce_dep` | `ce_dep_ov`* | `ew` | `mv_hist` | `maxret_es`* | `min_es`* |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| P1 konserwatywny (γ = 10) | 4,53 | 3,86 | 5,10 | – | 3,52 | 2,37 | 3,35 | 0,36 |
+| P3 zrównoważony (γ = 5) | 7,62 | 7,21 | 8,02 | 8,14 | 4,93 | 4,89 | 5,47 | 1,22 |
+| P5 agresywny (γ = 1,5) | 16,10 | 16,19 | 14,98 | 17,31 | 5,92 | 12,11 | 8,41 | 2,20 |
 
-\* Średnia po 7 modelach zależności.
+\* Średnia po 7 modelach zależności. Warianty `_ov` (nakładka opcyjna, polityka P3) liczono dla profili P3–P5.
 
-- **CE vs pozostałe reguły:** strategie maksymalizujące CE wygrywają w obu próbach z równymi wagami,
-  średnią–wariancją i regułami ES.
-- **Kara za zależność:** podnosi CE w kalibracji dla 4 z 5 profili, ale w hold-out nie.
+- **CE vs pozostałe reguły:** w hold-out strategie maksymalizujące CE wygrywają we wszystkich profilach
+  z równymi wagami, średnią–wariancją i regułami ES. W kalibracji `mv_hist` wyprzedza `ce` w P1.
+- **Kara za zależność:** podnosi CE w kalibracji dla 4 z 5 profili (bez P3), w hold-out tylko dla P1 i P3.
+- **Nakładka opcyjna:** warianty `ce_ov`, `ce_dep_ov` i `maxret_es_ov` mają wyższy średni CE niż
+  warianty bazowe w P3–P5 w obu próbach. `min_es_ov` ma CE niższy niż `min_es`.
 - **Istotność:** różnice między strategiami CE w hold-out są statystycznie nierozróżnialne. Model
-  Confidence Set obejmuje 24–27 z 30 szeregów w każdym profilu, a test Ledoita–Wolfa nie odrzuca
-  równości wskaźnika Sharpe'a z `ew` dla strategii głównej.
+  Confidence Set obejmuje wszystkie 30 szeregów w P1–P2 oraz 34–55 z 58 szeregów (z wariantami `_ov`)
+  w P3–P5. Test Ledoita–Wolfa nie odrzuca równości wskaźnika Sharpe'a z `ew` dla strategii głównej.
 - **Modele zależności:** R-vine ma najniższe BIC i wygrywa test Vuonga w każdym oknie estymacji.
   Według log-score poza próbą w hold-out równorzędne są kopuła Gaussa i R-vine.
-- **Prognozy ryzyka:** w kalibracji prognozy VaR/ES 97,5% niedoszacowują ryzyka (11,4 przekroczenia
-  wobec 3,9 oczekiwanych, głównie w 2008 r.). W hold-out jest 4,2 przekroczenia wobec 1,7
-  oczekiwanych, a testy odrzucają rzadziej. Moc testów przy danych miesięcznych jest niska.
+- **Prognozy ryzyka:** w kalibracji prognozy VaR/ES 97,5% niedoszacowują ryzyka (13,4 przekroczenia
+  wobec 3,9 oczekiwanych; ok. 28% przekroczeń w 2008 r., dalsze skupienia w 2015 i 2017–2018 r.).
+  W hold-out jest 4,9 przekroczenia wobec 1,7 oczekiwanych, a testy odrzucają rzadziej. Moc testów
+  przy danych miesięcznych jest niska.
 
 Pełne tabele: [`backtest_summary.md`](artifacts/reports/backtest_summary.md),
 [`ranking_holdout.md`](artifacts/reports/ranking_holdout.md),
@@ -205,7 +206,7 @@ wyniki w `artifacts/rebalance/`) pozostaje bez zmian.
 | `artifacts/reports/es_mc.md` | VaR/ES ex post (FHS, bootstrap, MC wielowymiarowe) vs ex ante i historyczne |
 | `artifacts/reports/weights/` | wagi tickerów strategii głównej w czasie (CSV, opis w README) |
 | `artifacts/backtest/<run_id>/periods.parquet` | miesięczne stopy brutto/netto, koszty, obrót, r_f każdego szeregu |
-| `artifacts/backtest/<run_id>/weights_tickers.parquet` | wagi tickerów, SF i look-through wszystkich 146 szeregów |
+| `artifacts/backtest/<run_id>/weights_tickers.parquet` | wagi tickerów, SF i look-through wszystkich 230 szeregów bazowych |
 | `artifacts/backtest/<run_id>/forecasts.parquet` | prognozy ex ante (VaR, ES, E[R], CE) z realizacją i PIT |
 | `artifacts/backtest/<run_id>/tests.parquet` | testy Kupca, Christoffersena, Z₂, Du–Escanciano |
 | `figures/backtest/` | majątek i obsunięcia, skład W w czasie, krocząca Sharpe, ES vs straty |

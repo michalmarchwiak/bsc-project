@@ -1,6 +1,6 @@
 {
- "digest": "ed5654073379306b6965c5f602852308729740e21b6f63599a562494a5a96ce5",
- "frozen_utc": "2026-11-01T03:26:24+00:00",
+ "digest": "56be834cd41c99b8ae6f1ff6d291de7b31d7e461f6d04420fd6fbade78821bbd",
+ "frozen_utc": "2026-11-04T14:07:53+00:00",
  "note": "Parametry meta (γ, κ, limity, q, ε, obcięcie vine'a) zamrożone przed hold-out; wartości wyjściowe z config/profiles.yaml (bez dostrajania na kalibracji).",
  "params": {
   "profiles": {
@@ -115,6 +115,10 @@
    },
    "forecast_model": "rvine",
    "transaction_cost": 0.001,
+   "redemption_cost": {
+    "enabled": true,
+    "path": "data/processed/savings_bonds_redemption_cost.csv"
+   },
    "pit_grid_step": 0.005,
    "sensitivity": {
     "enabled": true,
@@ -155,6 +159,21 @@
       "ce_dep"
      ]
     }
+   },
+   "options_overlay": {
+    "enabled": true,
+    "decisions": "artifacts/options/overlay_decisions.parquet",
+    "policy": null,
+    "strategies": [
+     "ce_dep",
+     "ce",
+     "maxret_es",
+     "min_es"
+    ],
+    "min_profile": "P3",
+    "fx_asset": true,
+    "fx_path": "data/raw/fx_nbp.csv",
+    "returns_local": "data/processed/log_returns_local.csv"
    }
   },
   "rvine": {
@@ -218,11 +237,13 @@
    "vol": "GJR-GARCH",
    "dist": "skewt",
    "scale": 100.0,
-   "sim_eps_cap": 2.0
+   "sim_eps_cap": 2.0,
+   "deterministic_sessions": 21
   },
   "rebalance": {
    "window_days": 1260,
    "min_obs": 750,
+   "min_obs_deterministic": 21,
    "horizon_days": 21,
    "n_scenarios": 10000,
    "backtest_scenarios": 2000,
@@ -355,6 +376,20 @@
      "DLR",
      "AVB",
      "EXR"
+    ]
+   },
+   "SF10": {
+    "name": "Obligacje oszczędnościowe Skarbu Państwa",
+    "deterministic": true,
+    "tickers": [
+     "OTS.SP",
+     "DOS.SP",
+     "DOR.SP",
+     "ROR.SP",
+     "TOZ.SP",
+     "TOS.SP",
+     "COI.SP",
+     "EDO.SP"
     ]
    }
   }

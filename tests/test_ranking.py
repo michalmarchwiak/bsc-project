@@ -89,3 +89,14 @@ def test_rank_tables_and_markdown():
     prof = {"P1": Profile("P1", "konserwatywny", 10.0, 1.0, 0.2, 0.05, 0.4)}
     md = rk.ranking_markdown(tab, "holdout", prof, rcfg, 24)
     assert "## P1" in md and "rvine/ce_dep" in md
+
+
+def test_base_series_text_counts_overlay_twins():
+    rows = [(f"{m}|{k}|{p}|base", m, k, p) for m in ("rvine", "gauss") for k in ("ce", "ce_dep") for p in ("P1", "P2", "P3")]
+    rows += [(f"rvine|{k}_ov|P3|base", "rvine", f"{k}_ov", "P3") for k in ("ce", "ce_dep")]
+    rows += [("-|ew|ALL|base", "-", "ew", "ALL")] + [(f"-|mv_hist|{p}|base", "-", "mv_hist", p) for p in ("P1", "P2", "P3")]
+    base = pd.DataFrame(rows * 2, columns=["sid", "model", "strategy", "profile"])
+    assert rk.base_series_text(base) == ("18 (2 modele × 2 strategie × 3 profile + 1 model × 2 strategie × 1 profil "
+                                         "z nakładką opcyjną `_ov` + ew + 3 × mv_hist)")
+    no_ov = base[~base["strategy"].str.endswith("_ov")]
+    assert rk.base_series_text(no_ov) == "16 (2 modele × 2 strategie × 3 profile + ew + 3 × mv_hist)"

@@ -207,6 +207,32 @@ def sensitivity_section(periods, gammas, profiles) -> list[str]:
     return lines + [""]
 
 
+def _plural(n: int, one: str, few: str, many: str) -> str:
+    """Polska forma liczebnika: 1 – ``one``, 2–4 (poza 12–14) – ``few``, pozostałe – ``many``."""
+    if n == 1:
+        return one
+    return few if n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14) else many
+
+
+def base_series_text(base: pd.DataFrame) -> str:
+    """Liczba szeregów bazowych z rozbiciem na bloki model × strategia × profil, warianty ``_ov`` i benchmarki."""
+    s = base.drop_duplicates("sid")
+    model = s[s["model"] != "-"]
+    ov = model["strategy"].str.endswith("_ov")
+
+    def block(d: pd.DataFrame) -> str:
+        m, k, p = d["model"].nunique(), d["strategy"].nunique(), d["profile"].nunique()
+        return (f"{m} {_plural(m, 'model', 'modele', 'modeli')} × {k} {_plural(k, 'strategia', 'strategie', 'strategii')}"
+                f" × {p} {_plural(p, 'profil', 'profile', 'profili')}")
+
+    parts = [block(model[~ov])] if (~ov).any() else []
+    if ov.any():
+        parts.append(f"{block(model[ov])} z nakładką opcyjną `_ov`")
+    for name, n in s[s["model"] == "-"].groupby("strategy").size().items():
+        parts.append(name if n == 1 else f"{n} × {name}")
+    return f"{s['sid'].nunique()} ({' + '.join(parts)})"
+
+
 def summary_markdown(run_dir, periods, tests, flags, scen, timings, rank_tabs, profiles, gammas, bcfg) -> str:
     n = {s: periods.loc[(periods["sample"] == s) & (periods["variant"] == "base"), "date"].nunique() for s in SAMPLES}
     base = periods[periods["variant"] == "base"]
@@ -215,7 +241,7 @@ def summary_markdown(run_dir, periods, tests, flags, scen, timings, rank_tabs, p
              f"({len(timings)}), w tym okresy realizacji: kalibracja {n['calibration']} mies., hold-out "
              f"{n['holdout']} mies. Opóźnienie wykonania {bcfg['execution_lag']} sesja, koszt "
              f"{100 * bcfg['transaction_cost']:.1f}% wartości transakcji, r_f – WIBOR 1M.",
-             f"Szeregi bazowe: {base['sid'].nunique()} (7 modeli × 4 strategie × 5 profili + ew + 5 × mv_hist).",
+             f"Szeregi bazowe: {base_series_text(base)}.",
              f"Scenariusze: mediana N = {int(scen['n'].median())}, maks. {int(scen['n'].max())}; odsetek par "
              f"(data, model) z N = n_max: {pct((scen.drop_duplicates(['date', 'model'])['n'] >= bcfg['scenarios']['n_max']).mean(), 1)}%.",
              f"Czas: średnio {timings['seconds'].mean():.0f} s/datę (1 proces), łącznie {timings['seconds'].sum() / 3600:.1f} h CPU.",
