@@ -147,3 +147,15 @@ def test_bs_put_call_parity_with_q():
     S, K, T, r, q, s = 100.0, np.array([95.0, 100.0, 105.0]), 21 / 252, 0.05, 0.02, 0.25
     c, p = bs.price(S, K, T, r, q, s, True), bs.price(S, K, T, r, q, s, False)
     np.testing.assert_allclose(c - p, S * np.exp(-q * T) - K * np.exp(-r * T), atol=1e-12)
+
+
+def test_period_arrays_equal_pandas_version():
+    idx = POS["ticker"].map({t: i for i, t in enumerate(W.index)}).to_numpy()
+    out = nav.period_arrays(W.to_numpy(), G.to_numpy(), g.to_numpy(), f.to_numpy(), idx,
+                            (POS["type"] == "call").to_numpy(), POS["moneyness"].to_numpy(), POS["h"].to_numpy(),
+                            POS["premium_rel"].to_numpy(), POS["delta"].to_numpy(), 0.03)
+    ref = nav.period_return(W, G, g, f, POS, 0.03)
+    for k, v in ref.items():
+        assert out[k] == pytest.approx(v, rel=1e-12, abs=1e-15)
+    np.testing.assert_allclose(out["e"], nav.delta_exposure(W, POS, 0.03).to_numpy(), rtol=1e-12)
+    assert out["kind"] == nav.overlay_kind(POS)

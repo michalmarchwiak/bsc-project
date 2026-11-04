@@ -97,3 +97,9 @@ def test_strike_vol_skew():
     s = ivm.strike_vol(0.2, [95.0, 100.0, 105.0], 100.0, beta=-0.5)
     np.testing.assert_allclose(s, 0.2 - 0.5 * np.log([0.95, 1.0, 1.05]))
     np.testing.assert_allclose(ivm.strike_vol(0.2, [95.0, 105.0], 100.0), 0.2)
+
+
+def test_market_multiplier_atm_adjustment():
+    assert ivm.market_multiplier(20.0, 0.16, {"atm_adj": 1.0}) == pytest.approx(1.25)
+    assert ivm.market_multiplier(20.0, 0.16, {"atm_adj": 0.8}) == pytest.approx(1.0)
+    assert ivm.market_multiplier(20.0, 0.16, {"atm_adj": 0.8, "atm_adj_in_m": False}) == pytest.approx(1.25)

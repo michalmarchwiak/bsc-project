@@ -12,7 +12,8 @@ konstruowana z prognoz GARCH i indeksów zmienności Cboe.
        E_t σ²_{t+h} = ω + ρ · E_t σ²_{t+h−1},   ρ = α + β + γ·κ₋,   κ₋ = E[z² 1{z < 0}],
    gdzie κ₋ liczone jest kwadraturą z gęstości skośnego t (dla λ = 0: κ₋ = 1/2).
 
-2. Mnożnik premii za ryzyko zmienności: m_t = (VIX_t/100) / σ̂_{SPX,t}(21).
+2. Mnożnik premii za ryzyko zmienności: m_t = (atm_adj · VIX_t/100) / σ̂_{SPX,t}(21) – stosunek zmienności ATM
+   S&P 500 do prognozy GARCH (``atm_adj_in_m``; przy atm_adj = 1: m_t = VIX/σ̂_SPX).
 
 3. Źródło ``iv_source`` (``config/options.yaml: monthly_overlay.implied_vol``):
    * VIX / OVX / GVZ: σ_imp = atm_adj · indeks/100; dla VIX przy τ ≠ 30 dni interpolacja wariancji całkowitej
@@ -108,6 +109,14 @@ def vrp_multiplier(vix_pct: float, sigma_spx: float) -> float:
     if not (np.isfinite(vix_pct) and np.isfinite(sigma_spx)) or sigma_spx <= 0:
         return float("nan")
     return float(vix_pct / 100.0 / sigma_spx)
+
+
+def market_multiplier(vix_pct: float, sigma_spx: float, icfg: dict) -> float:
+    """m_t z korektą VIX → σ_ATM: (atm_adj · VIX_t/100) / σ̂_SPX,t(21), gdy ``atm_adj_in_m`` (domyślnie tak).
+
+    VIX przewyższa zmienność ATM S&P 500; bez korekty m_t przenosiłby tę różnicę na σ_imp tickerów proxy."""
+    adj = float(icfg.get("atm_adj", 1.0)) if icfg.get("atm_adj_in_m", True) else 1.0
+    return vrp_multiplier(adj * vix_pct, sigma_spx)
 
 
 # --------------------------------------------------------------------------- indeksy zmienności

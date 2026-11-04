@@ -78,7 +78,9 @@ BSM z ciągłą stopą dywidendy (`pf.options.bs`), q = 0:
 
 Wielkość κ₋ jest liczona kwadraturą z gęstości skośnego t Hansena, a dla λ = 0 wynosi κ₋ = 1/2.
 
-**Mnożnik premii za ryzyko zmienności:** m_t = (VIX_t/100)/σ̂_{SPX,t}(21), z marginesem S&P 500 z okna ≤ t_j − 1.
+**Mnożnik premii za ryzyko zmienności:** m_t = (atm_adj·VIX_t/100)/σ̂_{SPX,t}(21), z marginesem S&P 500 z okna
+≤ t_j − 1. Przy atm_adj = 1 jest to VIX/σ̂_SPX. Korekta VIX → σ_ATM obejmuje także m_t (`atm_adj_in_m`), bo bez niej
+σ_imp tickerów proxy dziedziczyłaby zawyżenie VIX względem zmienności ATM.
 
 **Źródło σ_imp** (`iv_source`):
 * GVZ dla GLD, IAU i SGOL: σ = atm_adj·GVZ/100. Przed 09.2009 GVZ nie istnieje i stosowane jest `proxy`.
@@ -188,6 +190,26 @@ to κ(P + C) i utracona premia za ryzyko. Warianty λ = 0,1 i 0,25 pokazują kom
 Parametry (siatka, κ, pasmo, polityki, progi, λ, m̄, atm_adj i jego estymata) oraz wersje pakietów trafiają do
 `artifacts/manifest.json` (klucze `options/*`, `subfunds_overlay_nav`, `reports/options_*`). Wyniki per data
 (`artifacts/options/dates/`) i pamięć podręczna modeli (`artifacts/options/cache/`) są poza repozytorium.
+
+## Wyniki przebiegu (2008-01 – 2026-10, 226 dat, ustawienia domyślne)
+
+Pełne tabele: `artifacts/reports/options_monthly_backtest.md` i `artifacts/reports/options_validation.md`.
+
+- **Walidacja.**
+  - Przy atm_adj = 1 replika BXM wyprzedza indeks o 5,4 p.p. rocznie (TE 2,3% p.a., korelacja 0,98): premia
+    sprzedanego calla ATM jest zawyżona, bo VIX > σ_ATM.
+  - Przy atm_adj = 0,786 (estymata z 3 dni kwotowań SPY, IQR 0,74–0,83) różnica spada do −0,4 p.p.
+  - PPUT: +1,6 p.p. przy atm_adj = 1 (puty 5% OTM tańsze niż na rynku, brak skośności) i −0,5 p.p. przy β = −0,5.
+  - Wniosek: atm_adj ≈ 0,8 i β ≈ −0,5 lepiej odtwarzają oba indeksy niż ustawienia domyślne.
+- **Skala λ w P3.** Przy λ ∈ {1, 2, 3} niemal każda decyzja to collar ze sprzedanym callem ATM (98% dat × SF).
+  SF z nakładką staje się prawie bezryzykowny w walucie notowania: dla SF1 zwrot 0,4% i zmienność 2,2% rocznie,
+  z kosztem κ ≈ 3,6 p.p. rocznie. Przy λ = 0,1 i 0,25 decyzje są zróżnicowane (put / covered call / collar).
+- **Zastrzeżenie dotyczące wyników nakładek.** Polityki sprzedające opcje (P1_cc, P3) korzystają z premii za ryzyko
+  zmienności zawartej w modelowej σ_imp (m_t > 1 oraz VIX > σ_ATM przy atm_adj = 1). Ich przewaga zależy więc od
+  założeń wyceny, a nie od obserwowanych cen opcji. Wrażliwość ±3 p.p. σ_imp zmienia zwrot P1 i P1_cc o ok. 1,5–1,9 p.p.
+  rocznie.
+- **Portfele P3–P5** (t-kopuła, `ce_dep` i `maxret_es`). Kolumny SFk_OV dostają średnio 3–8% wagi i są używane w 4–21%
+  miesięcy. Zwrot roczny przy tym samym ÊS rośnie o 0,9–1,8 p.p. w całej próbie i o 1,4–2,5 p.p. w hold-out.
 
 ## Ograniczenia
 

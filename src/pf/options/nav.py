@@ -131,3 +131,26 @@ def overlay_kind(positions: pd.DataFrame | None) -> str:
 def nav_from_returns(r) -> np.ndarray:
     """V_j = Π_{i<j}(1 + R_i), V_0 = 1 (długość len(r) + 1)."""
     return np.concatenate([[1.0], np.cumprod(1.0 + np.asarray(r, dtype=float))])
+
+
+def period_arrays(w: np.ndarray, G: np.ndarray, g: np.ndarray, f: np.ndarray, idx: np.ndarray, is_call: np.ndarray,
+                  m: np.ndarray, h: np.ndarray, prem: np.ndarray, delta: np.ndarray, kappa: float) -> dict:
+    """Wersja tablicowa ``period_return`` i ``delta_exposure`` (nogi: indeks tickera, typ, K/S, h, premia, Δ)."""
+    n = len(w)
+    keep = h > 0
+    idx, is_call, m, h, prem, delta = (x[keep] for x in (idx, is_call, m, h, prem, delta))
+    sign = np.where(is_call, -1.0, 1.0)
+    D = 1.0 + np.bincount(idx, weights=np.where(is_call, -h * prem * (1 - kappa), h * prem * (1 + kappa)),
+                          minlength=n)
+    gi = g[idx]
+    Pi = np.bincount(idx, weights=np.where(is_call, -h * np.maximum(gi - m, 0.0), h * np.maximum(m - gi, 0.0)),
+                     minlength=n)
+    denom = float(w @ D)
+    wp = w[idx] * h * prem
+    return {"r_ov": float(w @ (G + f * Pi) / denom - 1.0), "r_base": float(w @ G - 1.0), "denominator": denom,
+            "premium_paid": float(wp[~is_call].sum() * (1 + kappa) / denom),
+            "premium_received": float(wp[is_call].sum() * (1 - kappa) / denom),
+            "kappa_cost": float(kappa * wp.sum() / denom), "payoff": float(w @ (f * Pi) / denom),
+            "e": w / denom * (1.0 + np.bincount(idx, weights=sign * h * delta, minlength=n)),
+            "kind": ("collar" if (~is_call).any() and is_call.any() else "put" if (~is_call).any()
+                     else "covered_call" if is_call.any() else "none")}

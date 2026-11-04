@@ -49,13 +49,17 @@ def candidate_legs(ledger_t: pd.DataFrame, ocfg: dict) -> pd.DataFrame:
     return L[puts | calls]
 
 
-def _leg(legs: pd.DataFrame, ticker: str, typ: str, m: float, h: float) -> dict | None:
-    sel = legs[(legs["ticker"] == ticker) & (legs["type"] == typ) & np.isclose(legs["moneyness"], m)]
-    if sel.empty or h <= 0:
+def _legs_index(legs: pd.DataFrame) -> dict:
+    """(ticker, type, round(K/S, 6)) → (premia względna, Δ, K/S z rejestru)."""
+    return {(t, typ, round(float(m), 6)): (float(p), float(dl), float(m)) for t, typ, m, p, dl in
+            zip(legs["ticker"], legs["type"], legs["moneyness"], legs["premium_rel"], legs["delta"])}
+
+
+def _leg(index: dict, ticker: str, typ: str, m: float, h: float) -> dict | None:
+    hit = index.get((ticker, typ, round(float(m), 6)))
+    if hit is None or h <= 0:
         return None
-    r = sel.iloc[0]
-    return {"ticker": ticker, "type": typ, "moneyness": float(m), "h": float(h),
-            "premium_rel": float(r["premium_rel"]), "delta": float(r["delta"])}
+    return {"ticker": ticker, "type": typ, "moneyness": hit[2], "h": float(h), "premium_rel": hit[0], "delta": hit[1]}
 
 
 def _frame(rows: list) -> pd.DataFrame:
@@ -66,6 +70,7 @@ def _frame(rows: list) -> pd.DataFrame:
 # --------------------------------------------------------------------------- P1
 
 def static_positions(legs: pd.DataFrame, tickers: list[str], spec: dict) -> pd.DataFrame:
+    legs = _legs_index(legs)
     rows = []
     for t in tickers:
         if "put" in spec:
@@ -123,6 +128,7 @@ def rule_kind(Q: float, T: float, V: float, rcfg: dict) -> str:
 
 def rule_positions(legs: pd.DataFrame, signals_t: pd.DataFrame, rcfg: dict) -> pd.DataFrame:
     """Pozycje P2 w dacie t (``signals_t``: ticker, Q, T, V)."""
+    legs = _legs_index(legs)
     rows = []
     for s in signals_t.itertuples(index=False):
         kind = rule_kind(s.Q, s.T, s.V, rcfg)

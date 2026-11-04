@@ -97,7 +97,7 @@ def date_step(period: dict, market: MarketData, cfg: dict, ocfg: dict, subfunds:
     S_t = S_t.reindex(tickers)
     levels = {v: market.vol_level(v, t_open) for v in VOL_NAMES}
     sigma_spx = ivm.garch_vol(model.spx, int(icfg.get("m_horizon", 21)), skip, td) if model.spx else float("nan")
-    m = ivm.vrp_multiplier(levels.get("VIX", np.nan), sigma_spx)
+    m = ivm.market_multiplier(levels.get("VIX", np.nan), sigma_spx, icfg)
     sig = ivm.sigma_table(tickers, model.margins, n, skip, m, levels, days, icfg, td)
     fx_t = market.fx_of(t_open, tickers)
     if pd.notna(t_close):
@@ -191,9 +191,24 @@ def signals_table(state: pd.DataFrame, tick: pd.DataFrame, market: MarketData, o
                                int(sc["min_history_months"]), int(sc["sma_months"]))
 
 
-def _positions_for(decisions: pd.DataFrame, policy_name: str, variant: str, lp: bool) -> pd.DataFrame:
-    v = variant if lp else "base"
-    return decisions[(decisions["policy"] == policy_name) & (decisions["variant"] == v)]
+def _variant_positions(decisions: pd.DataFrame, Lv: pd.DataFrame, variant: str, pols: list[str],
+                       lp_names: set[str]) -> dict[tuple, pd.DataFrame]:
+    """Pozycje polityk w wariancie z premiami z rejestru wariantu: (date, SF, polityka) → nogi.
+
+    Polityki LP mają decyzje własne dla wariantu, pozostałe – decyzje bazowe (te same h, inne premie)."""
+    lp = decisions["policy"].isin(lp_names)
+    sel = decisions["policy"].isin(pols) & ((lp & (decisions["variant"] == variant)) |
+                                            (~lp & (decisions["variant"] == "base")))
+    d = decisions[sel].drop(columns=["premium_rel", "delta", "K"], errors="ignore")
+    if d.empty:
+        return {}
+    key = ["date", "ticker", "type", "moneyness"]
+    d = d.merge(Lv[key + ["premium_rel", "delta", "K"]], on=key, how="left")
+    out = {}
+    for k, g in d.groupby(["date", "subfund", "policy"], sort=False):
+        out[k] = (g.reset_index(drop=True), g["ticker"].to_numpy(object), (g["type"] == "call").to_numpy(bool),
+                  *(g[c].to_numpy(float) for c in ("moneyness", "h", "premium_rel", "delta")))
+    return out
 
 
 def nav_table(ledger: pd.DataFrame, decisions: pd.DataFrame, ocfg: dict, variants: list[dict] | None = None,
@@ -204,47 +219,44 @@ def nav_table(ledger: pd.DataFrame, decisions: pd.DataFrame, ocfg: dict, variant
     premium_received, kappa_cost, payoff, kind, n_tickers, n_hedged; decisions_out z kolumnami w, e, K, kind)."""
     variants = variants or variant_specs(ocfg)
     sens = set(ocfg.get("sensitivity", {}).get("policies", []))
-    pols = policies or list(ocfg["policies"])
+    pols_all = policies or list(ocfg["policies"])
     lp_names = set(lp_policies(ocfg))
     icfg = ocfg["implied_vol"]
     rows, dec_out = [], []
-    led = {v["variant"]: variant_ledger(ledger, v, icfg) for v in variants}
+    firsts = {d: g.drop_duplicates("ticker").set_index("ticker") for d, g in ledger.groupby("date")}
     for spec in variants:
-        Lv = led[spec["variant"]]
-        key = ["date", "ticker", "type", "moneyness"]
-        prem = Lv.set_index(key)[["premium_rel", "delta", "K"]]
-        dec_by_date = {d: g for d, g in decisions.groupby("date")}
-        for d, Ld in Lv.groupby("date"):
-            first = Ld.drop_duplicates("ticker").set_index("ticker")
-            dd = dec_by_date.get(d, decisions.iloc[:0])
-            prem_d = prem.loc[d]
-            for sf, members in first.groupby("subfund"):
+        base_variant = spec["variant"] == "base"
+        pols = pols_all if base_variant else [p for p in pols_all if p in sens]
+        Lv = variant_ledger(ledger, spec, icfg)
+        posd = _variant_positions(decisions, Lv, spec["variant"], pols, lp_names)
+        for d, first in firsts.items():
+            for sf, members in first.groupby("subfund", observed=True):
                 ok = members[np.isfinite(members["S_next"])]
                 if ok.empty:
                     continue
                 tks = list(ok.index)
-                w = pd.Series(1.0 / len(tks), index=tks)
-                gg = ok["S_next"] / ok["S_t"]
-                ff = ok["fx_next"] / ok["fx_t"]
+                tpos = {t: i for i, t in enumerate(tks)}
+                wv = np.full(len(tks), 1.0 / len(tks))
+                gg = (ok["S_next"] / ok["S_t"]).to_numpy(float)
+                ff = (ok["fx_next"] / ok["fx_t"]).to_numpy(float)
                 GG = gg * ff
+                end = ok["t_next"].iloc[0]
                 for pname in pols:
-                    if spec["variant"] != "base" and pname not in sens:
-                        continue
-                    pos = _positions_for(dd[dd["subfund"] == sf], pname, spec["variant"], pname in lp_names)
-                    pos = pos[pos["ticker"].isin(tks)]
-                    if len(pos):
-                        j = pos.set_index(key[1:]).index
-                        pr = prem_d.reindex(j)
-                        pos = pos.assign(premium_rel=pr["premium_rel"].to_numpy(), delta=pr["delta"].to_numpy(),
-                                         K=pr["K"].to_numpy())
-                    out = nav.period_return(w, GG, gg, ff, pos, spec["kappa"])
-                    kind = nav.overlay_kind(pos)
-                    rows.append({"date": d, "end": ok["t_next"].iloc[0], "subfund": sf, "policy": pname,
-                                 "variant": spec["variant"], **out, "kind": kind, "n_tickers": len(tks),
-                                 "n_hedged": int(pos["ticker"].nunique()) if len(pos) else 0})
-                    if len(pos) and spec["variant"] == "base":
-                        e = nav.delta_exposure(w, pos, spec["kappa"])
-                        dec_out.append(pos.assign(w=pos["ticker"].map(w), e=pos["ticker"].map(e), kind=kind))
+                    grp = posd.get((d, sf, pname))
+                    if grp is None:
+                        ix, keep, arr = np.zeros(0, int), np.zeros(0, bool), [np.zeros(0)] * 4
+                        is_call = np.zeros(0, bool)
+                    else:
+                        frame, tk, is_call, *arr = grp
+                        ix = np.array([tpos.get(t, -1) for t in tk], dtype=int)
+                        keep = (ix >= 0) & (arr[1] > 0)
+                        ix, is_call, arr = ix[keep], is_call[keep], [a[keep] for a in arr]
+                    out = nav.period_arrays(wv, GG, gg, ff, ix, is_call, *arr, spec["kappa"])
+                    e, kind = out.pop("e"), out.pop("kind")
+                    rows.append({"date": d, "end": end, "subfund": sf, "policy": pname, "variant": spec["variant"],
+                                 **out, "kind": kind, "n_tickers": len(tks), "n_hedged": int(len(np.unique(ix)))})
+                    if len(ix) and base_variant:
+                        dec_out.append(frame[keep].assign(w=1.0 / len(tks), e=e[ix], kind=kind))
     periods = pd.DataFrame(rows)
     if len(periods):
         periods = periods.sort_values(["subfund", "policy", "variant", "date"]).reset_index(drop=True)

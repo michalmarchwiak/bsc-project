@@ -108,7 +108,8 @@ monthly_overlay:
     default_source: proxy             # σ_imp = clip(m_t · σ̂_i(τ), σ_min, σ_max)
     sources: {GLD: GVZ, IAU: GVZ, SGOL: GVZ}   # VIX – S&P 500/SPY, OVX – ropa, GVZ – złoto (ETF na złoto)
     vix_tenors_days: {VIX9D: 9, VIX: 30}       # interpolacja wariancji całkowitej (VIX9D od 2011)
-    atm_adj: 1.0                      # σ_ATM = atm_adj · indeks/100 (kalibracja: manifest options/atm_adj)
+    atm_adj: 1.0                      # σ_ATM = atm_adj · indeks/100; estymata z kwotowań SPY: manifest reports/options_validation
+    atm_adj_in_m: true                # m_t = atm_adj·VIX/σ̂_SPX (spójna korekta VIX → ATM także dla tickerów proxy)
     sigma_min: 0.01
     sigma_max: 1.5
     beta: 0.0                         # σ_imp(K) = σ_imp + β·ln(K/F); β ≠ 0 tylko w analizie wrażliwości
