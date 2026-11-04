@@ -558,5 +558,370 @@
         "main_strategy": "ce_dep"
       }
     }
+  },
+  "market/cboe_strategy_indices": {
+    "updated_utc": "2026-11-04T07:44:06+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "market/cboe_strategy_indices.parquet",
+    "sha256": "874760862f3e885ac1cb21be3430f847678dfdcb086209b6fcad26ade34d9819",
+    "n_rows": 10163,
+    "params": {
+      "status": "ok",
+      "validation": {
+        "PPUT": {
+          "source": "cboe",
+          "n_obs": 10160,
+          "n_duplicates": 0,
+          "n_nonpositive": 0,
+          "n_missing": 0,
+          "first_date": "1986-06-30",
+          "last_date": "2026-11-03",
+          "max_gap_bdays": 5
+        },
+        "PUT": {
+          "source": "cboe",
+          "n_obs": 4998,
+          "n_duplicates": 0,
+          "n_nonpositive": 0,
+          "n_missing": 0,
+          "first_date": "1991-03-04",
+          "last_date": "2026-11-03",
+          "max_gap_bdays": 827
+        },
+        "BXM": {
+          "source": "cboe",
+          "n_obs": 6192,
+          "n_duplicates": 0,
+          "n_nonpositive": 0,
+          "n_missing": 0,
+          "first_date": "2002-03-22",
+          "last_date": "2026-11-03",
+          "max_gap_bdays": 3
+        }
+      }
+    }
+  },
+  "market/usd_rate": {
+    "updated_utc": "2026-11-04T07:47:08+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "market/usd_rate.parquet",
+    "sha256": "211c52880fbf3bdf3befeb900de52b098e6f9d1109d3bbaa1d4263fc52472b46",
+    "n_rows": 5482,
+    "params": {
+      "sources": {
+        "irx": {
+          "n_obs": 5482,
+          "first": "2005-01-03"
+        },
+        "fred_dtb3": {
+          "error": "HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read timed out. (read timeout=30.0)"
+        }
+      },
+      "convention": "stopa dyskontowa ACT/360, ułamek",
+      "counts": {
+        "irx": 5482
+      }
+    }
+  },
+  "options/ledger": {
+    "updated_utc": "2026-11-04T09:33:39+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "options/ledger.parquet",
+    "sha256": "8c8198aff18f113c3a5c1b2c70bc9265286a9a774d3bc2b5a650bea77123b0f4",
+    "n_rows": 161580,
+    "params": {
+      "moneyness": [
+        0.95,
+        0.975,
+        1.0,
+        1.025,
+        1.05
+      ],
+      "band": 0.06,
+      "kappa": 0.03,
+      "implied_vol": {
+        "default_source": "proxy",
+        "sources": {
+          "GLD": "GVZ",
+          "IAU": "GVZ",
+          "SGOL": "GVZ"
+        },
+        "vix_tenors_days": {
+          "VIX9D": 9,
+          "VIX": 30
+        },
+        "atm_adj": 1.0,
+        "atm_adj_in_m": true,
+        "sigma_min": 0.01,
+        "sigma_max": 1.5,
+        "beta": 0.0,
+        "m_horizon": 21,
+        "spx_name": "SPX"
+      },
+      "m_bar": 1.0785438810100776,
+      "atm_adj": 1.0,
+      "first_date": "2008-01-02",
+      "last_date": "2026-10-01",
+      "n_dates": 226,
+      "dividends": "total_return",
+      "note": "opcje hipotetyczne, wycena modelowa"
+    }
+  },
+  "options/overlay_decisions": {
+    "updated_utc": "2026-11-04T09:33:40+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "options/overlay_decisions.parquet",
+    "sha256": "274bb7bff9179802b45c48bd565cf875c7f538ba56af5dd2d860b9a3256fb185",
+    "n_rows": 195948,
+    "params": {
+      "policies": {
+        "P0": {
+          "kind": "none"
+        },
+        "P1": {
+          "kind": "static",
+          "put": 0.975,
+          "h_put": 0.5
+        },
+        "P1_cc": {
+          "kind": "static",
+          "call": 1.025,
+          "h_call": 0.5
+        },
+        "P2": {
+          "kind": "rules"
+        },
+        "P3": {
+          "kind": "lp",
+          "lambda": 2.0
+        },
+        "P3_lam1": {
+          "kind": "lp",
+          "lambda": 1.0
+        },
+        "P3_lam3": {
+          "kind": "lp",
+          "lambda": 3.0
+        },
+        "P3_lam0.1": {
+          "kind": "lp",
+          "lambda": 0.1
+        },
+        "P3_lam0.25": {
+          "kind": "lp",
+          "lambda": 0.25
+        }
+      },
+      "rules": {
+        "q_cheap": 0.3,
+        "q_expensive": 0.7,
+        "v_max": 0.8,
+        "put_cheap": 1.0,
+        "put_trend": 0.975,
+        "collar_put": 0.975,
+        "collar_call": 1.05,
+        "covered_call": 1.025
+      },
+      "lp": {
+        "alpha": 0.975,
+        "n_scenarios": 5000,
+        "epsilon": 0.0002,
+        "drift_sharpe": 0.3,
+        "dependence_model": "student_t",
+        "seed_tag": "options_overlay"
+      }
+    }
+  },
+  "subfunds_overlay_nav": {
+    "updated_utc": "2026-11-04T09:33:40+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "subfunds_overlay_nav.parquet",
+    "sha256": "e661048e9419ae4ba7fd42115fdaad6114d9ca017d519a922389857f6ca54e68",
+    "n_rows": 57884,
+    "params": {
+      "kappa": 0.03,
+      "variants": [
+        "base",
+        "sigma+3pp",
+        "sigma-3pp",
+        "beta=-0.5",
+        "kappa=0.01",
+        "kappa=0.05"
+      ],
+      "weights": "równe w SF (reguła macierzy A)",
+      "m_bar": 1.0785438810100776
+    }
+  },
+  "options/portfolio_periods": {
+    "updated_utc": "2026-11-04T09:29:47+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "options/portfolio_periods.parquet",
+    "sha256": "862e0bef974d1e0d6dfbef03c04c5ee596749ccf757b51cff33fdb348a2ef448",
+    "n_rows": 2700,
+    "params": {
+      "portfolio": {
+        "enabled": true,
+        "profiles": [
+          "P3",
+          "P4",
+          "P5"
+        ],
+        "ov_min_profile": "P3",
+        "strategies": [
+          "ce_dep",
+          "maxret_es"
+        ],
+        "n_scenarios": 5000
+      },
+      "selected": "P3",
+      "transaction_cost": 0.001,
+      "execution_lag": 1
+    }
+  },
+  "reports/options_validation": {
+    "updated_utc": "2026-11-04T09:33:40+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "reports/options_validation.csv",
+    "sha256": "747c0967b3989adff57399e76261891a85824eb81f70b7d588b297cdce1fe996",
+    "n_rows": 156,
+    "params": {
+      "status": "ok",
+      "indices": {
+        "BXM": "ok",
+        "PPUT": "ok"
+      },
+      "atm_adj_estimate": {
+        "status": "ok",
+        "atm_adj": 0.7856798486479096,
+        "n_obs": 391,
+        "iqr": [
+          0.7388757776678861,
+          0.8323521804549344
+        ],
+        "first_date": "2026-10-30",
+        "last_date": "2026-11-03"
+      },
+      "validation": {
+        "BXM": {
+          "type": "call",
+          "side": "short",
+          "moneyness": 1.0,
+          "strike_rule": "ceil",
+          "strike_step": 5.0
+        },
+        "PPUT": {
+          "type": "put",
+          "side": "long",
+          "moneyness": 0.95,
+          "strike_rule": "floor",
+          "strike_step": 5.0
+        }
+      }
+    }
+  },
+  "options/annual_mc": {
+    "updated_utc": "2026-11-04T09:34:12+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "options/annual_mc.parquet",
+    "sha256": "7e1a7c5ccd68b8b3d385aff4f0b44467e805a1970cbe2ea6e053dfc7648540e9",
+    "n_rows": 45,
+    "params": {
+      "annual_mc": {
+        "months": 12,
+        "sessions_per_month": 21,
+        "n_scenarios": 2000,
+        "policies": [
+          "P0",
+          "P1",
+          "P1_cc",
+          "P2",
+          "P3_frozen"
+        ]
+      },
+      "date": "2026-10-01",
+      "m_bar": 1.0785438810100776
+    }
+  },
+  "reports/options_monthly_backtest": {
+    "updated_utc": "2026-11-04T09:34:14+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "reports/options_monthly_backtest.md",
+    "sha256": "7172ad4ed64d2502a88987287c0f90c75768309643c65ec18384a6dad3685e4e",
+    "params": {
+      "n_series_sf": 783,
+      "portfolio": true
+    }
   }
 }

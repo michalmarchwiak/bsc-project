@@ -1,0 +1,105 @@
+"""Nakładka opcyjna – Etap 2: prognoza GARCH zmienności, m_t, σ z indeksów Cboe, proxy, korekta skośności."""
+
+import numpy as np
+import pytest
+from scipy import integrate
+
+from pf.models.margins import MarginFit, simulate_daily, skewt_ppf
+from pf.options import implied_vol as ivm
+
+ICFG = {"default_source": "proxy", "sources": {"GLD": "GVZ"}, "vix_tenors_days": {"VIX9D": 9, "VIX": 30},
+        "atm_adj": 1.0, "sigma_min": 0.01, "sigma_max": 1.5}
+
+
+def fit(**kw) -> MarginFit:
+    base = dict(name="X", mu=0.02, phi=0.05, omega=0.03, alpha=0.04, gamma=0.08, beta=0.88, eta=6.0, lam=-0.15,
+                scale=100.0, last_r=-1.2, last_eps=-1.5, last_sigma2=2.0, loglik=0.0, n_obs=1000, converged=True,
+                eps_absmax=10.0)
+    base.update(kw)
+    return MarginFit(**base)
+
+
+@pytest.mark.parametrize("eta,lam", [(5.0, 0.0), (4.0, -0.3), (8.0, 0.25), (2.6, -0.1)])
+def test_skewt_density_moments(eta, lam):
+    f = lambda z: float(ivm.skewt_pdf(z, eta, lam))  # noqa: E731
+    total = integrate.quad(f, -np.inf, np.inf, limit=200)[0]
+    mean = integrate.quad(lambda z: z * f(z), -np.inf, np.inf, limit=200)[0]
+    assert total == pytest.approx(1.0, abs=1e-7) and mean == pytest.approx(0.0, abs=1e-6)
+    if eta > 3:
+        var = integrate.quad(lambda z: z * z * f(z), -np.inf, np.inf, limit=200)[0]
+        assert var == pytest.approx(1.0, abs=1e-5)
+
+
+def test_neg_second_moment_symmetric_and_vs_monte_carlo():
+    assert ivm.neg_second_moment(7.0, 0.0) == pytest.approx(0.5, abs=1e-8)
+    u = (np.arange(400_000) + 0.5) / 400_000
+    z = skewt_ppf(u, 6.0, -0.3)
+    mc = np.mean(z ** 2 * (z < 0))
+    assert ivm.neg_second_moment(6.0, -0.3) == pytest.approx(mc, rel=5e-3)
+    assert ivm.neg_second_moment(6.0, -0.3) > 0.5 > ivm.neg_second_moment(6.0, 0.3)
+
+
+def test_variance_path_matches_simulation():
+    f = fit()
+    rng = np.random.default_rng(3)
+    S, H = 200_000, 8
+    r = simulate_daily([f], rng.random((S, H, 1)), eps_cap=None)[:, :, 0] * f.scale
+    prev = np.concatenate([np.full((S, 1), f.last_r), r[:, :-1]], axis=1)
+    eps = r - f.mu - f.phi * prev
+    sim = (eps ** 2).mean(axis=0)
+    ana = ivm.variance_path(f.next_sigma2(), f.omega, ivm.persistence(f), H)
+    np.testing.assert_allclose(sim, ana, rtol=0.03)
+    # opóźnienie L: kroki L+1, …, L+n
+    np.testing.assert_allclose(ivm.variance_path(f.next_sigma2(), f.omega, ivm.persistence(f), 5, skip=3), ana[3:8])
+
+
+def test_garch_vol_constant_variance_and_deterministic():
+    f = fit(alpha=0.0, gamma=0.0, beta=0.0, omega=1.44)
+    assert ivm.garch_vol(f, 21, 1) == pytest.approx(np.sqrt(252 * 1.44) / 100)
+    det = fit(kind="deterministic")
+    assert ivm.garch_vol(det, 21) == 0.0
+
+
+def test_vrp_multiplier():
+    assert ivm.vrp_multiplier(20.0, 0.16) == pytest.approx(1.25)
+    assert np.isnan(ivm.vrp_multiplier(np.nan, 0.16)) and np.isnan(ivm.vrp_multiplier(20.0, 0.0))
+
+
+def test_index_vol_vix_interpolation():
+    lv = {"VIX9D": 16.0, "VIX": 20.0}
+    tenors = ICFG["vix_tenors_days"]
+    assert ivm.index_vol("VIX", lv, 30, tenors) == pytest.approx(0.20)
+    assert ivm.index_vol("VIX", lv, 9, tenors) == pytest.approx(0.16)
+    w9, w30 = 0.16 ** 2 * 9 / 365, 0.20 ** 2 * 30 / 365
+    w20 = w9 + (w30 - w9) * (20 - 9) / (30 - 9)
+    assert ivm.index_vol("VIX", lv, 20, tenors) == pytest.approx(np.sqrt(w20 / (20 / 365)))
+    assert ivm.index_vol("VIX", lv, 33, tenors) == pytest.approx(0.20)             # płaska ekstrapolacja
+    assert ivm.index_vol("VIX", {"VIX": 20.0}, 20, tenors) == pytest.approx(0.20)  # brak VIX9D (przed 2011)
+    assert ivm.index_vol("GVZ", {"GVZ": 15.0}, 28, tenors, atm_adj=0.9) == pytest.approx(0.135)
+
+
+def test_sigma_table_sources_fallback_and_shift():
+    fits = {"GLD": fit(name="GLD"), "AAA.WA": fit(name="AAA.WA")}
+    sh = ivm.garch_vol(fits["AAA.WA"], 21, 1)
+    tab = ivm.sigma_table(["GLD", "AAA.WA"], fits, 21, 1, 1.2, {"GVZ": 15.0, "VIX": 20.0}, 30, ICFG)
+    assert tab.loc["GLD", "iv_source"] == "GVZ" and tab.loc["GLD", "sigma_imp"] == pytest.approx(0.15)
+    assert tab.loc["AAA.WA", "sigma_imp"] == pytest.approx(1.2 * sh)
+    missing = ivm.sigma_table(["GLD"], fits, 21, 1, 1.2, {"VIX": 20.0}, 30, ICFG)     # GVZ przed 2009-09
+    assert missing.loc["GLD", "iv_source"] == "proxy" and missing.loc["GLD", "iv_source_cfg"] == "GVZ"
+    shifted = ivm.sigma_table(["GLD", "AAA.WA"], fits, 21, 1, 1.2, {"GVZ": 15.0}, 30, ICFG, shift_pp=3.0)
+    assert shifted.loc["GLD", "sigma_imp"] == pytest.approx(0.15)                   # indeks – bez przesunięcia
+    assert shifted.loc["AAA.WA", "sigma_imp"] == pytest.approx(1.2 * sh + 0.03)
+    low = ivm.sigma_table(["AAA.WA"], fits, 21, 1, 1e-4, {}, 30, ICFG)
+    assert low.loc["AAA.WA", "sigma_imp"] == ICFG["sigma_min"]
+
+
+def test_strike_vol_skew():
+    s = ivm.strike_vol(0.2, [95.0, 100.0, 105.0], 100.0, beta=-0.5)
+    np.testing.assert_allclose(s, 0.2 - 0.5 * np.log([0.95, 1.0, 1.05]))
+    np.testing.assert_allclose(ivm.strike_vol(0.2, [95.0, 105.0], 100.0), 0.2)
+
+
+def test_market_multiplier_atm_adjustment():
+    assert ivm.market_multiplier(20.0, 0.16, {"atm_adj": 1.0}) == pytest.approx(1.25)
+    assert ivm.market_multiplier(20.0, 0.16, {"atm_adj": 0.8}) == pytest.approx(1.0)
+    assert ivm.market_multiplier(20.0, 0.16, {"atm_adj": 0.8, "atm_adj_in_m": False}) == pytest.approx(1.25)

@@ -141,7 +141,8 @@ src/pf/
                    LP Rockafellara–Uryaseva (cvar), średnia–wariancja z Ledoitem–Wolfem (mv)
   backtest/        daty i okna (data), krok daty (engine), realizacja stóp (realized), testy VaR/ES,
                    miary, MC ex post, ranking
-  options/         moduł opcji (wycena, IV, powierzchnia zmienności, PPUT)
+  options/         moduł opcji (wycena, IV, powierzchnia zmienności, PPUT) i miesięczna nakładka opcyjna
+                   na tickery SF (rejestr, σ_imp, NAV, polityki P0–P3, warianty SFk_OV, walidacja BXM/PPUT)
 pipelines/         skrypty uruchomieniowe (python -m pipelines.<nazwa>)
 artifacts/         wyniki: backtest/<run_id>/ (tabele), reports/ (raporty .md), market/, models/
 figures/           wykresy (log_returns/, backtest/)
@@ -153,7 +154,7 @@ tests/             testy jednostkowe i integracyjne (bez sieci)
 
 ```bash
 pip install -e ".[dev]"
-pytest -q              # ok. 200 testów bez dostępu do sieci (ok. 1 min)
+pytest -q              # ok. 270 testów bez dostępu do sieci (ok. 2 min)
 pytest -m network      # testy sieciowe (źródła danych)
 ```
 
@@ -243,3 +244,22 @@ zrzuty łańcuchów opcji, wycenę Blacka–Scholesa–Mertona, zmienność impl
 powierzchnię zmienności i replikację strategii PPUT. Dane rynkowe są odświeżane codziennie przez
 `.github/workflows/refresh.yml`. Kalibracja i walidacja:
 `python -m pipelines.calibrate_surface`, `python -m pipelines.validate_pput`.
+
+### Miesięczna nakładka opcyjna
+
+`pipelines.options_monthly` wycenia w każdej dacie rebalansowania hipotetyczne opcje europejskie bliskie ATM
+(K/S ∈ {0,95; …; 1,05}, |ln(K/F)| ≤ 0,06) na każdy ticker SF1–SF9. Opcje są rozliczane w kolejnej dacie
+i włączane do NAV sub-funduszu według polityki: P0 (brak), P1 (stały put lub covered call), P2 (reguły na
+cenie ubezpieczenia m_t, trendzie i reżimie zmienności) albo P3 (LP max E[R] − λ·CVaR na scenariuszach
+GARCH-kopuła). σ_imp jest odtwarzana modelowo (GVZ dla ETF-ów na złoto, w pozostałych przypadkach
+σ̂_GARCH × VIX/σ̂_SPX), bo dla większości tickerów nie ma notowanych opcji miesięcznych. Warianty SFk_OV wchodzą
+jako kolumny poziomu 2 optymalizacji profili ≥ P3. Wycena jest walidowana replikacją Cboe BXM i PPUT.
+
+```bash
+python -m pipelines.options_monthly --jobs 4     # rejestr, polityki, NAV, portfele, walidacja, raport
+```
+
+Wyniki: `artifacts/options/`, `artifacts/subfunds_overlay_nav.parquet`,
+`artifacts/reports/options_monthly_backtest.md`, `artifacts/reports/options_validation.md`.
+Metoda i ograniczenia: [`docs/options_monthly.md`](docs/options_monthly.md).
+

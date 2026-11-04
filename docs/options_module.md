@@ -2,8 +2,9 @@
 
 Moduł dostarcza dane zmienności i kwotowania opcji (offline) oraz wycenę europejskich
 opcji na S&P 500 / SPY i WIG20 z parametryczną powierzchnią zmienności. Stanowi podstawę
-dla sub-funduszy opcyjnych (protective put, collar) wycenianych pełnym przeszacowaniem
-w scenariuszach Monte Carlo (Etapy 3–6, jeszcze niezaimplementowane).
+dla sub-funduszy opcyjnych (protective put, collar). Miesięczną nakładkę opcyjną na tickery
+sub-funduszy (rejestr opcji, polityki P0–P3, NAV, warianty SFk_OV, walidacja BXM/PPUT) opisuje
+[`options_monthly.md`](options_monthly.md).
 
 ## Uruchomienie
 
@@ -71,5 +72,5 @@ OTM; walidacja na podziale czasowym (`surface.oos_split`), raport
   zmianie schematu import jest pomijany (wpis `status: unavailable` w manifeście),
   a kalibracja korzysta tylko ze zrzutów yfinance. Tabela `option_chain` nie zawiera ceny
   bazowej – dołączana jest cena zamknięcia SPY.
-- Zmienność warunkowa σ_GARCH dla proxy WIG20 pochodzi z modeli marginesów, których
-  repozytorium jeszcze nie zawiera – `proxy_wig20` przyjmuje ją jako wejście.
+- Zmienność warunkowa σ_GARCH dla proxy WIG20 jest wejściem `proxy_wig20`; prognozę GARCH średniej
+  zmienności na okres opcji z marginesów AR(1)–GJR-GARCH liczy `pf.options.implied_vol.garch_vol`.

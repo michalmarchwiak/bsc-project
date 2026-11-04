@@ -13,3 +13,8 @@ artifacts/backtest/*/dates/
 artifacts/backtest/*/daily.parquet
 artifacts/backtest/*/daily_sf.parquet
 artifacts/backtest/*/weights_x.parquet
+
+# Nakładka opcyjna: wyniki per data i pamięć podręczna modeli (odtwarzalne, pipelines.options_monthly)
+artifacts/options/dates/
+artifacts/options/cache/
+artifacts/options/portfolio/
