@@ -558,5 +558,85 @@
         "main_strategy": "ce_dep"
       }
     }
+  },
+  "market/cboe_strategy_indices": {
+    "updated_utc": "2026-11-04T07:44:06+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "market/cboe_strategy_indices.parquet",
+    "sha256": "874760862f3e885ac1cb21be3430f847678dfdcb086209b6fcad26ade34d9819",
+    "n_rows": 10163,
+    "params": {
+      "status": "ok",
+      "validation": {
+        "PPUT": {
+          "source": "cboe",
+          "n_obs": 10160,
+          "n_duplicates": 0,
+          "n_nonpositive": 0,
+          "n_missing": 0,
+          "first_date": "1986-06-30",
+          "last_date": "2026-11-03",
+          "max_gap_bdays": 5
+        },
+        "PUT": {
+          "source": "cboe",
+          "n_obs": 4998,
+          "n_duplicates": 0,
+          "n_nonpositive": 0,
+          "n_missing": 0,
+          "first_date": "1991-03-04",
+          "last_date": "2026-11-03",
+          "max_gap_bdays": 827
+        },
+        "BXM": {
+          "source": "cboe",
+          "n_obs": 6192,
+          "n_duplicates": 0,
+          "n_nonpositive": 0,
+          "n_missing": 0,
+          "first_date": "2002-03-22",
+          "last_date": "2026-11-03",
+          "max_gap_bdays": 3
+        }
+      }
+    }
+  },
+  "market/usd_rate": {
+    "updated_utc": "2026-11-04T07:47:08+00:00",
+    "versions": {
+      "python": "3.13.18",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "market/usd_rate.parquet",
+    "sha256": "211c52880fbf3bdf3befeb900de52b098e6f9d1109d3bbaa1d4263fc52472b46",
+    "n_rows": 5482,
+    "params": {
+      "sources": {
+        "irx": {
+          "n_obs": 5482,
+          "first": "2005-01-03"
+        },
+        "fred_dtb3": {
+          "error": "HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read timed out. (read timeout=30.0)"
+        }
+      },
+      "convention": "stopa dyskontowa ACT/360, ułamek",
+      "counts": {
+        "irx": 5482
+      }
+    }
   }
 }

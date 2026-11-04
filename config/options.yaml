@@ -75,3 +75,94 @@ surface:
 
 wig20_proxy:
   sensitivity_pp: 3.0       # ± p.p. zmienności implikowanej
+
+# =========================================================================== miesięczna nakładka opcyjna
+# Hipotetyczne opcje europejskie bliskie ATM na tickery sub-funduszy (docs/options_monthly.md,
+# pipelines.options_monthly). Wycena modelowa: dla większości tickerów brak notowanych opcji miesięcznych.
+# Daty: daty rebalansowania backtestu (config/backtest.yaml), opcja otwierana na zamknięciu sesji otwarcia
+# pozycji i wygasająca na zamknięciu sesji jej zamknięcia (pf.backtest.data.holding_bounds).
+monthly_overlay:
+  exclude_subfunds: [SF10]            # obligacje oszczędnościowe: nienotowane, stopa deterministyczna
+  moneyness: [0.95, 0.975, 1.0, 1.025, 1.05]   # siatka K/S_t (rejestr: puty i calle na całej siatce)
+  put_max_moneyness: 1.0              # nakładka: puty K/S ≤ 1
+  call_min_moneyness: 1.0             # nakładka: calle K/S ≥ 1
+  band: 0.06                          # |ln(K/F)| ≤ band, w przeciwnym razie odrzucenie (in_band = False)
+  kappa: 0.03                         # koszt transakcyjny κ jako ułamek premii (kupno: +κ, sprzedaż: −κ)
+  trading_days: 252                   # τ = n_sesji / 252
+  dividends: total_return             # ceny skorygowane (TR) → q = 0; "yield" – q z 12 mies. (niezaimplementowane)
+  data:
+    returns_local: "data/processed/log_returns_local.csv"
+    returns_pln: "data/processed/log_returns_pln.csv"
+    fx: "data/raw/fx_nbp.csv"         # USDPLN, kurs średni NBP
+    fx_name: "USDPLN"
+    usd_rate: "artifacts/market/usd_rate.parquet"   # pf.data.usd_rate (^IRX, zapasowo FRED DTB3)
+    pln_rate: "artifacts/market/riskfree_pln.parquet"
+    vol_indices: "artifacts/market/vol_indices.parquet"
+    underlyings: "artifacts/market/underlyings.parquet"
+    strategy_indices: "artifacts/market/cboe_strategy_indices.parquet"
+  rates:                              # stopa ciągła na okres opcji: r = ln(1 + y·d/basis) / τ, d – dni kalendarzowe
+    pln_basis: 365                    # WIBOR 1M, ACT/365
+    usd_basis: 360                    # bony skarbowe 13-tyg., ACT/360
+    default_usd: 0.02                 # gdy brak szeregu stopy USD (ostrzeżenie w manifeście)
+  implied_vol:
+    default_source: proxy             # σ_imp = clip(m_t · σ̂_i(τ), σ_min, σ_max)
+    sources: {GLD: GVZ, IAU: GVZ, SGOL: GVZ}   # VIX – S&P 500/SPY, OVX – ropa, GVZ – złoto (ETF na złoto)
+    vix_tenors_days: {VIX9D: 9, VIX: 30}       # interpolacja wariancji całkowitej (VIX9D od 2011)
+    atm_adj: 1.0                      # σ_ATM = atm_adj · indeks/100 (kalibracja: manifest options/atm_adj)
+    sigma_min: 0.01
+    sigma_max: 1.5
+    beta: 0.0                         # σ_imp(K) = σ_imp + β·ln(K/F); β ≠ 0 tylko w analizie wrażliwości
+    m_horizon: 21                     # m_t = (VIX_t/100) / σ̂_SPX,t(21)
+    spx_name: SPX                     # artifacts/market/underlyings.parquet: (SPX, Close)
+  signals:
+    min_history_months: 36            # percentyle w oknie rozszerzającym się; wcześniej polityka = P0
+    sma_months: 10                    # T = S_t / SMA_10M − 1
+  policies:                           # P0 – brak, P1 – statyczna, P2 – regułowa, P3 – optymalizacyjna (LP)
+    P0: {kind: none}
+    P1: {kind: static, put: 0.975, h_put: 0.5}
+    P1_cc: {kind: static, call: 1.025, h_call: 0.5}
+    P2: {kind: rules}
+    P3: {kind: lp, lambda: 2.0}
+    P3_lam1: {kind: lp, lambda: 1.0}
+    P3_lam3: {kind: lp, lambda: 3.0}
+  selected: P3                        # polityka wariantów SFk_OV w portfelu
+  rules:                              # progi P2 ustalone ex ante (bez dostrajania)
+    q_cheap: 0.3                      # put: Q ≤ q_cheap lub (T < 0 i Q ≤ q_expensive)
+    q_expensive: 0.7                  # collar: T < 0 i Q > q_expensive; covered call: Q ≥ q_expensive, T > 0, V ≤ v_max
+    v_max: 0.8
+    put_cheap: 1.0                    # K/S puta przy taniej ochronie (Q ≤ q_cheap)
+    put_trend: 0.975                  # K/S puta przy trendzie spadkowym
+    collar_put: 0.975
+    collar_call: 1.05
+    covered_call: 1.025
+  lp:
+    alpha: 0.975                      # CVaR_α w max E[R] − λ·CVaR_α(R)
+    n_scenarios: 5000
+    epsilon: 2.0e-4                   # pasmo bezczynności: minimalna poprawa funkcji celu (stopa miesięczna)
+    drift_sharpe: 0.3                 # dryf w mierze P: E[S_{t+τ}/S_t] = exp((r + SR·σ̂)τ); USD/PLN: exp((r_PLN − r_USD)τ)
+    dependence_model: student_t       # kopuła scenariuszy nakładki (rejestr pf.models.dependence)
+    seed_tag: options_overlay
+  sensitivity:
+    enabled: true
+    sigma_shift_pp: 3.0               # ± p.p. σ_imp dla tickerów proxy
+    beta: -0.5                        # nachylenie skośności σ_imp(K) = σ_imp + β·ln(K/F)
+    kappa: [0.01, 0.05]
+    policies: [P1, P1_cc, P2, P3]
+  portfolio:                          # integracja z optymalizacją dwupoziomową (pf.options.portfolio)
+    enabled: true
+    profiles: [P3, P4, P5]
+    ov_min_profile: P3                # kolumny SFk_OV od tego profilu (P1 < P2 < … < P5)
+    strategies: [ce_dep, maxret_es]   # pf.opt.profiles.MODEL_STRATEGIES
+    n_scenarios: 5000
+  annual_mc:
+    months: 12
+    sessions_per_month: 21
+    n_scenarios: 2000
+    policies: [P0, P1, P1_cc, P2, P3_frozen]
+  validation:                         # replikacja Cboe BXM i PPUT silnikiem modułu (rolowanie w 3. piątek)
+    BXM: {type: call, side: short, moneyness: 1.0, strike_rule: ceil, strike_step: 5.0}
+    PPUT: {type: put, side: long, moneyness: 0.95, strike_rule: floor, strike_step: 5.0}
+  stress_windows:
+    "2008": ["2008-09-01", "2009-03-31"]
+    "2020": ["2020-02-01", "2020-04-30"]
+    "2022": ["2022-01-01", "2022-10-31"]
