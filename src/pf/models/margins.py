@@ -164,8 +164,15 @@ def fit_margins(returns: pd.DataFrame, scale: float = 100.0, jobs: int | None = 
     return fits, z
 
 
-def residual_panel(z: pd.DataFrame, market_of=lambda t: "PL" if t.endswith(".WA") else "US",
-                   trim_leading: bool = True) -> pd.DataFrame:
+FX_ASSETS = ("USDPLN",)   # kursy walut (kurs średni NBP – kalendarz GPW), aktywa modelu spoza sub-funduszy
+
+
+def default_market(ticker: str) -> str:
+    """Rynek aktywa w panelu reszt: GPW (``.WA``) i kurs NBP – 'PL', pozostałe – 'US'."""
+    return "PL" if str(ticker).endswith(".WA") or ticker in FX_ASSETS else "US"
+
+
+def residual_panel(z: pd.DataFrame, market_of=default_market, trim_leading: bool = True) -> pd.DataFrame:
     """Usuwa dni zamknięcia całego rynku, pozostałe braki zastępuje ẑ = 0.
 
     ``trim_leading``: panel zaczyna się w dniu, od którego notowane są wszystkie aktywa (max pierwszych

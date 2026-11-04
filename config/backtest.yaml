@@ -100,3 +100,18 @@ ranking:
                       turnover: 0.5}
   es_expost_method: fhs        # ES ex post do STARR (Etap 5): fhs | stationary_bootstrap
   main_series: {model: rvine, strategy: ce_dep}
+
+# Nakładka opcyjna w backteście (docs/options_monthly.md): dla profili ≥ min_profile każda strategia z listy ma bliźniaka
+# "<strategia>_ov" z dodatkowymi kolumnami SFk_OV na poziomie 2 (pf.options.portfolio). Pozycje opcyjne w datach t_j
+# (polityka monthly_overlay.selected, wariant bazowy) pochodzą z pliku decyzji pipelines.options_monthly – uruchom go
+# najpierw; brak pliku lub daty → SFk_OV ≡ SFk. Kurs USD/PLN jest wtedy aktywem modelu (marginesy i kopuły, poza
+# sub-funduszami), co daje wypłaty opcji na tickery w USD od ceny w USD i kursu osobno. Zmienia run_id (nowy przebieg).
+options_overlay:
+  enabled: true
+  decisions: "artifacts/options/overlay_decisions.parquet"
+  policy: null                   # null → config/options.yaml: monthly_overlay.selected
+  strategies: [ce_dep, ce, maxret_es, min_es]
+  min_profile: P3
+  fx_asset: true                 # USD/PLN jako aktywo modelu (data/raw/fx_nbp.csv)
+  fx_path: "data/raw/fx_nbp.csv"
+  returns_local: "data/processed/log_returns_local.csv"   # realizacja wypłat opcji na tickery w USD (cena w USD)

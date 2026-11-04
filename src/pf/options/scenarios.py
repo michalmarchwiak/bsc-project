@@ -35,7 +35,7 @@ import pandas as pd
 from pf.backtest.data import config_digest, eligible_assets, estimation_window
 from pf.backtest.engine import window_digest
 from pf.models.dependence import DependenceModel, fit_model, load_model, save_model
-from pf.models.margins import MarginFit, fit_margin, fit_margins, residual_panel, simulate_daily
+from pf.models.margins import MarginFit, default_market, fit_margin, fit_margins, residual_panel, simulate_daily
 from pf.models.rvine import pseudo_observations
 from pf.options.market import MarketData, currency
 from pf.sim.scenarios import full_uniforms, model_seed
@@ -45,7 +45,7 @@ CACHE_VERSION = "overlay-v2"
 
 
 def market_of(name: str) -> str:
-    return "PL" if name.endswith(".WA") or name == FX else "US"
+    return default_market(name)
 
 
 @dataclass

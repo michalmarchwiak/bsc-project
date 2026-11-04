@@ -19,11 +19,7 @@ import pandas as pd
 from scipy import stats
 
 from pf.models.dependence import DependenceModel
-from pf.models.margins import MarginFit, skewt_cdf
-
-
-def default_market(ticker: str) -> str:
-    return "PL" if ticker.endswith(".WA") else "US"
+from pf.models.margins import MarginFit, default_market, skewt_cdf  # noqa: F401 (default_market – ponowny eksport)
 
 
 def information_criteria(model: DependenceModel) -> dict:

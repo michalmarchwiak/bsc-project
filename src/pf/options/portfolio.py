@@ -123,3 +123,48 @@ def es_scale(es: float, es_target: float, rf: float) -> float:
     if not (np.isfinite(es) and np.isfinite(es_target)) or es <= es_target or es + rf <= 0:
         return 1.0
     return float(np.clip((es_target + rf) / (es + rf), 0.0, 1.0))
+
+
+def scenario_gross(R: np.ndarray, assets: list[str], fx_name: str = "USDPLN") -> dict[str, tuple[np.ndarray, np.ndarray]]:
+    """Brutto-stopy (g – waluta notowania, f – kurs) tickerów ze scenariuszy stóp w PLN z kursem jako aktywem.
+
+    Dla tickera w USD: g = (1 + R_PLN)/(1 + R_kurs), f = 1 + R_kurs; w PLN: g = 1 + R, f = 1. Bez kolumny kursu
+    (``fx_name`` poza ``assets``) f = 1 – przybliżenie wypłaty od ceny w PLN."""
+    from pf.options.market import currency
+
+    pos = {a: i for i, a in enumerate(assets)}
+    F = 1.0 + R[:, pos[fx_name]] if fx_name in pos else np.ones(len(R))
+    out = {}
+    for a, i in pos.items():
+        if a == fx_name:
+            continue
+        G = 1.0 + R[:, i]
+        out[a] = (G / F, F) if currency(a) == "USD" else (G, np.ones(len(R)))
+    return out
+
+
+def ov_denominators(w_sf: dict[str, pd.Series], positions: dict[str, pd.DataFrame], kappa: float) -> dict[str, float]:
+    """D_k = Σ_i w_ki D_i (mianownik finansowania premii) dla SF z pozycjami."""
+    out = {}
+    for sf, pos in positions.items():
+        if sf in w_sf:
+            w = w_sf[sf]
+            D, _ = nav._per_ticker(pos, list(w.index), kappa)
+            out[sf] = float(w.to_numpy(float) @ D)
+    return out
+
+
+def stock_exposure(res: TwoLevelResult, positions: dict[str, pd.DataFrame], kappa: float) -> pd.Series:
+    """Ekspozycja akcyjna look-through portfela z kolumnami SFk_OV: Σ_k W_k w_k + Σ_k W_k^OV w_k / D_k
+    (reszta majątku, Σ_k W_k^OV (1 − 1/D_k), to koszt nakładki – premie netto i κ)."""
+    D = ov_denominators(res.w, positions, kappa)
+    parts = []
+    for col, W in res.W.items():
+        if W <= 0:
+            continue
+        sf = col[:-len(OV_SUFFIX)] if col.endswith(OV_SUFFIX) else col
+        if sf not in res.w:
+            continue
+        scale = 1.0 / D.get(sf, 1.0) if col.endswith(OV_SUFFIX) else 1.0
+        parts.append(W * scale * res.w[sf])
+    return pd.concat(parts).groupby(level=0).sum() if parts else pd.Series(dtype=float)
