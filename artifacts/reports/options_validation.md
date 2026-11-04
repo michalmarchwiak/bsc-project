@@ -2,7 +2,7 @@
 
 Silnik modułu (BSM, σ = atm_adj·σ_VIX(τ) + β ln(K/F), τ = n/252, rolowanie w 3. piątek, rozliczenie po zamknięciu). TE = σ(r_rep − r_off)·√12 na stopach między rolowaniami.
 
-Estymata atm_adj z kwotowań SPY: {"status": "ok", "atm_adj": 0.7856798486479096, "n_obs": 391, "iqr": [0.7388757776678861, 0.8323521804549344], "first_date": "2026-10-30", "last_date": "2026-11-03"}
+Estymata atm_adj z kwotowań SPY: {"status": "ok", "atm_adj": 0.7856798486479096, "n_obs": 391, "iqr": [0.7388757776678861, 0.8323521804549356], "first_date": "2026-10-30", "last_date": "2026-11-03"}
 
 | indeks | wariant | okres | mies. | TE [% p.a.] | śr. różnica [% p.a.] | replika [% p.a.] | indeks [% p.a.] | korelacja |
 |---|---|---|---:|---:|---:|---:|---:|---:|

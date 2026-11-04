@@ -640,18 +640,18 @@
     }
   },
   "options/ledger": {
-    "updated_utc": "2026-11-04T09:33:39+00:00",
+    "updated_utc": "2026-11-04T10:43:52+00:00",
     "versions": {
-      "python": "3.13.18",
-      "numpy": "2.5.3",
-      "pandas": "3.0.5",
+      "python": "3.13.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
       "scipy": "1.18.1",
       "pyarrow": "26.0.1",
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "options/ledger.parquet",
-    "sha256": "8c8198aff18f113c3a5c1b2c70bc9265286a9a774d3bc2b5a650bea77123b0f4",
+    "sha256": "9964b4e03df45c024234a9e261114b12d8056bf941eab066ab14404a6307c787",
     "n_rows": 161580,
     "params": {
       "moneyness": [
@@ -682,7 +682,7 @@
         "m_horizon": 21,
         "spx_name": "SPX"
       },
-      "m_bar": 1.0785438810100776,
+      "m_bar": 1.0785442361673296,
       "atm_adj": 1.0,
       "first_date": "2008-01-02",
       "last_date": "2026-10-01",
@@ -692,19 +692,19 @@
     }
   },
   "options/overlay_decisions": {
-    "updated_utc": "2026-11-04T09:33:40+00:00",
+    "updated_utc": "2026-11-04T10:43:52+00:00",
     "versions": {
-      "python": "3.13.18",
-      "numpy": "2.5.3",
-      "pandas": "3.0.5",
+      "python": "3.13.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
       "scipy": "1.18.1",
       "pyarrow": "26.0.1",
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "options/overlay_decisions.parquet",
-    "sha256": "274bb7bff9179802b45c48bd565cf875c7f538ba56af5dd2d860b9a3256fb185",
-    "n_rows": 195948,
+    "sha256": "ff15b0e9da9ca1dd10aaa3bcdaf3d797ee8cb852d193875382deef24eccfee0f",
+    "n_rows": 191435,
     "params": {
       "policies": {
         "P0": {
@@ -765,18 +765,18 @@
     }
   },
   "subfunds_overlay_nav": {
-    "updated_utc": "2026-11-04T09:33:40+00:00",
+    "updated_utc": "2026-11-04T10:43:52+00:00",
     "versions": {
-      "python": "3.13.18",
-      "numpy": "2.5.3",
-      "pandas": "3.0.5",
+      "python": "3.13.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
       "scipy": "1.18.1",
       "pyarrow": "26.0.1",
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "subfunds_overlay_nav.parquet",
-    "sha256": "e661048e9419ae4ba7fd42115fdaad6114d9ca017d519a922389857f6ca54e68",
+    "sha256": "fef4f6d3c0bac6ec1745b22d78d14dae44ca3cdbde44f84c160829367e0105ba",
     "n_rows": 57884,
     "params": {
       "kappa": 0.03,
@@ -789,22 +789,22 @@
         "kappa=0.05"
       ],
       "weights": "równe w SF (reguła macierzy A)",
-      "m_bar": 1.0785438810100776
+      "m_bar": 1.0785442361673296
     }
   },
   "options/portfolio_periods": {
-    "updated_utc": "2026-11-04T09:29:47+00:00",
+    "updated_utc": "2026-11-04T10:44:08+00:00",
     "versions": {
-      "python": "3.13.18",
-      "numpy": "2.5.3",
-      "pandas": "3.0.5",
+      "python": "3.13.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
       "scipy": "1.18.1",
       "pyarrow": "26.0.1",
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "options/portfolio_periods.parquet",
-    "sha256": "862e0bef974d1e0d6dfbef03c04c5ee596749ccf757b51cff33fdb348a2ef448",
+    "sha256": "af38914fcdc714d21f7d9ba6d02208b7ec35d896a286603904c1788cc5468fdc",
     "n_rows": 2700,
     "params": {
       "portfolio": {
@@ -827,18 +827,18 @@
     }
   },
   "reports/options_validation": {
-    "updated_utc": "2026-11-04T09:33:40+00:00",
+    "updated_utc": "2026-11-04T10:44:08+00:00",
     "versions": {
-      "python": "3.13.18",
-      "numpy": "2.5.3",
-      "pandas": "3.0.5",
+      "python": "3.13.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
       "scipy": "1.18.1",
       "pyarrow": "26.0.1",
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "reports/options_validation.csv",
-    "sha256": "747c0967b3989adff57399e76261891a85824eb81f70b7d588b297cdce1fe996",
+    "sha256": "8f354084f7d672841a61d4b84a2bd33bc2655a0b0bc94ff81f7b48fb917055bf",
     "n_rows": 156,
     "params": {
       "status": "ok",
@@ -852,7 +852,7 @@
         "n_obs": 391,
         "iqr": [
           0.7388757776678861,
-          0.8323521804549344
+          0.8323521804549356
         ],
         "first_date": "2026-10-30",
         "last_date": "2026-11-03"
@@ -876,18 +876,18 @@
     }
   },
   "options/annual_mc": {
-    "updated_utc": "2026-11-04T09:34:12+00:00",
+    "updated_utc": "2026-11-04T10:44:21+00:00",
     "versions": {
-      "python": "3.13.18",
-      "numpy": "2.5.3",
-      "pandas": "3.0.5",
+      "python": "3.13.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
       "scipy": "1.18.1",
       "pyarrow": "26.0.1",
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "options/annual_mc.parquet",
-    "sha256": "7e1a7c5ccd68b8b3d385aff4f0b44467e805a1970cbe2ea6e053dfc7648540e9",
+    "sha256": "1b88610327b31f703dbc1add0d95d103a11a31cbbf120597e62c165decb12667",
     "n_rows": 45,
     "params": {
       "annual_mc": {
@@ -903,25 +903,121 @@
         ]
       },
       "date": "2026-10-01",
-      "m_bar": 1.0785438810100776
+      "m_bar": 1.0785442361673296
     }
   },
   "reports/options_monthly_backtest": {
-    "updated_utc": "2026-11-04T09:34:14+00:00",
+    "updated_utc": "2026-11-04T10:44:21+00:00",
     "versions": {
-      "python": "3.13.18",
-      "numpy": "2.5.3",
-      "pandas": "3.0.5",
+      "python": "3.13.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
       "scipy": "1.18.1",
       "pyarrow": "26.0.1",
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "reports/options_monthly_backtest.md",
-    "sha256": "7172ad4ed64d2502a88987287c0f90c75768309643c65ec18384a6dad3685e4e",
+    "sha256": "17771d93c92c5f2da161cd8288192ce47a64423fc5b79b134c8fb1ee6440100b",
     "params": {
       "n_series_sf": 783,
       "portfolio": true
+    }
+  },
+  "backtest/83254f06e339/periods": {
+    "updated_utc": "2026-11-04T16:47:48+00:00",
+    "versions": {
+      "python": "3.13.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "backtest/83254f06e339/periods.parquet",
+    "sha256": "6ed89016bf97c73f8b4274bd42f85410291a83233ba039d9292dd2863830b3d6",
+    "n_rows": 112746,
+    "params": {
+      "first_date": "2008-01-02",
+      "last_date": "2026-10-01",
+      "n_dates": 226,
+      "n_series": 621,
+      "transaction_cost": 0.001,
+      "execution_lag": 1
+    }
+  },
+  "backtest/83254f06e339/es_mc": {
+    "updated_utc": "2026-11-04T16:50:36+00:00",
+    "versions": {
+      "python": "3.13.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "backtest/83254f06e339/es_mc.parquet",
+    "sha256": "c0a1cc0b015e6bfa9a860a85bc04ee989550bd459bebf74ad00d06dca95be942",
+    "n_rows": 9732,
+    "params": {
+      "expost_mc": {
+        "horizon": 21,
+        "batch": 20000,
+        "n_min": 20000,
+        "n_max": 200000,
+        "rel_se": 0.01,
+        "main_model": "rvine",
+        "main_strategy": "ce_dep"
+      }
+    }
+  },
+  "backtest/83254f06e339/ranking": {
+    "updated_utc": "2026-11-04T16:51:29+00:00",
+    "versions": {
+      "python": "3.13.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "backtest/83254f06e339/ranking_holdout.parquet",
+    "sha256": "4e2839e0d73fda8789d183af206b5950ae1495cffbb03b402332a14aa0adf580",
+    "params": {
+      "ranking": {
+        "mcs_size": 0.1,
+        "mcs_reps": 5000,
+        "sharpe_test": {
+          "block": 3,
+          "reps": 5000,
+          "benchmark": "-|ew|ALL|base"
+        },
+        "test_level": 0.05,
+        "composite_weights": {
+          "ce_ann": 3.0,
+          "sharpe": 1.0,
+          "sortino": 1.0,
+          "calmar": 1.0,
+          "max_dd": 1.0,
+          "omega": 1.0,
+          "starr": 1.0,
+          "turnover": 0.5
+        },
+        "es_expost_method": "fhs",
+        "main_series": {
+          "model": "rvine",
+          "strategy": "ce_dep"
+        }
+      },
+      "figures": [
+        "figures/backtest/wealth_drawdown.png",
+        "figures/backtest/composition_W.png",
+        "figures/backtest/rolling_sharpe.png",
+        "figures/backtest/es_vs_losses.png"
+      ]
     }
   }
 }
