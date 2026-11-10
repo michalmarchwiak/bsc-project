@@ -183,7 +183,8 @@ CI (`.github/workflows/ci.yml`) uruchamia `pytest -q` dla każdego pusha i PR.
 
 ## Uruchomienie
 
-Pipeline'y uruchamia się w podanej kolejności. Są przyrostowe i wznawialne: policzone daty i modele
+Pipeline'y uruchamia się z katalogu repozytorium w podanej kolejności. Instalacja pakietu (`pip install -e .`) nie jest
+wymagana: przy jej braku `pipelines/__init__.py` dopisuje `src/` do ścieżki importu. Są przyrostowe i wznawialne: policzone daty i modele
 są pomijane.
 
 ```bash
