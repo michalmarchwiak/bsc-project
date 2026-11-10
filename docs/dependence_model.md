@@ -57,6 +57,23 @@ Wszystkie modele estymowane są na tych samych pseudo-obserwacjach (wspólne mar
 | `indep` | kopuła niezależności | 0 |
 | `empirical` | losowanie wierszy panelu pseudo-obserwacji (bez gęstości) | – |
 
+**Agregacja panelu reszt** (`dependence.aggregation` w `config/models.yaml`, `residual_panel(agg_days=k)`).
+Zamknięcia GPW (17:00) i NYSE (22:00) oraz fixing NBP (ok. 11:50) nie są synchroniczne, więc część współzmienności
+ujawnia się z opóźnieniem jednej sesji i nie wchodzi do zależności dziennej. Kopuły można dlatego szacować na
+sumach reszt z k kolejnych sesji kalendarza łącznego:
+
+    s_t = Σ_{j=0}^{k−1} ẑ_{t−j},    cov(s_i, s_j) = k·γ_ij(0) + (k−1)·(γ_ij(1) + γ_ji(1))
+
+(dla zależności ograniczonej do opóźnienia 1). Sumy są nakładające się (`overlap: true`, krok 1 sesja) albo
+rozłączne. Innowacje dzienne w symulacji pochodzą z kopuły sum, więc zależność stóp H-dniowych zbliża się do
+długookresowej, a zależność jednodniowa w scenariuszach nie jest interpretowana. Domyślnie k = 5; k = 1 to panel
+dzienny. Konsekwencje: (i) sumy nakładające się są zależne w czasie, więc AIC/BIC i test Vuonga są przesunięte
+w stronę modeli bogatszych – służą do porównań, nie do wnioskowania; (ii) log-score poza próbą liczony jest na
+pseudo-obserwacjach sum k-dniowych względem rozkładu sum z okna (`pit_panel_aggregated`); (iii) zależność
+w ogonach szacowana na sumach jest słabsza niż dzienna (agregacja zbliża rozkład do normalnego).
+Dobór k: `python -m pipelines.dependence_diagnostics` porównuje ρ_S i Λ(q) stóp 21-dniowych sub-funduszy
+w scenariuszach i w danych okna dla k ∈ {1, 2, 5, 10}.
+
 Ocena (`pf.models.gof`): AIC = 2k − 2ℓ, BIC = k ln n − 2ℓ; test Vuonga z poprawką Schwarza
 Z = [Σ mᵢ − (k₁ − k₂) ln(n)/2] / (√n s_m), mᵢ = log c₁(uᵢ) − log c₂(uᵢ) (R-vine vs pozostałe modele
 z gęstością, na oknie estymacji); log-score poza próbą LS = Σ_t log ĉ(u_t), gdzie
@@ -94,8 +111,10 @@ Parametry: `config/models.yaml`.
 
 ## Ograniczenia
 
-- Notowania GPW i NYSE nie są synchroniczne (zamknięcie 17:00 vs 22:00 czasu polskiego),
-  więc dzienna zależność między rynkami jest zaniżona; zależność wewnątrz rynku nie.
+- Notowania GPW i NYSE oraz fixing NBP nie są synchroniczne (17:00, 22:00 i ok. 11:50 czasu polskiego). Dzienna
+  zależność jest przez to zniekształcona w obu kierunkach: między rynkami bywa zaniżona, a między aktywami w USD
+  przeliczonymi na PLN zawyżona (wspólny składnik kursowy nie jest zsynchronizowany z ceną w USD). Agregacja
+  panelu reszt (wyżej) ogranicza ten efekt, ale go nie usuwa.
 - Stopy w PLN zawierają czynnik USD/PLN – dla aktywów USA o niskiej zmienności (krótkie
   obligacje skarbowe) zależność wynika głównie z kursu walutowego (τ ≈ 0,96 dla SHY–SCHO).
 - Duplikaty ekspozycji (GLD/IAU/SGOL, SHY/VGSH/SCHO) dają τ > 0,9; parametry kopuł są

@@ -276,8 +276,9 @@ def main() -> None:
         rcfg = {**rcfg, "transaction_cost": args.cost}
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
+    subfunds = load_subfunds("fixed")              # starszy pipeline: pierwotna stała lista tickerów
     returns = pd.read_csv(ROOT / cfg["returns"]["path"], index_col=0, parse_dates=True).sort_index()
-    subfunds = load_subfunds()
+    returns = returns[[c for c in returns.columns if any(c in spec["tickers"] for spec in subfunds.values())]]
     all_dates = rebalance_dates(returns.index, rcfg["min_obs"])
     all_dates = pd.DatetimeIndex([t for t in all_dates if covers_all_subfunds(returns, t, rcfg, subfunds)])
     dates = all_dates

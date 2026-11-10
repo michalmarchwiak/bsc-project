@@ -36,7 +36,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from pf import ARTIFACTS_DIR, ROOT, config
+from pf import ARTIFACTS_DIR, ROOT, config, universe
 from pf.artifacts import update_manifest, write_parquet
 from pf.backtest import overlay as bto
 from pf.backtest.data import config_digest, sample_label
@@ -57,6 +57,18 @@ PORT_PARTS = ("weights", "level1", "exante")
 def load_configs() -> tuple[dict, dict, dict, dict, dict]:
     return (config.load("models"), config.load("backtest"), config.load("profiles"), load_subfunds(),
             config.load("options")["monthly_overlay"])
+
+
+_UNIVERSE: dict = {}
+
+
+def subfunds_at(market: MarketData, cfg: dict, subfunds: dict, t) -> dict:
+    """Skład sub-funduszy obowiązujący w dacie t (``pf.universe``); uniwersum bez wyboru składu – bez zmian."""
+    if not universe.uses_selection(subfunds):
+        return subfunds
+    if id(subfunds) not in _UNIVERSE:
+        _UNIVERSE[id(subfunds)] = universe.build(subfunds, market.r_pln, cfg["rebalance"])
+    return _UNIVERSE[id(subfunds)].at(pd.Timestamp(t))
 
 
 def overlay_periods(market: MarketData, cfg: dict, bcfg: dict, subfunds: dict) -> pd.DataFrame:
@@ -106,6 +118,7 @@ def run_date(period: dict, market: MarketData, cfg: dict, ocfg: dict, subfunds: 
              force: bool = False) -> dict:
     tag = pd.Timestamp(period["date"]).strftime("%Y-%m-%d")
     folder = Path(out_dir) / "dates" / tag
+    subfunds = subfunds_at(market, cfg, subfunds, period["date"])
     digest = step_digest(period, market, cfg, ocfg, subfunds, seed)
     done = folder / "done.json"
     if done.exists() and not force:
@@ -251,6 +264,7 @@ def run_portfolio_date(period: dict, market: MarketData, cfg: dict, ocfg: dict, 
                        decisions: pd.DataFrame, out_dir: Path, seed: int, force: bool = False) -> dict:
     tag = pd.Timestamp(period["date"]).strftime("%Y-%m-%d")
     folder = Path(out_dir) / "portfolio" / tag
+    subfunds = subfunds_at(market, cfg, subfunds, period["date"])
     pos_dec = decisions[decisions["date"] == period["date"]]
     digest = config_digest({"step": step_digest(period, market, cfg, ocfg, subfunds, seed), "port": ocfg["portfolio"],
                             "profiles": pcfg, "selected": ocfg["selected"], "kappa": ocfg["kappa"],
@@ -409,6 +423,7 @@ def run_annual(cons: dict, market: MarketData, cfg: dict, ocfg: dict, subfunds: 
     t = pd.Timestamp(date) if date is not None else state["date"].max()
     t = state.loc[state["date"] <= t, "date"].max()
     acfg = ocfg["annual_mc"]
+    subfunds = subfunds_at(market, cfg, subfunds, t)
     all_tickers = [tk for spec in subfunds.values() for tk in spec["tickers"]]
     model = scenarios.fit_overlay_model(market, t, cfg, ocfg, all_tickers, deterministic_tickers(subfunds),
                                         Path(out_dir) / "cache")

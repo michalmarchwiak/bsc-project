@@ -14,7 +14,9 @@ nie wchodzą do panelu reszt ani modeli zależności, a w scenariuszach ich stop
 Pamięć podręczna (``artifacts/backtest/cache/``, poza repozytorium): klucz marginesów to skrót SHA-256
 danych okna i konfiguracji marginesów, klucz modeli zależności – dodatkowo konfiguracji ``rvine`` i
 ``dependence``. Zmiana danych spoza okna (np. dopisanie nowych sesji) nie unieważnia wyników
-historycznych dat, a każda zmiana danych w oknie – tak.
+historycznych dat, a każda zmiana danych w oknie – tak. Obok parametrów marginesów zapisywane są surowe reszty
+(``z.parquet``), więc zmiana agregacji panelu (``dependence.aggregation``) nie wymaga ponownej estymacji GARCH:
+panel wariantu trafia do ``panel_<znacznik>.parquet``, a modele zależności mają osobny klucz.
 """
 
 from __future__ import annotations
@@ -33,8 +35,8 @@ from pf import ARTIFACTS_DIR
 from pf.artifacts import write_parquet
 from pf.backtest.data import config_digest, eligible_assets, estimation_window, sample_label
 from pf.models.dependence import DependenceModel, fit_model, load_model, save_model
-from pf.models.gof import compare_with_reference, oos_log_score, pit_panel
-from pf.models.margins import MarginFit, fit_margins, residual_panel
+from pf.models.gof import compare_with_reference, oos_log_score, pit_panel, pit_panel_aggregated
+from pf.models.margins import MarginFit, aggregation_spec, fit_margins, residual_panel
 from pf.models.rvine import pseudo_observations
 from pf.opt.mv import mv_two_level
 from pf.opt.profiles import TwoLevelResult, equal_weight, load_profiles, optimize_two_level, subfund_data
@@ -85,14 +87,24 @@ def margins_key(window: pd.DataFrame, cfg: dict, deterministic=()) -> str:
 
 
 def dependence_key(cfg: dict) -> str:
-    return config_digest({"rvine": cfg["rvine"], "dependence": cfg["dependence"]})[:12]
+    dep = dict(cfg["dependence"])
+    if aggregation_spec(dep)[0] == 1:               # panel dzienny: klucz jak przed wprowadzeniem agregacji
+        dep.pop("aggregation", None)
+    return config_digest({"rvine": cfg["rvine"], "dependence": dep})[:12]
+
+
+def panel_file(cfg: dict) -> str:
+    """Nazwa pliku panelu reszt w pamięci podręcznej (panel dzienny: ``panel.parquet``)."""
+    k, overlap = aggregation_spec(cfg.get("dependence"))
+    return "panel.parquet" if k == 1 else f"panel_agg{k}{'o' if overlap else 'n'}.parquet"
 
 
 def fit_margins_step(t: pd.Timestamp, returns: pd.DataFrame, cfg: dict, jobs: int | None = 1,
                      cache_dir: Path | None = CACHE_DIR, deterministic=()) -> DateModels:
     """Marginesy i pseudo-obserwacje dla daty t (wczytywane z pamięci podręcznej, jeśli istnieją).
 
-    ``deterministic`` – tickery o stopie znanej ex ante (SF10): margines deterministyczny, poza panelem reszt."""
+    ``deterministic`` – tickery o stopie znanej ex ante (SF10): margines deterministyczny, poza panelem reszt.
+    Panel reszt: dzienny albo sumy k-dniowe (``dependence.aggregation``, ``residual_panel``)."""
     rcfg = cfg["rebalance"]
     window = estimation_window(returns, t, rcfg["window_days"])
     assets = eligible_assets(window, rcfg["min_obs"], deterministic, rcfg.get("min_obs_deterministic"))
@@ -100,21 +112,29 @@ def fit_margins_step(t: pd.Timestamp, returns: pd.DataFrame, cfg: dict, jobs: in
     window = window[assets]
     tag = pd.Timestamp(t).strftime("%Y-%m-%d")
     folder = None if cache_dir is None else Path(cache_dir) / tag / margins_key(window, cfg, det)
+    k, overlap = aggregation_spec(cfg.get("dependence"))
+    pfile = panel_file(cfg)
     t0 = time.time()
-    if folder is not None and (folder / "margins.parquet").exists() and (folder / "panel.parquet").exists():
+    has_margins = folder is not None and (folder / "margins.parquet").exists()
+    if has_margins and ((folder / pfile).exists() or (folder / "z.parquet").exists()):
         rows = pd.read_parquet(folder / "margins.parquet").to_dict(orient="records")
         margins = {r["name"]: MarginFit(**r) for r in rows}
-        panel = pd.read_parquet(folder / "panel.parquet")
+        if (folder / pfile).exists():
+            panel = pd.read_parquet(folder / pfile)
+        else:
+            panel = residual_panel(pd.read_parquet(folder / "z.parquet"), agg_days=k, overlap=overlap)
+            panel.to_parquet(folder / pfile)
         cached = True
     else:
         margins, z = fit_margins(window, scale=cfg["margins"]["scale"], jobs=jobs, deterministic=det,
                                  n_last=cfg["margins"].get("deterministic_sessions", 21))
-        panel = residual_panel(z)
+        panel = residual_panel(z, agg_days=k, overlap=overlap)
         cached = False
         if folder is not None:
             folder.mkdir(parents=True, exist_ok=True)
             pd.DataFrame([f.to_dict() for f in margins.values()]).to_parquet(folder / "margins.parquet")
-            panel.to_parquet(folder / "panel.parquet")
+            z.to_parquet(folder / "z.parquet")
+            panel.to_parquet(folder / pfile)
     dm = DateModels(pd.Timestamp(t), assets, margins, panel, pseudo_observations(panel.to_numpy()))
     dm.timings["margins"] = time.time() - t0
     dm.cached["margins"] = cached
@@ -428,8 +448,10 @@ def run_date(t: pd.Timestamp, t_next: pd.Timestamp | None, returns: pd.DataFrame
     oos = returns.loc[(returns.index >= t) & ((returns.index < t_next) if t_next is not None else True), dm.assets]
     ls_rows = []
     if len(oos):
-        U_oos = pit_panel(dm.margins, oos)
-        for n, m in dens.items():
+        k_agg, overlap = aggregation_spec(dcfg)
+        U_oos = (pit_panel(dm.margins, oos) if k_agg == 1
+                 else pit_panel_aggregated(dm.margins, oos, dm.panel, k_agg, overlap))
+        for n, m in (dens.items() if len(U_oos) else ()):
             ls = oos_log_score(m, U_oos)
             ls_rows.append(pd.DataFrame({"date": t, "session": U_oos.index, "model": n, "logscore": ls}))
     dm.timings["gof"] = time.time() - t0

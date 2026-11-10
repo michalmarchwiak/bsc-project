@@ -1,37 +1,105 @@
 # Sub-fundusze (SF) i ich skład. Wewnątrz SF wagi równe między tickerami dostępnymi
-# w dniu rebalansowania (macierz A, look-through x = AᵀW). Grupy SF1–SF9 odpowiadają listom
-# tickerów w data_import.py, SF10 – rodzinom obligacji z config/savings_bonds.yaml.
+# w dniu rebalansowania (macierz A, look-through x = AᵀW).
 # deterministic: true – stopa zwrotu w horyzoncie znana ex ante (margines deterministyczny, poza kopułą).
+#
+# Uniwersa (pf.universe, pf.portfolio.load_subfunds):
+#   pit   – skład SF akcyjnych wybierany punktowo w czasie z szerszej puli spółek (klucz ``select``);
+#   fixed – pierwotna stała lista tickerów (dobrana z perspektywy 2026 r. – obciążenie doborem ex post);
+#           służy do porównania z wcześniejszymi przebiegami.
+# Aktywne uniwersum: klucz ``universe`` albo zmienna środowiskowa PF_UNIVERSE (ma pierwszeństwo).
+universe: pit
 
-subfunds:
-  SF1:
-    name: "Akcje polskie"
-    tickers: [PKO.WA, PZU.WA, KGH.WA, PKN.WA, PEO.WA, LPP.WA, CDR.WA, DNP.WA, PGE.WA, CPS.WA]
-  SF2:
-    name: "Akcje USA"
-    tickers: [AAPL, MSFT, NVDA, AMZN, GOOGL, JPM, JNJ, XOM, PG, WMT]
-  SF3:
+# Wybór składu (SF z kluczem ``select``, pf.universe): w dacie rebalansowania t do SF wchodzi ``top`` spółek puli
+# o największej średniej z ostatnich ``lookback_months`` miesięcznych median dziennej wartości obrotu (Close·Volume,
+# waluta notowania), spośród spółek dopuszczonych w oknie estymacji przed t (min_obs, config/models.yaml). Ranking
+# obrotów jest ustalany w rewizji r ≤ t (pierwsza sesja miesiąca ``review_month``) z miesięcy zakończonych przed r,
+# więc skład zmienia się raz w roku albo gdy spółka po debiucie uzyska wymaganą historię. Tickery ``core``
+# (np. ETF-y na złoto) należą do SF zawsze. Reguła używa wyłącznie danych sprzed t.
+selection:
+  turnover_path: "data/processed/turnover_monthly.csv"    # data_manipulation.py
+  lookback_months: 12
+  review_month: 1
+
+# SF wspólne dla obu uniwersów (ETF-y i obligacje oszczędnościowe).
+common:
+  SF3: &sf3
     name: "Akcje rynków rozwiniętych ex-USA"
     tickers: [EFA, EWJ, EWU, EWG, EWQ, EWL, EWC, EWA, EWN, EWS]
-  SF4:
+  SF4: &sf4
     name: "Akcje rynków wschodzących"
     tickers: [EEM, MCHI, INDA, EWZ, EWW, EWT, THD, IDX, TUR, EZA]
-  SF5:
+  SF5: &sf5
     name: "Obligacje skarbowe USA"
     tickers: [SHY, IEI, IEF, TLT, GOVT, VGSH, VGIT, VGLT, SCHO, SCHR]
-  SF6:
+  SF6: &sf6
     name: "Obligacje korporacyjne IG"
     tickers: [LQD, VCIT, VCSH, IGSB, IGIB, USIG]
-  SF7:
+  SF7: &sf7
     name: "Obligacje high yield"
     tickers: [HYG, JNK, ANGL, FALN]
-  SF8:
-    name: "Złoto i spółki wydobywcze"
-    tickers: [GLD, IAU, SGOL, GDX, GDXJ, NEM, AEM, KGC, WPM, FNV]
-  SF9:
-    name: "Nieruchomości (REIT)"
-    tickers: [PLD, AMT, EQIX, O, SPG, PSA, WELL, DLR, AVB, EXR]
-  SF10:
+  SF10: &sf10
     name: "Obligacje oszczędnościowe Skarbu Państwa"
     deterministic: true
     tickers: [OTS.SP, DOS.SP, DOR.SP, ROR.SP, TOZ.SP, TOS.SP, COI.SP, EDO.SP]
+
+universes:
+  # Pule: spółki nadal notowane (dane Yahoo). Spółek wycofanych z obrotu (np. Lehman, PGNiG, Lotos, TVN) nie ma
+  # w danych – to pozostałe obciążenie przeżywalnością. Listy pul zestawiono ręcznie (obecny skład S&P 100
+  # i wybrane wcześniejsze duże spółki; obecni i byli uczestnicy WIG20/mWIG40; duże REIT-y; spółki wydobywcze
+  # złota) i warto je zweryfikować z oficjalnymi składami indeksów.
+  pit:
+    SF1:
+      name: "Akcje polskie"
+      select: {top: 10}
+      tickers: [PKO.WA, PZU.WA, KGH.WA, PKN.WA, PEO.WA, LPP.WA, CDR.WA, DNP.WA, PGE.WA, CPS.WA,
+                OPL.WA, MBK.WA, ALE.WA, ALR.WA, JSW.WA, TPE.WA, ENA.WA, KRU.WA, KTY.WA, BDX.WA,
+                PCO.WA, ZAB.WA, EUR.WA, ACP.WA, LWB.WA, BHW.WA, GTC.WA, MIL.WA, ING.WA, ATT.WA,
+                KER.WA, XTB.WA, BFT.WA, CAR.WA, AGO.WA, BIO.WA, PXM.WA, BRS.WA, EAT.WA, ENG.WA]
+    SF2:
+      name: "Akcje USA"
+      select: {top: 10}
+      tickers: [AAPL, MSFT, NVDA, AMZN, GOOGL, JPM, JNJ, XOM, PG, WMT,
+                ABBV, ABT, ACN, ADBE, AIG, AMD, AMGN, AVGO, AXP, BA, BAC, BKNG, BLK, BMY, BRK-B, C, CAT,
+                CHTR, CL, CMCSA, COF, COP, COST, CRM, CSCO, CVS, CVX, DE, DHR, DIS, DOW, DUK, EMR, F, FDX,
+                GD, GE, GILD, GM, GS, HD, HON, IBM, INTC, INTU, KO, LIN, LLY, LMT, LOW, MA, MCD, MDLZ,
+                MDT, MET, META, MMM, MO, MRK, MS, NEE, NFLX, NKE, ORCL, PEP, PFE, PM, PYPL, QCOM, RTX,
+                SBUX, SCHW, SO, T, TGT, TMO, TMUS, TSLA, TXN, UNH, UNP, UPS, USB, V, VZ, WFC,
+                FCX, HPQ, EBAY, SLB, OXY, HAL, MU, AMAT, EXC, AEP, ALL, BAX, DVN, NSC, WMB, GLW, BIIB,
+                DD, KHC, XRX, EOG, APA]
+    SF3: *sf3
+    SF4: *sf4
+    SF5: *sf5
+    SF6: *sf6
+    SF7: *sf7
+    SF8:
+      name: "Złoto i spółki wydobywcze"
+      select: {top: 5, core: [GLD, IAU, SGOL, GDX, GDXJ]}
+      tickers: [GLD, IAU, SGOL, GDX, GDXJ, NEM, AEM, KGC, WPM, FNV,
+                AU, GFI, HMY, EGO, IAG, BVN, RGLD, PAAS, CDE, HL, SSRM, BTG, AGI]
+    SF9:
+      name: "Nieruchomości (REIT)"
+      select: {top: 10}
+      tickers: [PLD, AMT, EQIX, O, SPG, PSA, WELL, DLR, EXR,
+                VTR, BXP, HST, VNO, KIM, MAA, ESS, UDR, ARE, CCI, SBAC, WY, IRM, INVH, VICI, CPT, REG,
+                FRT, SLG, MAC, DOC, SUI, ELS, AMH, CUBE, KRC, NNN]
+    SF10: *sf10
+
+  fixed:
+    SF1:
+      name: "Akcje polskie"
+      tickers: [PKO.WA, PZU.WA, KGH.WA, PKN.WA, PEO.WA, LPP.WA, CDR.WA, DNP.WA, PGE.WA, CPS.WA]
+    SF2:
+      name: "Akcje USA"
+      tickers: [AAPL, MSFT, NVDA, AMZN, GOOGL, JPM, JNJ, XOM, PG, WMT]
+    SF3: *sf3
+    SF4: *sf4
+    SF5: *sf5
+    SF6: *sf6
+    SF7: *sf7
+    SF8:
+      name: "Złoto i spółki wydobywcze"
+      tickers: [GLD, IAU, SGOL, GDX, GDXJ, NEM, AEM, KGC, WPM, FNV]
+    SF9:
+      name: "Nieruchomości (REIT)"
+      tickers: [PLD, AMT, EQIX, O, SPG, PSA, WELL, DLR, AVB, EXR]
+    SF10: *sf10

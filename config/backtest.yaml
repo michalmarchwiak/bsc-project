@@ -101,6 +101,16 @@ ranking:
   es_expost_method: fhs        # ES ex post do STARR (Etap 5): fhs | stationary_bootstrap
   main_series: {model: rvine, strategy: ce_dep}
 
+# Benchmarki rynkowe (konsolidacja, pipelines.backtest.realize_market_benchmarks): portfele o stałych wagach docelowych
+# z tickerów spoza sub-funduszy (kolumny pliku stóp w PLN, data_import.py), rebalansowane w datach backtestu z tym
+# samym kosztem transakcyjnym. Szeregi "-|<nazwa>|ALL|base" trafiają do rankingu (CE przy γ każdego profilu, MCS);
+# nie mają prognoz ex ante ani testów VaR/ES. Benchmark bez pełnej historii tickerów jest pomijany.
+market_benchmarks:
+  enabled: true
+  series:
+    idx_spx: {SPY: 1.0}                # S&P 500 z dywidendami (ETF SPDR), w PLN po kursie NBP
+    idx_wig20: {WIG20TR.WA: 1.0}       # WIG20TR (indeks dochodowy; Stooq albo data/raw/stooq/wig20tr.csv)
+
 # Nakładka opcyjna w backteście (docs/options_monthly.md): dla profili ≥ min_profile każda strategia z listy ma bliźniaka
 # "<strategia>_ov" z dodatkowymi kolumnami SFk_OV na poziomie 2 (pf.options.portfolio). Pozycje opcyjne w datach t_j
 # (polityka monthly_overlay.selected, wariant bazowy) pochodzą z pliku decyzji pipelines.options_monthly – uruchom go

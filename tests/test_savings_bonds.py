@@ -93,9 +93,9 @@ def test_log_returns_on_sessions(src):
 
 
 def test_config_lists_sf10():
-    sf = config.load("subfunds")["subfunds"]
-    assert deterministic_subfunds(sf) == ["SF10"]
-    assert set(deterministic_tickers(sf)) == set(sb.tickers())
+    for sf in config.load("subfunds")["universes"].values():
+        assert deterministic_subfunds(sf) == ["SF10"]
+        assert set(deterministic_tickers(sf)) == set(sb.tickers())
 
 
 def bond_panel(n=400, seed=11, young=60):

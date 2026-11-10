@@ -16,8 +16,14 @@ Waluty notowań: tickery z sufiksem ``.WA`` – PLN, pozostałe (NYSE/NASDAQ/NYS
 Żaden z tickerów nie jest notowany w EUR, więc EUR/PLN jest pobierany tylko gdy
 ``ALWAYS_FETCH_EUR = True`` lub gdy na liście pojawi się instrument w EUR.
 
+Lista tickerów: pierwotne listy poniżej oraz – z konfiguracji – pule spółek wszystkich uniwersów
+(``config/subfunds.yaml``) i tickery benchmarków rynkowych (``config/backtest.yaml: market_benchmarks``).
+Tickery z ``STOOQ_FIRST`` (indeksy GPW, których nie ma w Yahoo) są pobierane ze Stooq; jeśli istnieje plik
+``data/raw/stooq/<symbol>.csv`` (ręcznie pobrany CSV ze Stooq), ma on pierwszeństwo przed siecią.
+
 Uruchomienie:
-    python data_import.py
+    python data_import.py                  # pobranie wszystkich tickerów
+    python data_import.py --missing-only   # tylko tickery bez pliku data/raw/ohlcv/<TICKER>.csv (pozostałe z dysku)
 
 Wyniki (katalog ``data/raw``):
     ohlcv/<TICKER>.csv   – pełne notowania dla każdego instrumentu
@@ -33,6 +39,7 @@ Wyniki (katalog ``data/raw``):
 
 from __future__ import annotations
 
+import argparse
 import io
 import logging
 import os
@@ -64,14 +71,38 @@ TICKERS_EMERGING = ["EEM", "MCHI", "INDA", "EWZ", "EWW", "EWT", "THD", "IDX", "T
 TICKERS_GOLD = ["GLD", "IAU", "SGOL", "GDX", "GDXJ", "NEM", "AEM", "KGC", "WPM", "FNV"]
 TICKERS_REIT = ["PLD", "AMT", "EQIX", "O", "SPG", "PSA", "WELL", "DLR", "AVB", "EXR"]
 
-TICKERS = (
+TICKERS_BASE = (
     TICKERS_PL + TICKERS_US_EQUITY + TICKERS_US_TREASURY + TICKERS_CORP_IG + TICKERS_CORP_HY
     + TICKERS_DEVELOPED + TICKERS_EMERGING + TICKERS_GOLD + TICKERS_REIT
 )
 
+CONFIG_DIR = Path(__file__).resolve().parent / "config"
+
+
+def config_tickers(config_dir: Path = CONFIG_DIR) -> list[str]:
+    """Tickery notowane z konfiguracji: pule wszystkich uniwersów (bez obligacji ``*.SP``) i benchmarki rynkowe."""
+    import yaml
+
+    out: list[str] = []
+    sub = yaml.safe_load((config_dir / "subfunds.yaml").read_text(encoding="utf-8"))
+    for uni in sub.get("universes", {}).values():
+        for spec in uni.values():
+            if not spec.get("deterministic", False):
+                out += list(spec["tickers"])
+    bt = yaml.safe_load((config_dir / "backtest.yaml").read_text(encoding="utf-8"))
+    for weights in ((bt.get("market_benchmarks") or {}).get("series") or {}).values():
+        out += list(weights)
+    return list(dict.fromkeys(out))
+
+
+# Pierwotne tickery na początku (kolejność kolumn istniejących plików bez zmian), nowe – na końcu.
+TICKERS = list(dict.fromkeys(TICKERS_BASE + config_tickers()))
+
 # Symbole Stooq odbiegające od reguły (zapas, gdy Yahoo nie zwróci danych). AVB brakowało w poprzednim
 # pobraniu (coverage.csv: MISSING) – symbol podany jawnie.
-STOOQ_SYMBOLS: dict[str, str] = {"AVB": "avb.us"}
+STOOQ_SYMBOLS: dict[str, str] = {"AVB": "avb.us", "WIG20TR.WA": "wig20tr"}
+# Tickery pobierane najpierw ze Stooq (indeksy GPW – brak w Yahoo); kopia lokalna: data/raw/stooq/<symbol>.csv.
+STOOQ_FIRST = {"WIG20TR.WA"}
 STOOQ_URLS = ["https://stooq.pl/q/d/l/", "https://stooq.com/q/d/l/"]
 YAHOO_RETRIES = 3
 
@@ -155,7 +186,19 @@ def parse_stooq_prices(text: str) -> pd.DataFrame | None:
     return df.reindex(columns=OHLCV_COLUMNS)
 
 
+def read_stooq_local(ticker: str, start: str, end: str) -> pd.DataFrame | None:
+    """Ręcznie pobrany CSV ze Stooq (``data/raw/stooq/<symbol>.csv``) – używany, gdy istnieje."""
+    path = OUT_DIR / "stooq" / f"{stooq_symbol(ticker)}.csv"
+    if not path.is_file():
+        return None
+    df = parse_stooq_prices(path.read_text(encoding="utf-8"))
+    return None if df is None else df.loc[start:end]
+
+
 def fetch_stooq(ticker: str, start: str, end: str) -> pd.DataFrame | None:
+    local = read_stooq_local(ticker, start, end)
+    if local is not None and not local.empty:
+        return local
     params = {
         "s": stooq_symbol(ticker),
         "d1": start.replace("-", ""),
@@ -234,12 +277,48 @@ def fetch_yahoo_fx(currency: str, start: str, end: str) -> pd.Series:
 
 # --------------------------------------------------------------------------- main
 
-def download_prices() -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
-    log.info("Yahoo Finance: %d tickerów", len(TICKERS))
-    prices = fetch_yahoo(TICKERS, START, END)
-    sources = {t: "yahoo" for t in prices}
+def load_existing(tickers: list[str]) -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
+    """Notowania zapisane wcześniej w ``ohlcv/<TICKER>.csv`` (źródło z poprzedniego ``coverage.csv``)."""
+    prev = {}
+    cov = OUT_DIR / "coverage.csv"
+    if cov.is_file():
+        c = pd.read_csv(cov)
+        prev = dict(zip(c["ticker"], c["source"]))
+    prices, sources = {}, {}
+    for t in tickers:
+        path = OUT_DIR / "ohlcv" / f"{t}.csv"
+        if path.is_file():
+            df = pd.read_csv(path, index_col="Date", parse_dates=True).sort_index()
+            if not df.empty:
+                prices[t] = df.reindex(columns=OHLCV_COLUMNS)
+                sources[t] = prev.get(t, "local") if prev.get(t, "MISSING") != "MISSING" else "local"
+    return prices, sources
 
-    for t in [t for t in TICKERS if t not in prices]:
+
+def download_prices(missing_only: bool = False) -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
+    """Notowania wszystkich tickerów; ``missing_only`` – tickery z plikiem ``ohlcv`` są wczytywane z dysku."""
+    prices, sources = load_existing(TICKERS) if missing_only else ({}, {})
+    todo = [t for t in TICKERS if t not in prices]
+    if missing_only:
+        log.info("Z dysku: %d tickerów; do pobrania: %d", len(prices), len(todo))
+
+    for t in [t for t in todo if t in STOOQ_FIRST]:
+        df = fetch_stooq(t, START, END)
+        if df is not None and not df.empty:
+            prices[t], sources[t] = df, "stooq"
+
+    yahoo = [t for t in todo if t not in prices and t not in STOOQ_FIRST]
+    if yahoo:
+        log.info("Yahoo Finance: %d tickerów", len(yahoo))
+        got = fetch_yahoo(yahoo, START, END)
+        prices.update(got)
+        sources.update({t: "yahoo" for t in got})
+
+    for t in [t for t in todo if t not in prices]:
+        if t in STOOQ_FIRST:                       # indeks GPW: brak w Yahoo, Stooq już sprawdzony
+            log.error("Nie udało się pobrać %s ze Stooq – zapisz CSV ręcznie jako data/raw/stooq/%s.csv", t,
+                      stooq_symbol(t))
+            continue
         log.info("Brak danych z Yahoo dla %s – ponawiam zapytanie dla pojedynczego tickera", t)
         df = fetch_yahoo_single(t, START, END)
         if df is not None:
@@ -279,11 +358,15 @@ def to_pln(adj_close: pd.DataFrame, fx: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description="Pobieranie notowań dziennych i kursów NBP")
+    parser.add_argument("--missing-only", action="store_true",
+                        help="pobierz tylko tickery bez pliku data/raw/ohlcv/<TICKER>.csv; pozostałe wczytaj z dysku")
+    args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     (OUT_DIR / "ohlcv").mkdir(parents=True, exist_ok=True)
 
-    prices, sources = download_prices()
+    prices, sources = download_prices(args.missing_only)
     for t, df in prices.items():
         df.to_csv(OUT_DIR / "ohlcv" / f"{t}.csv")
 

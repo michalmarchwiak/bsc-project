@@ -25,14 +25,19 @@ Wyjście:
                                                        i obligacji oszczędnościowych)
     data/processed/savings_bonds_redemption_cost.csv – opłata za wcześniejszy wykup obligacji (ułamek
                                                        wartości) na sesjach tabeli stóp
+    data/processed/turnover_monthly.csv             – mediana dziennej wartości obrotu (Close·Volume, waluta
+                                                       notowania) w miesiącu kalendarzowym; wybór składu
+                                                       sub-funduszy punktowo w czasie (``pf.universe``)
     figures/log_returns/<wariant>/<TICKER>.png      – wykresy
 
 Uruchomienie:
-    python data_manipulation.py
+    python data_manipulation.py              # tabele i wykresy wszystkich tickerów
+    python data_manipulation.py --no-plots   # tylko tabele (przy szerokich pulach spółek wykresów jest kilkaset)
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 import sys
@@ -74,12 +79,34 @@ def load_ohlcv(ticker: str) -> pd.DataFrame:
 
 
 def non_trading_days(ticker: str) -> pd.DatetimeIndex:
-    """Dni z zerowym wolumenem – Yahoo uzupełnia nimi m.in. święta na GPW (cena nieaktualna)."""
+    """Dni z zerowym wolumenem – Yahoo uzupełnia nimi m.in. święta na GPW (cena nieaktualna).
+
+    Szereg bez dodatniego wolumenu w całej historii (indeks giełdowy) nie jest filtrowany."""
     path = RAW_DIR / "ohlcv" / f"{ticker}.csv"
     if not path.exists():
         return pd.DatetimeIndex([])
     df = load_ohlcv(ticker)
+    if not (df["Volume"] > 0).any():
+        return pd.DatetimeIndex([])
     return df.index[df["Volume"] == 0]
+
+
+def monthly_turnover(tickers: list[str]) -> pd.DataFrame:
+    """Mediana dziennej wartości obrotu Close·Volume (waluta notowania) w miesiącu kalendarzowym.
+
+    Dni bez obrotu są pomijane; miesiąc bez notowań – NaN. Indeks: pierwszy dzień miesiąca."""
+    out = {}
+    for t in tickers:
+        if not (RAW_DIR / "ohlcv" / f"{t}.csv").exists():
+            continue
+        df = load_ohlcv(t)
+        value = (df["Close"] * df["Volume"]).where(df["Volume"] > 0).dropna()
+        if len(value):
+            out[t] = value.groupby(value.index.to_period("M")).median()
+    table = pd.DataFrame(out).sort_index()
+    table.index = table.index.to_timestamp()
+    table.index.name = "Date"
+    return table
 
 
 def load_prices(path: Path) -> pd.DataFrame:
@@ -176,9 +203,15 @@ def currency_label(ticker: str, variant: str) -> str:
     return "USD"
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description="Dzienne log-stopy zwrotu, statystyki, obroty i wykresy")
+    parser.add_argument("--no-plots", action="store_true", help="bez wykresów figures/log_returns/")
+    args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+
+    monthly_turnover(TICKERS).to_csv(PROCESSED_DIR / "turnover_monthly.csv", float_format="%.6g")
+    log.info("Zapisano miesięczne mediany obrotów (%s)", PROCESSED_DIR / "turnover_monthly.csv")
 
     for variant, price_path in VARIANTS.items():
         if not price_path.exists():
@@ -198,6 +231,8 @@ def main() -> None:
         if not check["ok"]:
             log.error("%s: dane niekompletne: %s", variant, check)
 
+        if args.no_plots:
+            continue
         fig_dir = FIG_DIR / variant
         fig_dir.mkdir(parents=True, exist_ok=True)
         for ticker in returns.columns:

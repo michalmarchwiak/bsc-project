@@ -16,8 +16,9 @@ Sesje bez notowania danego aktywa (NaN) są pomijane: u_t = NaN, stan filtra bez
 Panel reszt łączy GPW i giełdy USA: zaczyna się od dnia, w którym notowane są już wszystkie aktywa
 (okresy przed debiutem nie są wypełniane), dni, w których cały rynek był zamknięty (święta), są
 usuwane, a pojedyncze braki (dni bez obrotu danego instrumentu) wypełniane są ẑ = 0.
-Zamknięcie GPW (17:00) i NYSE (22:00 czasu polskiego) nie są synchroniczne, co zaniża
-dzienną zależność między rynkami.
+Zamknięcie GPW (17:00), NYSE (22:00 czasu polskiego) i fixing NBP (ok. 11:50) nie są synchroniczne, co
+zniekształca dzienną zależność między rynkami i między ceną w USD a kursem. Dlatego kopuły można szacować
+na sumach reszt z k kolejnych sesji (``residual_panel(agg_days=k)``, ``dependence.aggregation``).
 
 Margines deterministyczny (``kind = "deterministic"``, obligacje oszczędnościowe SF10): stopa aktywa
 w horyzoncie jest znana ex ante (oprocentowanie bieżącego okresu odsetkowego), więc rozkład brzegowy
@@ -172,22 +173,53 @@ def default_market(ticker: str) -> str:
     return "PL" if str(ticker).endswith(".WA") or ticker in FX_ASSETS else "US"
 
 
-def residual_panel(z: pd.DataFrame, market_of=default_market, trim_leading: bool = True) -> pd.DataFrame:
+def aggregation_spec(dcfg: dict | None) -> tuple[int, bool]:
+    """(k, overlap) z ``dependence.aggregation`` (``config/models.yaml``); brak sekcji → (1, True) – panel dzienny."""
+    a = (dcfg or {}).get("aggregation") or {}
+    return max(int(a.get("days", 1)), 1), bool(a.get("overlap", True))
+
+
+def residual_panel(z: pd.DataFrame, market_of=default_market, trim_leading: bool = True, agg_days: int = 1,
+                   overlap: bool = True) -> pd.DataFrame:
     """Usuwa dni zamknięcia całego rynku, pozostałe braki zastępuje ẑ = 0.
 
     ``trim_leading``: panel zaczyna się w dniu, od którego notowane są wszystkie aktywa (max pierwszych
     obserwacji). Okresy przed debiutem instrumentu nie są „pojedynczymi brakami” – wypełnienie ich ẑ = 0
     tworzy długie serie wiązań, zaniża zależność i czyni macierz sin(πτ̂/2) nieokreśloną.
+
+    ``agg_days`` = k > 1: panel sum reszt z k kolejnych sesji kalendarza łącznego,
+
+        s_t = Σ_{j=0}^{k−1} ẑ_{t−j}   (brak notowania → 0),
+
+    nakładających się (``overlap``, krok 1 sesja) albo rozłącznych (bloki liczone od końca okna). Zamknięcia
+    GPW i NYSE oraz fixing NBP nie są synchroniczne, więc część zależności dziennej ujawnia się z opóźnieniem
+    jednej sesji: cov(Σ_k ẑ_i, Σ_k ẑ_j) = k·γ_ij(0) + (k−1)·(γ_ij(1) + γ_ji(1)) dla zależności ograniczonej do
+    opóźnienia 1. Kopuła szacowana na sumach k-dniowych odtwarza więc zależność w horyzoncie wielodniowym
+    (dla k → ∞ długookresową), a nie tylko jednoczesną. Wiersz pozostaje w panelu, jeśli każdy rynek miał w nim
+    co najmniej jedną sesję (dla k = 1: reguła dni zamknięcia całego rynku).
     """
     if trim_leading and len(z.columns):
         first = z.apply(pd.Series.first_valid_index).dropna()
         if len(first):
             z = z.loc[z.index >= first.max()]
+    k = max(int(agg_days), 1)
     markets = pd.Series({c: market_of(c) for c in z.columns})
     open_all = np.ones(len(z), dtype=bool)
     for m in markets.unique():
-        open_all &= z[markets.index[markets == m]].notna().any(axis=1).to_numpy()
-    return z[open_all].fillna(0.0)
+        is_open = z[markets.index[markets == m]].notna().any(axis=1)
+        if k > 1:
+            is_open = is_open.astype(float).rolling(k).sum() > 0
+        open_all &= is_open.to_numpy()
+    if k == 1:
+        return z[open_all].fillna(0.0)
+    sums = z.fillna(0.0).rolling(k).sum()
+    keep = open_all.copy()
+    keep[: k - 1] = False                                  # niepełne sumy na początku okna
+    if not overlap:
+        block = np.zeros(len(z), dtype=bool)
+        block[len(z) - 1::-k] = True                       # bloki rozłączne liczone od ostatniej sesji
+        keep &= block
+    return sums[keep]
 
 
 def skewt_ppf(u: np.ndarray, eta: float, lam: float) -> np.ndarray:

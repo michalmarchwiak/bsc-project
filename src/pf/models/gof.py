@@ -10,6 +10,11 @@ Log-score poza próbą: u_t = F̂_i,t(r_i,t) z filtru GARCH naprzód parametrami
 (``MarginFit.pit_forward``) dla sesji między końcem okna a końcem następnego okna; dni zamknięcia
 całego rynku są usuwane, pojedyncze braki → u = F_skewt(0) (odpowiednik ẑ = 0 w panelu reszt).
     LS = Σ_t log ĉ(u_t)   (wyższy – lepszy; kopuła empiryczna bez gęstości jest pomijana).
+
+Kopuła szacowana na sumach k-dniowych reszt (``dependence.aggregation``) jest oceniana na tych samych
+wielkościach poza próbą (``pit_panel_aggregated``): s_t = Σ_{j<k} ẑ_{t−j} z filtru GARCH naprzód,
+u_t = (#{s_τ ≤ s_t w oknie estymacji} + 1/2)/(n + 1) – pseudo-obserwacja względem rozkładu sum z okna.
+Sumy nakładające się są zależne w czasie; log-score służy do porównania modeli, a nie jako wiarygodność.
 """
 
 from __future__ import annotations
@@ -74,6 +79,22 @@ def pit_panel(margins: dict[str, MarginFit], r_oos: pd.DataFrame, market_of=defa
     U = U[open_all]
     fill = {a: float(skewt_cdf(np.array([0.0]), margins[a].eta, margins[a].lam)[0]) for a in assets}
     return U.fillna(fill)
+
+
+def pit_panel_aggregated(margins: dict[str, MarginFit], r_oos: pd.DataFrame, panel: pd.DataFrame, agg_days: int,
+                         overlap: bool = True, market_of=default_market) -> pd.DataFrame:
+    """Panel pseudo-obserwacji sum k-dniowych reszt poza próbą względem sum z okna estymacji (``panel``).
+
+    Zasady jak w ``residual_panel(agg_days=k)``; pierwsze k − 1 sesji poza próbą (niepełne sumy) są pomijane."""
+    from pf.models.margins import residual_panel
+
+    assets = [a for a in panel.columns if a in r_oos.columns and a in margins]
+    z = pd.DataFrame({a: margins[a].standardized_forward(r_oos[a].to_numpy()) for a in assets}, index=r_oos.index)
+    s = residual_panel(z, market_of=market_of, trim_leading=False, agg_days=agg_days, overlap=overlap)
+    n = len(panel)
+    U = {a: (np.searchsorted(np.sort(panel[a].to_numpy()), s[a].to_numpy(), side="right") + 0.5) / (n + 1.0)
+         for a in assets}
+    return pd.DataFrame(U, index=s.index).clip(1e-6, 1.0 - 1e-6)
 
 
 def oos_log_score(model: DependenceModel, U_oos: pd.DataFrame | np.ndarray) -> np.ndarray:
