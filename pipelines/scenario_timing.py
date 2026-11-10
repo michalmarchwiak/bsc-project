@@ -31,10 +31,11 @@ from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import pandas as pd
 
-from pf import ARTIFACTS_DIR, ROOT, config
+from pf import ARTIFACTS_DIR, ROOT, config, universe
 from pf.backtest import engine
 from pf.backtest.data import eligible_dates, in_range, load_returns
-from pf.models.gof import oos_log_score, pit_panel
+from pf.models.gof import oos_log_score, pit_panel, pit_panel_aggregated
+from pf.models.margins import aggregation_spec
 from pf.portfolio import deterministic_tickers, load_subfunds
 
 log = logging.getLogger("scenario_timing")
@@ -45,8 +46,9 @@ def measure_date(t: pd.Timestamp, next_t: pd.Timestamp | None, models: list[str]
     for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
         os.environ.setdefault(var, "1")
     cfg, bcfg = config.load("models"), config.load("backtest")
-    returns = load_returns(ROOT / cfg["returns"]["path"])
-    subfunds = load_subfunds()
+    pool = load_subfunds()
+    returns = universe.restrict_to_pool(load_returns(ROOT / cfg["returns"]["path"]), pool)
+    returns, subfunds = universe.build(pool, returns, cfg["rebalance"]).view(t)    # skład daty t
     t0 = time.time()
     dm = engine.fit_margins_step(t, returns, cfg, jobs=1, cache_dir=None, deterministic=deterministic_tickers(subfunds))
     engine.fit_models_step(dm, cfg, models)
@@ -54,7 +56,8 @@ def measure_date(t: pd.Timestamp, next_t: pd.Timestamp | None, models: list[str]
     stats = engine.scenario_stats_table(t, scen)
     t1 = time.time()
     oos = returns.loc[(returns.index >= t) & ((returns.index < next_t) if next_t is not None else True), dm.assets]
-    U_oos = pit_panel(dm.margins, oos)
+    k_agg, overlap = aggregation_spec(cfg["dependence"])
+    U_oos = pit_panel(dm.margins, oos) if k_agg == 1 else pit_panel_aggregated(dm.margins, oos, dm.panel, k_agg, overlap)
     ls = {m: float(oos_log_score(dm.models[m], U_oos).sum()) for m in models if dm.models[m].has_density}
     dm.timings["log_score"] = time.time() - t1
     row = {"date": t, "n_assets": len(dm.assets), "panel_obs": len(dm.panel), "total": time.time() - t0,
@@ -184,7 +187,7 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     cfg, bcfg = config.load("models"), config.load("backtest")
     models = args.models or cfg["dependence"]["models"]
-    returns = load_returns(ROOT / cfg["returns"]["path"])
+    returns = universe.restrict_to_pool(load_returns(ROOT / cfg["returns"]["path"]), load_subfunds())
     all_dates = eligible_dates(returns, cfg["rebalance"], load_subfunds())
     sample = in_range(all_dates, [bcfg["calibration"][0], bcfg["holdout"][1]])
     dates = pd.DatetimeIndex(args.dates) if args.dates else sample[[0, len(sample) // 2, len(sample) - 1]]

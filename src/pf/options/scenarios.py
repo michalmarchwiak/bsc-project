@@ -35,7 +35,8 @@ import pandas as pd
 from pf.backtest.data import config_digest, eligible_assets, estimation_window
 from pf.backtest.engine import window_digest
 from pf.models.dependence import DependenceModel, fit_model, load_model, save_model
-from pf.models.margins import MarginFit, default_market, fit_margin, fit_margins, residual_panel, simulate_daily
+from pf.models.margins import (MarginFit, aggregation_spec, default_market, fit_margin, fit_margins, residual_panel,
+                               simulate_daily)
 from pf.models.rvine import pseudo_observations
 from pf.options.market import MarketData, currency
 from pf.sim.scenarios import full_uniforms, model_seed
@@ -162,7 +163,8 @@ def fit_overlay_model(market: MarketData, t: pd.Timestamp, cfg: dict, ocfg: dict
         margins, z = fit_margins(window, scale=mcfg["scale"], jobs=jobs, deterministic=det,
                                  n_last=mcfg.get("deterministic_sessions", 21))
         margins, z, refit = robust_margins(window, margins, z, mcfg["scale"])
-        panel = residual_panel(z, market_of=market_of)
+        k_agg, overlap = aggregation_spec(cfg.get("dependence"))
+        panel = residual_panel(z, market_of=market_of, agg_days=k_agg, overlap=overlap)
         dep = fit_model(name, pseudo_observations(panel.to_numpy()), list(panel.columns), cfg)
         spx = fit_spx(market, t, rcfg["window_days"], rcfg["min_obs"], mcfg["scale"])
         model = OverlayModel(t, assets, margins, dep, spx, window.index.max())

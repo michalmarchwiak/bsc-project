@@ -117,7 +117,7 @@ class MultiMC:
 
     def __init__(self, r_sf: pd.DataFrame, cfg: dict, deterministic=()):
         from pf.models.dependence import fit_model
-        from pf.models.margins import fit_margins
+        from pf.models.margins import aggregation_spec, fit_margins
         from pf.models.rvine import pseudo_observations
 
         logr = np.log1p(r_sf)
@@ -127,6 +127,10 @@ class MultiMC:
         self.margins, z = fit_margins(logr, scale=cfg["margins"]["scale"], jobs=1, deterministic=det,
                                       n_last=len(logr))
         Z = z.dropna(how="any")
+        k_agg, overlap = aggregation_spec(cfg.get("dependence"))
+        if k_agg > 1 and len(Z) > 2 * k_agg:        # sumy k-dniowe reszt, jak w backteście (dependence.aggregation)
+            Z = Z.rolling(k_agg).sum().dropna(how="any")
+            Z = Z if overlap else Z.iloc[::-1].iloc[::k_agg].iloc[::-1]
         self.stochastic = list(z.columns)
         self.model = (fit_model("rvine", pseudo_observations(Z.to_numpy()), self.stochastic, cfg)
                       if self.stochastic else None)

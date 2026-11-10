@@ -26,12 +26,12 @@ import time
 import numpy as np
 import pandas as pd
 
-from pf import ARTIFACTS_DIR, ROOT, config
+from pf import ARTIFACTS_DIR, ROOT, config, universe
 from pf.artifacts import update_manifest
 from pf.backtest.data import eligible_assets, load_returns
 from pf.models.dependence import fit_model, save_model
 from pf.models.gof import compare_with_reference
-from pf.models.margins import fit_margins, residual_panel
+from pf.models.margins import aggregation_spec, fit_margins, residual_panel
 from pf.models.rvine import pseudo_observations
 from pf.portfolio import deterministic_tickers, load_subfunds
 
@@ -149,19 +149,24 @@ def main() -> None:
     bcfg = config.load("backtest")
     dcfg = cfg["dependence"]
     names_models = args.models or dcfg["models"]
-    returns = load_returns(ROOT / cfg["returns"]["path"])
+    subfunds = load_subfunds()
+    returns = universe.restrict_to_pool(load_returns(ROOT / cfg["returns"]["path"]), subfunds)
     lo, hi = (pd.Timestamp(x) for x in bcfg["calibration"])
+    # uniwersum z wyborem składu: spółki ze składu obowiązującego w ostatniej dacie próby kalibracyjnej
+    uni = universe.build(subfunds, returns, cfg["rebalance"])
+    returns, subfunds = uni.view(returns.index[returns.index <= hi][-1])
     returns = returns.loc[(returns.index >= lo) & (returns.index <= hi)]
     # panel kopuły zaczyna się od debiutu najmłodszego aktywa – w próbie pełnej wymagane jest pokrycie
     # ``full_sample_min_coverage`` sesji, aby nie skracać panelu do kilku ostatnich lat
     min_obs = max(cfg["rebalance"]["min_obs"], int(np.ceil(dcfg["full_sample_min_coverage"]
                                                            * returns.notna().sum().max())))
-    det = set(deterministic_tickers(load_subfunds()))
+    det = set(deterministic_tickers(subfunds))
     assets = [a for a in eligible_assets(returns, min_obs) if a not in det]
 
     t0 = time.time()
     margins, z = fit_margins(returns[assets], scale=cfg["margins"]["scale"], jobs=args.jobs)
-    panel = residual_panel(z)
+    k_agg, overlap = aggregation_spec(dcfg)
+    panel = residual_panel(z, agg_days=k_agg, overlap=overlap)
     U = pseudo_observations(panel.to_numpy())
     log.info("Marginesy: %.0f s, %d aktywów, panel %d sesji", time.time() - t0, len(assets), len(panel))
 
@@ -196,7 +201,7 @@ def main() -> None:
         vine = models["rvine"].vine
         edges = pd.DataFrame(vine.summary())
         edges.to_csv(REPORT_DIR / "rvine_full_sample.csv", index=False)
-        sf_of = {t: sf for sf, spec in load_subfunds().items() for t in spec["tickers"]}
+        sf_of = {t: sf for sf, spec in subfunds.items() for t in spec["tickers"]}
         (REPORT_DIR / "rvine_full_sample.md").write_text(
             to_markdown(edges, vine, margins_df, returns, len(panel), sf_of, cfg["rvine"].get("estimation", "itau")),
             encoding="utf-8")

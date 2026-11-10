@@ -23,6 +23,36 @@ Metodologia backtestu strategii opartych na modelach zależności (pakiet `pf`, 
   dostępności danych (SF1 wchodzi w 2008-02, SF7 – high yield – w 2010-05). Przy ścisłym warunku
   `covers_all_subfunds` pierwszą datą byłby 2010-05-03.
 
+### Uniwersum punktowo w czasie (`pf.universe`, `config/subfunds.yaml`)
+
+Pierwotna lista spółek (uniwersum `fixed`) została dobrana z perspektywy 2026 r., co wprowadza do backtestu
+obciążenie doborem ex post. W uniwersum `pit` (domyślnym) sub-fundusze akcyjne SF1, SF2, SF9 i spółki wydobywcze
+w SF8 są pulami kandydatów (ok. 40, 120, 36 i 18 spółek), a skład w dacie t wyznacza reguła na danych sprzed t:
+
+- ranking: średnia z 12 ostatnich miesięcznych median dziennej wartości obrotu Close·Volume (waluta notowania),
+  z miesięcy zakończonych przed datą rewizji r(t) – pierwszą sesją stycznia;
+- skład: `top` spółek o najwyższym rankingu spośród dopuszczonych w oknie estymacji przed t (≥ 750 sesji);
+  w SF8 ETF-y na złoto (`core`) należą do składu zawsze, a z rankingu pochodzi 5 spółek;
+- skład zmienia się więc raz w roku albo gdy spółka po debiucie uzyska wymaganą historię; sprzedaż spółek
+  usuniętych ze składu obciąża koszt transakcyjny.
+
+Marginesy i kopuły daty t obejmują tylko aktywa składu (wymiar jak w uniwersum `fixed`, ok. 80). Skład w każdej
+dacie zapisuje `artifacts/backtest/<run_id>/universe.parquet`. Wybór uniwersum: klucz `universe` albo zmienna
+`PF_UNIVERSE` (`PF_UNIVERSE=fixed python -m pipelines.backtest …`); zmienia `run_id`.
+
+Ograniczenia reguły: wartość obrotu przybliża wielkość spółki, ale faworyzuje spółki o wysokiej rotacji; pule
+zawierają tylko spółki notowane do dziś (spółek wycofanych z obrotu nie ma w danych Yahoo), więc obciążenie
+przeżywalnością jest ograniczone, a nie usunięte; listy pul zestawiono ręcznie i należy je zweryfikować
+z oficjalnymi składami indeksów.
+
+### Benchmarki rynkowe
+
+`market_benchmarks` w `config/backtest.yaml`: `idx_spx` (ETF SPY – S&P 500 z dywidendami, w PLN) i `idx_wig20`
+(indeks WIG20TR ze Stooq; kopia lokalna `data/raw/stooq/wig20tr.csv`). Szeregi `-|idx_*|ALL|base` powstają
+w konsolidacji (kupno i trzymanie, koszt zakupu początkowego), wchodzą do rankingu i MCS każdego profilu, nie mają
+prognoz ex ante ani testów VaR/ES. WIG20TR jest indeksem (bez kosztów replikacji). Benchmark bez danych jest
+pomijany z ostrzeżeniem.
+
 ## 2. Opóźnienie wykonania i stopa wolna od ryzyka
 
 Decyzja w sesji t korzysta z danych ≤ t−1. Okres realizacji obejmuje sesje [i(t) + L, i(t_next) + L):
@@ -45,6 +75,10 @@ panel reszt od debiutu najmłodszego aktywa okna (bez wypełniania okresów prze
 braki → ẑ = 0), pseudo-obserwacje z rang. Modele (`pf.models.dependence`): `rvine`, `cvine`, `dvine`
 (sekwencyjna MNW kopuł parowych, obcięcie na 3 drzewach, rodziny Gauss/t/Clayton/Gumbel z obrotami
 i Frank), `gauss`, `student_t`, `indep`, `empirical`. Szczegóły i wzory: `docs/dependence_model.md`.
+Panel do estymacji kopuł to domyślnie sumy reszt z k = 5 kolejnych sesji (`dependence.aggregation`; k = 1 –
+panel dzienny wcześniejszych przebiegów), co ogranicza wpływ asynchroniczności zamknięć GPW/NYSE i fixingu NBP na
+zależność w horyzoncie miesiąca (opis i konsekwencje dla AIC/BIC: `docs/dependence_model.md`; dobór k:
+`pipelines.dependence_diagnostics`).
 Ocena: AIC/BIC i test Vuonga (R-vine vs pozostałe) na oknie; log-score poza próbą
 LS = Σ_t log ĉ(u_t) z PIT filtru GARCH naprzód (`MarginFit.pit_forward`) dla sesji [t, t_next).
 Obligacje SF10 mają margines deterministyczny (r_h = μ̂, średnia z 21 ostatnich sesji, σ = 0) i nie wchodzą
@@ -158,6 +192,9 @@ odsetek zaliczonych testów VaR/ES, średnia ranga CE portfeli.
 
 ## 9. Wyniki (przebieg `83254f06e339`)
 
+**Uwaga.** Wyniki poniżej pochodzą z przebiegu sprzed wprowadzenia uniwersum `pit`, agregacji panelu reszt
+i benchmarków rynkowych: uniwersum `fixed`, panel dzienny (k = 1). Nie odpowiadają bieżącej konfiguracji.
+
 226 dat (kalibracja 156, hold-out 70; ocena 156 + 69 miesięcy), 230 szeregów bazowych (146 bez nakładki
 i 84 warianty `_ov` dla P3–P5) + 391 wariantów wrażliwości, 52,6 h CPU. Mediana N = 12 500 scenariuszy
 (ostatnia data 35–50 tys.). Luzowanie limitów c_LT/W_max nie było potrzebne.
@@ -191,8 +228,11 @@ python -m pipelines.ranking                                   # ranking, raporty
 
 ## 11. Ograniczenia
 
-- **Asynchroniczność.** GPW zamyka się o 17:00, NYSE o 22:00, a fixing NBP jest ok. 11:50. Dzienna
-  zależność między rynkami jest więc zaniżona, a przeliczenie na PLN używa kursu z innej chwili niż cena.
+- **Asynchroniczność.** GPW zamyka się o 17:00, NYSE o 22:00, a fixing NBP jest ok. 11:50. Dzienna zależność
+  jest więc zniekształcona (między rynkami zaniżona, między aktywami w USD przeliczonymi na PLN zawyżona),
+  a przeliczenie na PLN używa kursu z innej chwili niż cena. Agregacja panelu reszt (k = 5) ogranicza ten efekt.
+- **Uniwersum.** Reguła obrotowa w uniwersum `pit` korzysta tylko z danych sprzed daty decyzji, ale pule obejmują
+  wyłącznie spółki notowane do dziś; w uniwersum `fixed` lista spółek jest dobrana ex post.
 - **Heurystyka dwupoziomowa.** CE pojedynczego SF z γ inwestora nie jest CE portfela.
 - **Niska moc testów.** Przy próbie miesięcznej oczekiwana liczba przekroczeń VaR 97,5% jest mała:
   3,9 w kalibracji (156 mies.) i 1,7 w hold-out (69 mies.).

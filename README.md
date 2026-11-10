@@ -22,6 +22,11 @@ Szczegóły metody i wzory: [`docs/backtest.md`](docs/backtest.md),
 
 ## Najważniejsze wyniki
 
+**Uwaga.** Poniższe wyniki pochodzą z przebiegu `83254f06e339`, policzonego na stałej liście spółek (uniwersum
+`fixed`) i dziennym panelu reszt. Bieżąca konfiguracja używa uniwersum punktowego w czasie (`pit`), kopuł na sumach
+5-dniowych reszt i benchmarków rynkowych (sekcje „Uniwersum i dane” oraz „Metoda w skrócie”); wyniki dla niej
+wymagają nowego przebiegu.
+
 Przebieg `83254f06e339` (10 sub-funduszy z SF10, nakładka opcyjna `_ov`): 226 dat rebalansowania
 2008-01 – 2026-10, okres kalibracji 156 miesięcy, hold-out 69 miesięcy (2021-01 – 2026-09). Wszystkie
 stopy są miesięczne, netto po kosztach 0,1% wartości transakcji. Zrealizowany ekwiwalent pewności (CE)
@@ -58,7 +63,19 @@ Pełne tabele: [`backtest_summary.md`](artifacts/reports/backtest_summary.md),
 
 ## Uniwersum i dane
 
-| SF | segment | tickery |
+`config/subfunds.yaml` definiuje dwa uniwersa (klucz `universe` albo zmienna `PF_UNIVERSE`):
+
+- **`pit` (domyślne)** – skład SF1, SF2, SF9 i spółek wydobywczych w SF8 jest wybierany punktowo w czasie z szerszej
+  puli spółek (ok. 40 spółek GPW, ok. 120 dużych spółek USA, 36 REIT-ów, 18 spółek wydobywczych). W dacie t do SF
+  wchodzi 10 spółek (SF8: 5 spółek obok 5 ETF-ów na złoto) o największej wartości obrotu z 12 miesięcy przed
+  ostatnią rewizją styczniową, spośród spółek z historią ≥ 750 sesji. Reguła używa tylko danych sprzed t
+  (`pf.universe`, opis: [`docs/backtest.md`](docs/backtest.md)). Modele daty obejmują ok. 80 aktywów składu.
+- **`fixed`** – pierwotna stała lista z tabeli poniżej, dobrana z perspektywy 2026 r. (obciążenie doborem ex post);
+  zachowana do porównań.
+
+Benchmarki rynkowe (`market_benchmarks` w `config/backtest.yaml`): S&P 500 z dywidendami (ETF SPY w PLN) i WIG20TR.
+
+| SF | segment | tickery (uniwersum `fixed`) |
 |---|---|---|
 | SF1 | akcje polskie | PKO, PZU, KGH, PKN, PEO, LPP, CDR, DNP, PGE, CPS (GPW) |
 | SF2 | akcje USA | AAPL, MSFT, NVDA, AMZN, GOOGL, JPM, JNJ, XOM, PG, WMT |
@@ -103,7 +120,9 @@ TOS od 2022-09; DOS do 2023-01, TOZ do 2024-05).
    1260 sesji przed datą decyzji. Panel standaryzowanych reszt jest przekształcany w
    pseudo-obserwacje z rang. Obligacje SF10 mają margines deterministyczny: dzienna stopa w horyzoncie
    to średnia z 21 ostatnich sesji, bez innowacji. Nie wchodzą do panelu reszt ani do kopuł.
-2. **Modele zależności.** Siedem kopuł estymowanych na tych samych pseudo-obserwacjach. Winorośle
+2. **Modele zależności.** Siedem kopuł estymowanych na tych samych pseudo-obserwacjach: rangach sum reszt
+   z k = 5 kolejnych sesji (`dependence.aggregation`; k = 1 – panel dzienny). Sumy ograniczają wpływ
+   asynchroniczności zamknięć GPW i NYSE oraz fixingu NBP na zależność w horyzoncie miesiąca. Winorośle
    mają obcięcie na 3 drzewach i sekwencyjną MNW par z rodzin Gauss/t/Clayton/Gumbel (z obrotami)
    i Frank, z wyborem rodziny według AIC. Ocena: AIC/BIC, test Vuonga i log-score poza próbą.
 3. **Scenariusze ex ante.** 21-dniowe ścieżki GARCH z kopuły z adaptacyjną liczbą N: symulacja
@@ -140,6 +159,7 @@ src/pf/
   sim/             scenariusze (adaptacyjne N, wspólne liczby losowe)
   opt/             CE i gradient (utility), kara za zależność, profile i optymalizacja dwupoziomowa,
                    LP Rockafellara–Uryaseva (cvar), średnia–wariancja z Ledoitem–Wolfem (mv)
+  universe.py      skład sub-funduszy punktowo w czasie (wybór spółek z puli według obrotów)
   backtest/        daty i okna (data), krok daty (engine), realizacja stóp (realized), testy VaR/ES,
                    miary, MC ex post, ranking
   options/         moduł opcji (wycena, IV, powierzchnia zmienności, PPUT) i miesięczna nakładka opcyjna
@@ -155,7 +175,7 @@ tests/             testy jednostkowe i integracyjne (bez sieci)
 
 ```bash
 pip install -e ".[dev]"
-pytest -q              # ok. 270 testów bez dostępu do sieci (ok. 2 min)
+pytest -q              # ok. 290 testów bez dostępu do sieci (ok. 2 min)
 pytest -m network      # testy sieciowe (źródła danych)
 ```
 
@@ -167,16 +187,19 @@ Pipeline'y uruchamia się w podanej kolejności. Są przyrostowe i wznawialne: p
 są pomijane.
 
 ```bash
-# 1. Dane (sieć): notowania, kursy NBP, obligacje oszczędnościowe, log-stopy w PLN, stopa wolna od ryzyka
-python data_import.py              # zawiera python -m pf.data.savings_bonds
-python data_manipulation.py
+# 1. Dane (sieć): notowania, kursy NBP, obligacje oszczędnościowe, log-stopy w PLN, obroty, stopa wolna od ryzyka
+python data_import.py --missing-only   # tylko tickery bez pliku w data/raw/ohlcv (bez flagi: wszystkie od nowa)
+python data_manipulation.py --no-plots # tabele stóp i data/processed/turnover_monthly.csv (bez flagi: także wykresy)
 python -m pf.data.riskfree
+# WIG20TR (benchmark) pochodzi ze Stooq; gdy pobranie się nie uda: zapisz CSV jako data/raw/stooq/wig20tr.csv
 
 # 2. Modele zależności na próbie kalibracyjnej (ok. 3 min) → artifacts/reports/dependence_models_full_sample.md
 python -m pipelines.fit_rvine_full_sample --jobs 4
 
 # 3. (opcjonalnie) pomiar kosztu i prognoza czasu backtestu → artifacts/reports/scenario_timing.md
 python -m pipelines.scenario_timing --jobs 3
+#    (opcjonalnie) dobór agregacji panelu reszt: zależność stóp 21-dniowych w scenariuszach a w danych
+python -m pipelines.dependence_diagnostics --jobs 4      # → artifacts/reports/dependence_diagnostics.md
 
 # 4. Nakładka opcyjna (ok. 45 min) – pozycje opcyjne wymagane przez backtest (config/backtest.yaml: options_overlay)
 python -m pipelines.options_monthly --jobs 4
@@ -192,6 +215,8 @@ python -m pipelines.ranking
 ```
 
 Pojedyncze daty: `python -m pipelines.backtest --dates 2008-10-01 --no-consolidate`.
+Przebieg na pierwotnej liście spółek: poprzedź każde polecenie z kroków 2–6 zmienną `PF_UNIVERSE=fixed`
+(osobny `run_id`). Panel dzienny: `dependence.aggregation.days: 1` w `config/models.yaml`.
 
 Starszy pipeline `python -m pipelines.monthly_rebalance` (skład sub-funduszy na danych 2011–2020,
 wyniki w `artifacts/rebalance/`) pozostaje bez zmian.
@@ -228,8 +253,10 @@ Benchmarki mają model `-`.
 
 ## Ograniczenia
 
-- **Asynchroniczność.** Notowania GPW i NYSE oraz fixing NBP nie są synchroniczne, przez co dzienna
-  zależność między rynkami jest zaniżona.
+- **Asynchroniczność.** Notowania GPW i NYSE oraz fixing NBP nie są synchroniczne, przez co dzienna zależność
+  jest zniekształcona. Kopuły na sumach 5-dniowych reszt ograniczają ten efekt, ale go nie usuwają.
+- **Uniwersum.** Pule spółek w uniwersum `pit` obejmują tylko spółki notowane do dziś, a ranking opiera się na
+  wartości obrotu (przybliżenie wielkości spółki), więc obciążenie przeżywalnością jest ograniczone, nie usunięte.
 - **Heurystyka dwupoziomowa.** Dekompozycja optymalizuje CE pojedynczego SF z γ inwestora, więc nie
   daje optimum łącznego.
 - **Oczekiwane stopy.** Pochodzą ze stałych AR(1) w oknie i są obarczone dużym błędem.

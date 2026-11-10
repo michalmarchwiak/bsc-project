@@ -10,6 +10,13 @@ Konsolidacja: zrealizowane stopy dzienne i okresowe (brutto/netto, dryf wag, kos
 za wcześniejszy wykup obligacji oszczędnościowych SF10), szeregi SF,
 PIT zrealizowanych strat, testy VaR/ES osobno dla kalibracji i hold-out.
 
+Uniwersum (``config/subfunds.yaml``, ``pf.universe``): dla sub-funduszy z kluczem ``select`` skład w dacie t
+jest wybierany z puli spółek według wartości obrotu z danych sprzed ostatniej rewizji (punktowo w czasie); modele
+daty obejmują tylko aktywa składu. Skład w każdej dacie: ``<run_dir>/universe.parquet``.
+
+Benchmarki rynkowe (``market_benchmarks`` w ``config/backtest.yaml``): portfele o stałych wagach z tickerów spoza
+sub-funduszy (np. ETF na S&P 500, indeks WIG20TR), realizowane w konsolidacji jak pozostałe szeregi (bez prognoz).
+
 Zamrożenie: przed pierwszą datą hold-out zapisywany jest ``frozen_params.json`` (skrót konfiguracji
 parametrów meta); przebieg hold-out z inną konfiguracją jest odrzucany. Modele (GARCH, kopuły) są nadal
 estymowane co miesiąc w oknie kroczącym – to część strategii.
@@ -35,14 +42,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from pf import ARTIFACTS_DIR, ROOT, config
+from pf import ARTIFACTS_DIR, ROOT, config, universe
 from pf.artifacts import sha256, update_manifest, write_parquet
 from pf.backtest import engine
 from pf.backtest.data import config_digest, eligible_dates, in_range, load_returns, run_id, sample_label
 from pf.backtest.realized import add_sid, collect, collect_tails, evaluate_forecasts, realize, realize_overlay
 from pf.backtest.risk_tests import backtest_series
 from pf.data import riskfree
-from pf.portfolio import load_subfunds
+from pf.portfolio import active_universe, load_subfunds
 
 log = logging.getLogger("backtest")
 BACKTEST_DIR = ARTIFACTS_DIR / "backtest"
@@ -53,7 +60,7 @@ def load_all() -> tuple[dict, dict, dict, dict]:
 
 
 # Sekcje post-processingu (nie wpływają na wyniki dat) – poza run_id.
-POSTPROCESS_KEYS = ("risk_tests", "expost_mc", "ranking")
+POSTPROCESS_KEYS = ("risk_tests", "expost_mc", "ranking", "market_benchmarks")
 
 
 def overlay_enabled(bcfg: dict) -> bool:
@@ -74,12 +81,18 @@ def current_run_id(cfg, bcfg, pcfg, subfunds) -> str:
     if overlay_enabled(bcfg):                     # pozycje opcyjne, kurs i stopy lokalne wpływają na wyniki dat
         configs["overlay_data"] = {k: sha256(f) if f.is_file() else None for k, f in overlay_files(bcfg).items()}
         configs["options"] = config.load("options")["monthly_overlay"]["kappa"]
+    if universe.uses_selection(subfunds):         # reguła wyboru składu i dane o obrotach wpływają na wyniki dat
+        scfg = universe.selection_config()
+        path = ROOT / scfg.get("turnover_path", "")
+        configs["selection"] = {**scfg, "turnover_sha256": sha256(path) if path.is_file() else None}
     return run_id(configs, ROOT / cfg["returns"]["path"], bcfg.get("run_id_length", 12))
 
 
-def prepare_returns(cfg: dict, bcfg: dict) -> pd.DataFrame:
-    """Dzienne log-stopy w PLN; przy nakładce opcyjnej z kursem USD/PLN jako aktywem modelu (poza sub-funduszami)."""
-    returns = load_returns(ROOT / cfg["returns"]["path"])
+def prepare_returns(cfg: dict, bcfg: dict, subfunds: dict | None = None) -> pd.DataFrame:
+    """Dzienne log-stopy w PLN aktywów uniwersum (pełne pule sub-funduszy; inne kolumny pliku, np. tickery
+    benchmarków rynkowych, są pomijane); przy nakładce opcyjnej z kursem USD/PLN jako aktywem modelu."""
+    subfunds = load_subfunds() if subfunds is None else subfunds
+    returns = universe.restrict_to_pool(load_returns(ROOT / cfg["returns"]["path"]), subfunds)
     if overlay_enabled(bcfg) and bcfg["options_overlay"].get("fx_asset", True):
         from pf.options.market import fx_log_returns
 
@@ -121,6 +134,8 @@ def freeze(run_dir: Path, cfg, bcfg, pcfg, subfunds) -> dict:
     meta = {"profiles": pcfg, "backtest": {k: v for k, v in bcfg.items() if k not in ("riskfree",) + POSTPROCESS_KEYS},
             "rvine": cfg["rvine"], "dependence": cfg["dependence"], "margins": cfg["margins"],
             "rebalance": cfg["rebalance"], "subfunds": subfunds}
+    if universe.uses_selection(subfunds):
+        meta["selection"] = universe.selection_config()
     digest = config_digest(meta)
     path = run_dir / "frozen_params.json"
     if path.exists():
@@ -143,11 +158,13 @@ def _worker(args):
     t, t_next, run_dir, latest, force = args
     if not _WORKER:                                 # dane i pozycje wczytywane raz na proces
         cfg, bcfg, pcfg, subfunds = load_all()
-        _WORKER.update(cfg=cfg, bcfg=bcfg, pcfg=pcfg, subfunds=subfunds, returns=prepare_returns(cfg, bcfg),
-                       overlay=overlay_context(bcfg))
+        returns = prepare_returns(cfg, bcfg, subfunds)
+        _WORKER.update(cfg=cfg, bcfg=bcfg, pcfg=pcfg, overlay=overlay_context(bcfg),
+                       universe=universe.build(subfunds, returns, cfg["rebalance"]))
     w = _WORKER
     logging.getLogger("pf").setLevel(logging.WARNING)
-    return engine.run_date(t, t_next, w["returns"], w["cfg"], w["bcfg"], w["pcfg"], w["subfunds"], run_dir,
+    returns_t, subfunds_t = w["universe"].view(t)   # skład sub-funduszy obowiązujący w dacie t
+    return engine.run_date(t, t_next, returns_t, w["cfg"], w["bcfg"], w["pcfg"], subfunds_t, run_dir,
                            engine.CACHE_DIR, latest, force, w["overlay"])
 
 
@@ -232,13 +249,51 @@ def load_sell_cost(bcfg: dict) -> pd.DataFrame | None:
     return pd.read_csv(path, index_col=0, parse_dates=True).sort_index()
 
 
+def benchmark_returns(cfg: dict, bcfg: dict, index: pd.DatetimeIndex) -> pd.DataFrame | None:
+    """Dzienne log-stopy w PLN tickerów benchmarków rynkowych (kolumny pliku stóp spoza sub-funduszy)."""
+    mb = bcfg.get("market_benchmarks") or {}
+    if not mb.get("enabled", False):
+        return None
+    tickers = list(dict.fromkeys(t for w in (mb.get("series") or {}).values() for t in w))
+    full = load_returns(ROOT / cfg["returns"]["path"])
+    return full.reindex(index=index, columns=tickers)
+
+
+def realize_market_benchmarks(bench: pd.DataFrame, bcfg: dict, dates: pd.DatetimeIndex, cost: float, rf, sell_cost=None
+                              ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Szeregi ``-|<nazwa>|ALL|base``: portfel o stałych wagach docelowych, rebalansowany w datach ``dates``.
+
+    Benchmark jest pomijany (ostrzeżenie), gdy któryś ticker nie ma notowań przed pierwszą datą okresu."""
+    series = (bcfg.get("market_benchmarks") or {}).get("series") or {}
+    lag = int(bcfg["execution_lag"])
+    rows, lags, meta = [], {}, {}
+    for name, weights in series.items():
+        first = bench.reindex(columns=list(weights)).apply(pd.Series.first_valid_index)
+        if first.isna().any() or (first > dates.min()).any():
+            log.warning("Benchmark rynkowy %s pominięty: brak notowań %s przed %s", name,
+                        ", ".join(first.index[first.isna() | (first > dates.min())]), dates.min().date())
+            continue
+        total = float(sum(weights.values()))
+        sid = engine.series_id(engine.BENCH_MODEL, name, "ALL", "base")
+        lags[sid] = lag
+        meta[sid] = {"model": engine.BENCH_MODEL, "strategy": name, "profile": "ALL", "variant": "base"}
+        rows += [{"date": t, "sid": sid, "ticker": tk, "weight": float(w) / total} for t in dates
+                 for tk, w in weights.items()]
+    if not rows:
+        return pd.DataFrame(), pd.DataFrame()
+    daily, periods = realize(bench, pd.DataFrame(rows), pd.Series(lags), dates, cost, rf, bcfg["riskfree"]["day_count"],
+                             sell_cost)
+    return daily, periods.join(pd.DataFrame(meta).T, on="sid")
+
+
 def consolidate(run_dir: Path, returns: pd.DataFrame, cfg: dict, bcfg: dict, pcfg: dict, subfunds: dict,
                 rf: pd.Series | None = None, calendar: pd.DatetimeIndex | None = None,
-                returns_local: pd.DataFrame | None = None) -> dict:
+                returns_local: pd.DataFrame | None = None, bench_returns: pd.DataFrame | None = None) -> dict:
     """Tabele zbiorcze: stopy zrealizowane, prognozy z PIT, testy VaR/ES, oceny modeli.
 
     ``calendar`` – pełny kalendarz dat rebalansowania (koniec okresu realizacji ostatniej policzonej daty
     wyznacza następna data kalendarza, także jeśli nie została jeszcze policzona).
+    ``bench_returns`` – log-stopy tickerów benchmarków rynkowych (``benchmark_returns``); None – bez benchmarków.
     """
     alpha = float(cfg["rebalance"]["es_alpha"])
     done = sorted(p.parent.name for p in (run_dir / "dates").glob("*/done.json"))
@@ -274,6 +329,11 @@ def consolidate(run_dir: Path, returns: pd.DataFrame, cfg: dict, bcfg: dict, pcf
         periods = pd.concat([periods, p_ov], ignore_index=True)
     meta = flags.drop_duplicates("sid").set_index("sid")[["model", "strategy", "profile", "variant"]]
     periods = periods.join(meta, on="sid")
+    if bench_returns is not None:                   # benchmarki rynkowe (bez prognoz ex ante i testów VaR/ES)
+        d_mb, p_mb = realize_market_benchmarks(bench_returns, bcfg, dates, cost, rf)
+        if len(p_mb):
+            daily = pd.concat([daily, d_mb], ignore_index=True)
+            periods = pd.concat([periods, p_mb], ignore_index=True)
     periods["sample"] = [sample_label(t, bcfg) for t in periods["date"]]
 
     wsf = weights[(weights["level"] == "sf") & (weights["variant"] == "base") & ~is_ov]   # SF z nakładką: subfunds_overlay_nav
@@ -349,13 +409,20 @@ def main() -> None:
                                                      "subfunds": subfunds}, indent=1, ensure_ascii=False,
                                                     default=str), encoding="utf-8")
     log.info("run_id = %s", rid)
-    returns = prepare_returns(cfg, bcfg)
+    returns = prepare_returns(cfg, bcfg, subfunds)
+    uni = universe.build(subfunds, returns, cfg["rebalance"])
     if overlay_enabled(bcfg):
         ctx = overlay_context(bcfg)
         log.info("Nakładka opcyjna: polityka %s, %d dat z pozycjami, bliźniaki %s (profile ≥ %s), kurs w modelu: %s",
                  ctx["policy"], len(ctx["positions"]), ", ".join(s + engine.OV_STRATEGY_SUFFIX for s in ctx["strategies"]),
                  ctx["min_profile"], "USDPLN" in returns.columns)
     dates_all = all_dates(returns, cfg, bcfg, subfunds)
+    if uni.active:
+        sched = uni.schedule(dates_all)
+        write_parquet(sched, run_dir / "universe.parquet")
+        log.info("Uniwersum %s: %d rewizji rankingu, %d spółek w pulach, %d w składzie co najmniej raz",
+                 active_universe(), sched["review"].nunique(), sched["ticker"].nunique(),
+                 sched.loc[sched["selected"], "ticker"].nunique())
     if not args.consolidate_only:
         if args.dates:
             dates = pd.DatetimeIndex([dates_all[dates_all.searchsorted(d)] for d in args.dates])
@@ -370,7 +437,8 @@ def main() -> None:
             log.info("Parametry zamrożone (%s, %s)", rec["digest"][:12], rec["frozen_utc"])
         run_dates(dates, dates_all, run_dir, args.jobs, args.force)
     if not args.no_consolidate:
-        consolidate(run_dir, returns, cfg, bcfg, pcfg, subfunds, calendar=dates_all)
+        consolidate(run_dir, returns, cfg, bcfg, pcfg, subfunds, calendar=dates_all,
+                    bench_returns=benchmark_returns(cfg, bcfg, returns.index))
 
 
 if __name__ == "__main__":

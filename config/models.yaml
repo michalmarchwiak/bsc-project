@@ -28,6 +28,14 @@ dependence:                         # modele zależności (pf.models.dependence)
   full_sample_min_coverage: 0.90    # raport pełnej próby: aktywa z ≥ 90% sesji próby (panel bez skracania)
   higham_tol: 1.0e-9
   higham_max_iter: 500
+  # Panel reszt do estymacji kopuł: sumy standaryzowanych reszt z ``days`` kolejnych sesji (pf.models.margins.
+  # residual_panel). Zamknięcia GPW (17:00) i NYSE (22:00) oraz fixing NBP (11:50) nie są synchroniczne, więc
+  # zależność dzienna pomija część współzmienności widoczną z opóźnieniem jednej sesji; sumy k-dniowe ją ujmują.
+  # days: 1 – panel dzienny (wcześniejsze przebiegi). overlap: true – sumy nakładające się (krok 1 sesja),
+  # false – bloki rozłączne (mniej obserwacji, brak autokorelacji sum). Diagnostyka: pipelines.dependence_diagnostics.
+  aggregation:
+    days: 5
+    overlap: true
   student_t:
     df_grid: [2.5, 3, 3.5, 4, 5, 6, 7, 8, 10, 12, 15, 20, 25, 30, 40, 50]   # profil wiarygodności ν
     refine: true                    # doprecyzowanie ν między sąsiednimi punktami siatki
