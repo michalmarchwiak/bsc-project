@@ -98,7 +98,9 @@ def random_corr(d, seed):
     F = rng.normal(size=(d, 2))
     S = F @ F.T + np.diag(rng.uniform(0.3, 1.0, d))
     s = np.sqrt(np.diag(S))
-    return S / np.outer(s, s)
+    R = S / np.outer(s, s)
+    np.fill_diagonal(R, 1.0)          # dzielenie daje 1 ± ε zależnie od BLAS; arcsin(1 + ε) = NaN
+    return R
 
 
 # --------------------------------------------------------------------------- Gauss, t
