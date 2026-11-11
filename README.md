@@ -2,9 +2,9 @@
 
 Projekt bada, czy jawne modelowanie zależności między aktywami (kopuły winorośli i kopuły
 eliptyczne) poprawia alokację wielosegmentowego funduszu dla inwestorów o różnej awersji do ryzyka.
-Fundusz składa się z 10 sub-funduszy: 79 instrumentów z GPW i giełd USA (SF1–SF9) oraz 8 rodzin
-obligacji oszczędnościowych Skarbu Państwa (SF10). Wszystkie wyniki są liczone w PLN, ze stopą wolną
-od ryzyka WIBOR 1M.
+Fundusz składa się z 10 sub-funduszy: ok. 80 instrumentów z GPW i giełd USA w każdej dacie (SF1–SF9; spółki
+wybierane punktowo w czasie z puli ok. 260 instrumentów) oraz 8 rodzin obligacji oszczędnościowych Skarbu
+Państwa (SF10). Wszystkie wyniki są liczone w PLN, ze stopą wolną od ryzyka WIBOR 1M.
 
 Pakiet `pf` (`src/pf`) obejmuje:
 
@@ -22,44 +22,60 @@ Szczegóły metody i wzory: [`docs/backtest.md`](docs/backtest.md),
 
 ## Najważniejsze wyniki
 
-**Uwaga.** Poniższe wyniki pochodzą z przebiegu `83254f06e339`, policzonego na stałej liście spółek (uniwersum
-`fixed`) i dziennym panelu reszt. Bieżąca konfiguracja używa uniwersum punktowego w czasie (`pit`), kopuł na sumach
-5-dniowych reszt i benchmarków rynkowych (sekcje „Uniwersum i dane” oraz „Metoda w skrócie”); wyniki dla niej
-wymagają nowego przebiegu.
+Przebieg `3ababedef5d8`: uniwersum `pit`, kopuły na sumach 5-dniowych reszt, 10 sub-funduszy z SF10, nakładka
+opcyjna `_ov`, benchmarki rynkowe. 226 dat rebalansowania 2008-01 – 2026-10, okres kalibracji 156 miesięcy,
+hold-out 69 miesięcy (2021-01 – 2026-09), 232 szeregi bazowe, 45 h CPU. Wszystkie stopy są miesięczne, netto po
+kosztach 0,1% wartości transakcji. Zrealizowany ekwiwalent pewności (CE) liczono od stóp nadwyżkowych nad
+WIBOR 1M, w skali rocznej, przy γ danego profilu.
 
-Przebieg `83254f06e339` (10 sub-funduszy z SF10, nakładka opcyjna `_ov`): 226 dat rebalansowania
-2008-01 – 2026-10, okres kalibracji 156 miesięcy, hold-out 69 miesięcy (2021-01 – 2026-09). Wszystkie
-stopy są miesięczne, netto po kosztach 0,1% wartości transakcji. Zrealizowany ekwiwalent pewności (CE)
-liczono od stóp nadwyżkowych nad WIBOR 1M, w skali rocznej, przy γ danego profilu.
+CE [% rocznie]: hold-out, w nawiasie kalibracja.
 
-| hold-out, CE [% rocznie] | `ce_dep`* | `ce`* | R-vine × `ce_dep` | `ce_dep_ov`* | `ew` | `mv_hist` | `maxret_es`* | `min_es`* |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| P1 konserwatywny (γ = 10) | 4,53 | 3,86 | 5,10 | – | 3,52 | 2,37 | 3,35 | 0,36 |
-| P3 zrównoważony (γ = 5) | 7,62 | 7,21 | 8,02 | 8,14 | 4,93 | 4,89 | 5,47 | 1,22 |
-| P5 agresywny (γ = 1,5) | 16,10 | 16,19 | 14,98 | 17,31 | 5,92 | 12,11 | 8,41 | 2,20 |
+| profil | `ce_dep`* | `ce`* | `ce_dep_ov`* | `maxret_es`* | `min_es`* | `ew` | `mv_hist` | `idx_spx` | `idx_wig20` |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| P1 (γ = 10) | 2,16 (0,71) | 1,03 (0,10) | – | 1,33 (−1,01) | 1,42 (−0,39) | 3,08 (0,81) | 2,02 (0,16) | 2,49 (−1,22) | −9,54 (−25,59) |
+| P2 (γ = 7) | 3,06 (2,55) | 2,09 (1,91) | – | 2,51 (0,89) | 2,01 (0,56) | 4,09 (2,50) | 3,36 (0,66) | 5,20 (2,54) | −1,94 (−17,76) |
+| P3 (γ = 5) | 3,59 (4,29) | 2,52 (4,73) | 4,37 (5,86) | 3,82 (2,44) | 2,35 (1,15) | 4,77 (3,64) | 5,62 (2,49) | 7,03 (5,03) | 2,99 (−12,83) |
+| P4 (γ = 3) | 5,88 (8,57) | 6,92 (8,59) | 7,03 (9,90) | 5,82 (4,42) | 2,74 (1,62) | 5,45 (4,80) | 8,43 (5,58) | 8,88 (7,50) | 7,81 (−8,04) |
+| P5 (γ = 1,5) | 13,02 (14,26) | 13,12 (14,66) | 14,79 (15,74) | 7,98 (5,59) | 3,00 (1,90) | 5,96 (5,69) | 11,42 (5,92) | 10,28 (9,36) | 11,35 (−4,49) |
 
 \* Średnia po 7 modelach zależności. Warianty `_ov` (nakładka opcyjna, polityka P3) liczono dla profili P3–P5.
+Strategia główna R-vine × `ce_dep`: 2,53 / 3,85 / 3,30 / 3,48 / 10,92 w hold-out (P1–P5).
 
-- **CE vs pozostałe reguły:** w hold-out strategie maksymalizujące CE wygrywają we wszystkich profilach
-  z równymi wagami, średnią–wariancją i regułami ES. W kalibracji `mv_hist` wyprzedza `ce` w P1.
-- **Kara za zależność:** podnosi CE w kalibracji dla 4 z 5 profili (bez P3), w hold-out tylko dla P1 i P3.
-- **Nakładka opcyjna:** warianty `ce_ov`, `ce_dep_ov` i `maxret_es_ov` mają wyższy średni CE niż
-  warianty bazowe w P3–P5 w obu próbach. `min_es_ov` ma CE niższy niż `min_es`.
-- **Istotność:** różnice między strategiami CE w hold-out są statystycznie nierozróżnialne. Model
-  Confidence Set obejmuje wszystkie 30 szeregów w P1–P2 oraz 34–55 z 58 szeregów (z wariantami `_ov`)
-  w P3–P5. Test Ledoita–Wolfa nie odrzuca równości wskaźnika Sharpe'a z `ew` dla strategii głównej.
-- **Modele zależności:** R-vine ma najniższe BIC i wygrywa test Vuonga w każdym oknie estymacji.
-  Według log-score poza próbą w hold-out równorzędne są kopuła Gaussa i R-vine.
-- **Prognozy ryzyka:** w kalibracji prognozy VaR/ES 97,5% niedoszacowują ryzyka (13,4 przekroczenia
-  wobec 3,9 oczekiwanych; ok. 28% przekroczeń w 2008 r., dalsze skupienia w 2015 i 2017–2018 r.).
-  W hold-out jest 4,9 przekroczenia wobec 1,7 oczekiwanych, a testy odrzucają rzadziej. Moc testów
-  przy danych miesięcznych jest niska.
+- **CE vs benchmarki:** przewaga strategii CE ogranicza się do profili agresywnych. W hold-out `ce` i `ce_dep`
+  wygrywają ze wszystkimi benchmarkami tylko w P5. W P1–P3 lepsze są równe wagi (`ew`) i S&P 500 (`idx_spx`),
+  a w P4 `idx_spx`, `mv_hist` i `idx_wig20`. W kalibracji strategie CE wygrywają w P4–P5, w P3 przegrywają
+  z `idx_spx`, w P2 są na poziomie `ew` i `idx_spx`, a w P1 przegrywają z `ew`.
+- **Wpływ uniwersum:** w przebiegu `83254f06e339` (stała lista spółek dobrana ex post, panel dzienny) strategie CE
+  wygrywały w hold-out z `ew` i `mv_hist` we wszystkich profilach (`ce_dep`: 4,53–16,10). Różnica łączy zmianę
+  uniwersum i agregacji reszt; tych efektów nie rozdzielono.
+- **Kara za zależność:** `ce_dep` ma wyższy CE niż `ce` w P1–P2 w obu próbach, w P3 tylko w hold-out, a w P4–P5
+  niższy. Na siatce κ (kalibracja) najlepsze jest κ = 2 dla P1–P3 i κ ≤ 0,05 dla P4–P5.
+- **Koncentracja:** `ce_dep` trzyma średnio 6,6 (P1) do 2,5 (P5) sub-funduszy, a SF1 i SF2 mają łącznie 46% (P1)
+  do 88% (P5) wagi w hold-out. Limit `w_max` wiąże w mniej niż 5% dat. Wagę SF ogranicza limit look-through:
+  W_k ≤ c_LT / maxᵢ w_{k,i}, co daje ok. 0,25 (P1) do 0,50 (P5).
+- **Nakładka opcyjna:** warianty `ce_ov`, `ce_dep_ov` i `maxret_es_ov` mają wyższy średni CE niż bazowe
+  (hold-out: +0,8 do +1,8 p.p., kalibracja: +1,2 do +3,1 p.p.). Różnica skupia się w dwóch miesiącach
+  (2020-09 i 2021-01), w których modelowa σ_imp jest 2,5 razy wyższa od prognozy GARCH (m_t ≈ 2,5 przy
+  medianie 1,08), a cały portfel trafia do kolumn SFk_OV. Bez nich przewaga w hold-out spada do +0,1 do
+  +0,4 p.p., a w kalibracji do +0,4 do +2,4 p.p. `min_es_ov` ma CE ujemny. Wynik zależy więc od założeń
+  wyceny (sekcja „Moduł opcji”).
+- **Istotność:** różnice są statystycznie nierozróżnialne. Model Confidence Set w hold-out obejmuje wszystkie
+  32 szeregi w P1–P2 oraz 49–59 z 60 szeregów w P3–P5. Test Ledoita–Wolfa nie odrzuca równości wskaźnika
+  Sharpe'a z `ew` dla strategii głównej (p = 0,27–0,97).
+- **Modele zależności:** R-vine ma najniższe BIC, wygrywa test Vuonga w każdym oknie kalibracji i jako jedyny
+  należy do MCS według log-score poza próbą w obu próbach. Lepsze dopasowanie nie daje lepszych portfeli:
+  najlepszą średnią rangę CE ma C-vine, a w hold-out najlepsze szeregi modelowe dają kopuły Gaussa i t.
+- **Prognozy ryzyka:** prognozy VaR/ES 97,5% niedoszacowują ryzyka. W kalibracji jest średnio 14,7 przekroczenia
+  wobec 3,9 oczekiwanych (26% w 2008 r., dalsze skupienia w 2015 i 2018 r.), w hold-out 6,1 wobec 1,7
+  (55% w 2022 r.). Test Kupca nie odrzuca dla 42% szeregów w kalibracji i 61% w hold-out. Moc testów przy
+  danych miesięcznych jest niska.
 
 Pełne tabele: [`backtest_summary.md`](artifacts/reports/backtest_summary.md),
 [`ranking_holdout.md`](artifacts/reports/ranking_holdout.md),
 [`ranking_calibration.md`](artifacts/reports/ranking_calibration.md),
 [`dependence_models.md`](artifacts/reports/dependence_models.md),
 [`es_mc.md`](artifacts/reports/es_mc.md); wykresy w [`figures/backtest/`](figures/backtest/).
+Sekcja 9 w [`docs/backtest.md`](docs/backtest.md) opisuje jeszcze przebieg `83254f06e339`.
 
 ## Uniwersum i dane
 
@@ -205,7 +221,7 @@ python -m pipelines.dependence_diagnostics --jobs 4      # → artifacts/reports
 # 4. Nakładka opcyjna (ok. 45 min) – pozycje opcyjne wymagane przez backtest (config/backtest.yaml: options_overlay)
 python -m pipelines.options_monthly --jobs 4
 
-# 5. Backtest (ok. 46 h CPU z wariantami _ov; na 4 rdzeniach ok. 12,5 h): kalibracja, zamrożenie parametrów, hold-out
+# 5. Backtest (ok. 45 h CPU z wariantami _ov; na 4 rdzeniach ok. 11,5 h): kalibracja, zamrożenie parametrów, hold-out
 python -m pipelines.backtest --sample calibration --jobs 4
 python -m pipelines.backtest --sample holdout --jobs 4
 python -m pipelines.backtest --consolidate-only
@@ -235,10 +251,11 @@ wyniki w `artifacts/rebalance/`) pozostaje bez zmian.
 | `artifacts/backtest/<run_id>/weights_tickers.parquet` | wagi tickerów, SF i look-through wszystkich 230 szeregów bazowych |
 | `artifacts/backtest/<run_id>/forecasts.parquet` | prognozy ex ante (VaR, ES, E[R], CE) z realizacją i PIT |
 | `artifacts/backtest/<run_id>/tests.parquet` | testy Kupca, Christoffersena, Z₂, Du–Escanciano |
+| `artifacts/backtest/<run_id>/universe.parquet` | skład uniwersum `pit` w każdej dacie (ranking obrotów, wybór spółek) |
 | `figures/backtest/` | majątek i obsunięcia, skład W w czasie, krocząca Sharpe, ES vs straty |
 
 Szereg identyfikuje czwórka `model | strategia | profil | wariant`, np. `rvine|ce_dep|P3|base`.
-Benchmarki mają model `-`.
+Benchmarki mają model `-`. Benchmarki rynkowe `idx_spx` i `idx_wig20` nie mają wag ani prognoz ex ante.
 
 ## Odtwarzalność
 
@@ -264,6 +281,10 @@ Benchmarki mają model `-`.
 - **Winsoryzacja innowacji.** Symulowane innowacje są ograniczone do 2·max|ε̂| z okna, co zapobiega
   eksplozji rekursji GARCH przy rozkładach z η < 4.
 - **Krótki hold-out.** 69 miesięcy i niska moc testów miesięcznych utrudniają rozstrzygnięcia.
+- **Limity koncentracji.** Limit `w_max` prawie nigdy nie wiąże. Wagę SF ogranicza iloraz c_LT / maxᵢ w_{k,i},
+  więc profile agresywne trzymają 2–3 sub-fundusze, głównie SF1 i SF2.
+- **Nakładka opcyjna.** Mnożnik m_t = VIX/σ̂_SPX nie ma górnego ograniczenia i w pojedynczych datach sięga 2,5.
+  Premie sprzedawanych calli są wtedy zawyżone, a optymalizacja przenosi cały portfel do kolumn SFk_OV.
 - **Indeksy obligacji SF10.** Odzwierciedlają rolowaną pozycję jednego rocznika, a nie serię bieżącą,
   którą kupuje inwestor w dniu t. Prognoza stopy z 21 sesji pomija zmianę stopy w nowym okresie odsetkowym.
 
@@ -296,4 +317,17 @@ dla profili ≥ P3 każda strategia ma bliźniaka `<strategia>_ov` z kolumnami S
 jest aktywem modelu. Wyniki: `artifacts/options/`, `artifacts/subfunds_overlay_nav.parquet`,
 `artifacts/reports/options_monthly_backtest.md`, `artifacts/reports/options_validation.md`.
 Metoda i ograniczenia: [`docs/options_monthly.md`](docs/options_monthly.md).
+
+Wnioski z przebiegu `3ababedef5d8`:
+
+- **Polityka P3 to niemal pełne zabezpieczenie.** Przy λ = 2 nakładka jest collarem w 89–100% miesięcy,
+  ze sprzedanym callem ATM o h = 1 dla 78% par (ticker, data). SFk_OV traci ekspozycję na aktywo bazowe: SF1_OV
+  ma zwrot −0,05% i zmienność 1,2% rocznie przy koszcie κ ok. 3,7% rocznie, czyli mniej niż WIBOR 1M.
+  SFk_OV w USD zachowują głównie ekspozycję na kurs USD/PLN.
+- **Wycena zawyża premie sprzedawanych opcji.** Przy `atm_adj = 1` replika BXM wyprzedza indeks Cboe
+  o 5,4 p.p. rocznie, a przy `atm_adj` = 0,775 (estymata z kwotowań SPY) o −0,7 p.p. Backtest używa `atm_adj = 1`.
+- **Przewaga wariantów `_ov` nie jest odporna.** Kolumny SFk_OV mają średnio 2–8% wagi w strategiach CE,
+  a różnica CE skupia się w 2020-09 i 2021-01 (m_t ≈ 2,5). `min_es_ov` trzyma ok. 50% w SF1_OV i ma CE ujemny.
+- **Zalecane zmiany przed użyciem wyników `_ov`:** `atm_adj` ≈ 0,8 i β ≈ −0,5, górne ograniczenie m_t
+  (np. kwantyl 95% z okna rozszerzającego się) oraz niższe λ (0,1–0,25), przy którym decyzje są zróżnicowane.
 
