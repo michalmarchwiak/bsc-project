@@ -416,18 +416,18 @@
     }
   },
   "market/riskfree_pln": {
-    "updated_utc": "2026-10-31T17:44:11+00:00",
+    "updated_utc": "2026-11-10T17:13:01+00:00",
     "versions": {
-      "python": "3.13.18",
-      "numpy": "2.5.3",
-      "pandas": "3.0.5",
+      "python": "3.13.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.1",
       "scipy": "1.18.1",
-      "pyarrow": "26.0.0",
-      "yfinance": "1.7.0",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "market/riskfree_pln.parquet",
-    "sha256": "d9c29a5a128fdf6bdf070d2be5b4b4c9b9637c61a137f822fde84a7d6cd67699",
+    "sha256": "6dd5099edbb8c59918a58f459c4814239c44b136804ae3b21e46bf2477567818",
     "n_rows": 5694,
     "params": {
       "symbol": "plopln1m",
@@ -455,7 +455,7 @@
       ],
       "n_missing": 0,
       "errors": {
-        "wibor": "WIBOR niedostępny: https://stooq.pl/q/d/l/: Stooq plopln1m: nieoczekiwana odpowiedź ('<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"no'); https://stooq.com/q/d/l/: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))"
+        "wibor": "WIBOR niedostępny: https://stooq.pl/q/d/l/: Stooq plopln1m: nieoczekiwana odpowiedź ('<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"no'); https://stooq.com/q/d/l/: Stooq plopln1m: nieoczekiwana odpowiedź ('<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"no')"
       },
       "source_counts": {
         "wibor1m_monthly": 5673,
@@ -544,19 +544,19 @@
     }
   },
   "options/ledger": {
-    "updated_utc": "2026-11-04T10:43:52+00:00",
+    "updated_utc": "2026-11-10T19:02:10+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.4",
-      "pandas": "3.1.0",
+      "pandas": "3.1.1",
       "scipy": "1.18.1",
       "pyarrow": "26.0.1",
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "options/ledger.parquet",
-    "sha256": "9964b4e03df45c024234a9e261114b12d8056bf941eab066ab14404a6307c787",
-    "n_rows": 161580,
+    "sha256": "07ce1433c9ad41bb15e794e9052d5756937773acc19b23e5df086a0b5c8f3313",
+    "n_rows": 167360,
     "params": {
       "moneyness": [
         0.95,
@@ -596,19 +596,19 @@
     }
   },
   "options/overlay_decisions": {
-    "updated_utc": "2026-11-04T10:43:52+00:00",
+    "updated_utc": "2026-11-10T19:02:10+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.4",
-      "pandas": "3.1.0",
+      "pandas": "3.1.1",
       "scipy": "1.18.1",
       "pyarrow": "26.0.1",
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "options/overlay_decisions.parquet",
-    "sha256": "ff15b0e9da9ca1dd10aaa3bcdaf3d797ee8cb852d193875382deef24eccfee0f",
-    "n_rows": 191435,
+    "sha256": "cd0af32c2bb0b525f6771ed55f68196e17301ed41efcbf04c57629db20b96291",
+    "n_rows": 196336,
     "params": {
       "policies": {
         "P0": {
@@ -669,18 +669,18 @@
     }
   },
   "subfunds_overlay_nav": {
-    "updated_utc": "2026-11-04T10:43:52+00:00",
+    "updated_utc": "2026-11-10T19:02:10+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.4",
-      "pandas": "3.1.0",
+      "pandas": "3.1.1",
       "scipy": "1.18.1",
       "pyarrow": "26.0.1",
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "subfunds_overlay_nav.parquet",
-    "sha256": "fef4f6d3c0bac6ec1745b22d78d14dae44ca3cdbde44f84c160829367e0105ba",
+    "sha256": "5d2d388f7a20883f5e4ea05979c43f22cee26d0968e2e073417bda546fd5033f",
     "n_rows": 57884,
     "params": {
       "kappa": 0.03,
@@ -697,18 +697,18 @@
     }
   },
   "options/portfolio_periods": {
-    "updated_utc": "2026-11-04T10:44:08+00:00",
+    "updated_utc": "2026-11-10T19:02:30+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.4",
-      "pandas": "3.1.0",
+      "pandas": "3.1.1",
       "scipy": "1.18.1",
       "pyarrow": "26.0.1",
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "options/portfolio_periods.parquet",
-    "sha256": "af38914fcdc714d21f7d9ba6d02208b7ec35d896a286603904c1788cc5468fdc",
+    "sha256": "5ffa05575b67f2e5dd656148396e43363c2053581fbdd60d3851fc73eae51422",
     "n_rows": 2700,
     "params": {
       "portfolio": {
@@ -731,18 +731,18 @@
     }
   },
   "reports/options_validation": {
-    "updated_utc": "2026-11-04T10:44:08+00:00",
+    "updated_utc": "2026-11-10T19:02:30+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.4",
-      "pandas": "3.1.0",
+      "pandas": "3.1.1",
       "scipy": "1.18.1",
       "pyarrow": "26.0.1",
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "reports/options_validation.csv",
-    "sha256": "8f354084f7d672841a61d4b84a2bd33bc2655a0b0bc94ff81f7b48fb917055bf",
+    "sha256": "032a3d52f1d3e96e801b01d0ecb8720f62451da57b65a05c40b83efc91188011",
     "n_rows": 156,
     "params": {
       "status": "ok",
@@ -752,14 +752,14 @@
       },
       "atm_adj_estimate": {
         "status": "ok",
-        "atm_adj": 0.7856798486479096,
-        "n_obs": 391,
+        "atm_adj": 0.7750175334823575,
+        "n_obs": 912,
         "iqr": [
-          0.7388757776678861,
-          0.8323521804549356
+          0.7296915646571025,
+          0.8241528106971899
         ],
         "first_date": "2026-10-30",
-        "last_date": "2026-11-03"
+        "last_date": "2026-11-09"
       },
       "validation": {
         "BXM": {
@@ -780,18 +780,18 @@
     }
   },
   "options/annual_mc": {
-    "updated_utc": "2026-11-04T10:44:21+00:00",
+    "updated_utc": "2026-11-10T19:02:44+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.4",
-      "pandas": "3.1.0",
+      "pandas": "3.1.1",
       "scipy": "1.18.1",
       "pyarrow": "26.0.1",
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "options/annual_mc.parquet",
-    "sha256": "1b88610327b31f703dbc1add0d95d103a11a31cbbf120597e62c165decb12667",
+    "sha256": "ad4394de8e69d639b38c27bd53fe02b2851c306a6401ad7ad91aa10219063dd2",
     "n_rows": 45,
     "params": {
       "annual_mc": {
@@ -811,18 +811,18 @@
     }
   },
   "reports/options_monthly_backtest": {
-    "updated_utc": "2026-11-04T10:44:21+00:00",
+    "updated_utc": "2026-11-10T19:02:44+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.4",
-      "pandas": "3.1.0",
+      "pandas": "3.1.1",
       "scipy": "1.18.1",
       "pyarrow": "26.0.1",
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
     "path": "reports/options_monthly_backtest.md",
-    "sha256": "17771d93c92c5f2da161cd8288192ce47a64423fc5b79b134c8fb1ee6440100b",
+    "sha256": "dd796e5780f100af30c4633559779c346f5032a046dced07ed45bc7d4b880b1d",
     "params": {
       "n_series_sf": 783,
       "portfolio": true
@@ -890,6 +890,102 @@
     },
     "path": "backtest/83254f06e339/ranking_holdout.parquet",
     "sha256": "4e2839e0d73fda8789d183af206b5950ae1495cffbb03b402332a14aa0adf580",
+    "params": {
+      "ranking": {
+        "mcs_size": 0.1,
+        "mcs_reps": 5000,
+        "sharpe_test": {
+          "block": 3,
+          "reps": 5000,
+          "benchmark": "-|ew|ALL|base"
+        },
+        "test_level": 0.05,
+        "composite_weights": {
+          "ce_ann": 3.0,
+          "sharpe": 1.0,
+          "sortino": 1.0,
+          "calmar": 1.0,
+          "max_dd": 1.0,
+          "omega": 1.0,
+          "starr": 1.0,
+          "turnover": 0.5
+        },
+        "es_expost_method": "fhs",
+        "main_series": {
+          "model": "rvine",
+          "strategy": "ce_dep"
+        }
+      },
+      "figures": [
+        "figures/backtest/wealth_drawdown.png",
+        "figures/backtest/composition_W.png",
+        "figures/backtest/rolling_sharpe.png",
+        "figures/backtest/es_vs_losses.png"
+      ]
+    }
+  },
+  "backtest/3ababedef5d8/periods": {
+    "updated_utc": "2026-11-11T00:36:21+00:00",
+    "versions": {
+      "python": "3.13.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.1",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "backtest/3ababedef5d8/periods.parquet",
+    "sha256": "68a121beb550ccf8b733e6326557e75b43882706343ca1022c16e2583e2d3dcb",
+    "n_rows": 113196,
+    "params": {
+      "first_date": "2008-01-02",
+      "last_date": "2026-10-01",
+      "n_dates": 226,
+      "n_series": 623,
+      "transaction_cost": 0.001,
+      "execution_lag": 1
+    }
+  },
+  "backtest/3ababedef5d8/es_mc": {
+    "updated_utc": "2026-11-11T00:39:01+00:00",
+    "versions": {
+      "python": "3.13.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.1",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "backtest/3ababedef5d8/es_mc.parquet",
+    "sha256": "60d0061eca0e699ab5392197ac34d0c6c3f75bec7a2d51e0821aab7182c551dd",
+    "n_rows": 9744,
+    "params": {
+      "expost_mc": {
+        "horizon": 21,
+        "batch": 20000,
+        "n_min": 20000,
+        "n_max": 200000,
+        "rel_se": 0.01,
+        "main_model": "rvine",
+        "main_strategy": "ce_dep"
+      }
+    }
+  },
+  "backtest/3ababedef5d8/ranking": {
+    "updated_utc": "2026-11-11T00:39:58+00:00",
+    "versions": {
+      "python": "3.13.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.1",
+      "scipy": "1.18.1",
+      "pyarrow": "26.0.1",
+      "yfinance": "1.8.0",
+      "requests": "2.34.2"
+    },
+    "path": "backtest/3ababedef5d8/ranking_holdout.parquet",
+    "sha256": "a7b7c4ff89aa193737b018dcbed03c4f029c4fb8bd679ab7b491ed2e6f488b9d",
     "params": {
       "ranking": {
         "mcs_size": 0.1,
