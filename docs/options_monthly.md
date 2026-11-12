@@ -82,6 +82,14 @@ Wielkość κ₋ jest liczona kwadraturą z gęstości skośnego t Hansena, a dl
 ≤ t_j − 1. Przy atm_adj = 1 jest to VIX/σ̂_SPX. Korekta VIX → σ_ATM obejmuje także m_t (`atm_adj_in_m`), bo bez niej
 σ_imp tickerów proxy dziedziczyłaby zawyżenie VIX względem zmienności ATM.
 
+**Ograniczenie m_t** (`implied_vol.m_cap`, domyślnie `{quantile: 0.95, min_obs: 250}`): m_t ≤ kwantyl historii
+m_s z okna estymacji marginesu S&P 500, gdzie m_s = (atm_adj·VIX_{s+1}/100)/σ̂_{SPX,s}(21), a σ̂_{SPX,s} to prognoza
+z informacji ≤ s przy parametrach modelu z daty t_j (`pf.options.implied_vol.multiplier_history`). Historia używa
+tylko danych ≤ t_j − 1. Prognoza GARCH na 21 sesji spada po spokojnym okresie szybciej niż VIX, więc bez
+ograniczenia m_t sięga 2,5 (2020-09, 2021-01), a premie tickerów proxy są zawyżone. Na datach backtestu ograniczenie
+wynosi 1,31–1,69 i wiąże w 19 z 226 dat. `market_state.parquet` zapisuje `m` (po ograniczeniu), `m_raw` i `m_cap`.
+`quantile: null` wyłącza ograniczenie.
+
 **Źródło σ_imp** (`iv_source`):
 * GVZ dla GLD, IAU i SGOL: σ = atm_adj·GVZ/100. Przed 09.2009 GVZ nie istnieje i stosowane jest `proxy`.
 * VIX dla S&P 500: wariancja całkowita jest interpolowana między VIX9D i VIX. Źródło służy tylko do m_t
@@ -216,6 +224,8 @@ Parametry (siatka, κ, pasmo, polityki, progi, λ, m̄, atm_adj i jego estymata)
 (`artifacts/options/dates/`) i pamięć podręczna modeli (`artifacts/options/cache/`) są poza repozytorium.
 
 ## Wyniki przebiegu (2008-01 – 2026-10, 226 dat, ustawienia domyślne)
+
+**Uwaga.** Wyniki poniżej policzono bez ograniczenia `m_cap`; wymagają nowego przebiegu.
 
 Pełne tabele: `artifacts/reports/options_monthly_backtest.md` i `artifacts/reports/options_validation.md`.
 

@@ -125,11 +125,18 @@ def robust_margins(window: pd.DataFrame, fits: dict[str, MarginFit], z: pd.DataF
     return fits, z, refit
 
 
+def spx_window(market: MarketData, t: pd.Timestamp, window_days: int) -> pd.Series:
+    """Log-stopy S&P 500 z okna estymacji: ostatnie ``window_days`` sesji przed t."""
+    if market.spx is None:
+        return pd.Series(dtype=float)
+    r = np.log(market.spx.astype(float)).diff().dropna()
+    return r[r.index < pd.Timestamp(t)].iloc[-window_days:]
+
+
 def fit_spx(market: MarketData, t: pd.Timestamp, window_days: int, min_obs: int, scale: float) -> MarginFit | None:
     if market.spx is None:
         return None
-    r = np.log(market.spx.astype(float)).diff().dropna()
-    r = r[r.index < pd.Timestamp(t)].iloc[-window_days:]
+    r = spx_window(market, t, window_days)
     if len(r) < min_obs:
         return None
     fit = fit_margin(r.rename("SPX"), scale)[0]

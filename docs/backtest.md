@@ -100,11 +100,15 @@ stochastycznych; stopa aktywa SF10 jest stała we wszystkich scenariuszach, R_i 
 
 | id | nazwa | γ | κ | c_SF | c_LT | W_max |
 |---|---|---:|---:|---:|---:|---:|
-| P1 | konserwatywny | 10 | 1.00 | 0.20 | 0.05 | 0.40 |
-| P2 | umiarkowany | 7 | 0.60 | 0.25 | 0.07 | 0.45 |
-| P3 | zrównoważony | 5 | 0.35 | 0.30 | 0.10 | 0.50 |
+| P1 | konserwatywny | 10 | 1.00 | 0.20 | 0.05 | 0.20 |
+| P2 | umiarkowany | 7 | 0.60 | 0.25 | 0.07 | 0.225 |
+| P3 | zrównoważony | 5 | 0.35 | 0.30 | 0.10 | 0.25 |
 | P4 | dynamiczny | 3 | 0.15 | 0.40 | 0.15 | 0.60 |
 | P5 | agresywny | 1.5 | 0.05 | 0.50 | 0.25 | 0.75 |
+
+W_max wiąże tylko poniżej c_LT/c_SF (P1: 0,25, P2: 0,28, P3: 0,33, P4: 0,375, P5: 0,50), bo
+W_k ≤ min(W_max, c_LT/m_k). W przebiegu `3ababedef5d8` (W_max = 0,40 / 0,45 / 0,50 w P1–P3) limit wiązał w mniej
+niż 5% dat. W P1–P3 obniżono go poniżej tego progu, żeby faktycznie ograniczał koncentrację w sub-funduszach.
 
 Ekwiwalent pewności CRRA na scenariuszach miesięcznych stóp prostych R_s:
 

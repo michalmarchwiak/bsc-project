@@ -22,6 +22,11 @@ Szczegóły metody i wzory: [`docs/backtest.md`](docs/backtest.md),
 
 ## Najważniejsze wyniki
 
+**Uwaga.** Poniższe wyniki pochodzą z przebiegu `3ababedef5d8`, policzonego przed dwiema zmianami konfiguracji:
+niższym limitem wagi sub-funduszu w P1–P3 (`w_max` = 0,20 / 0,225 / 0,25 zamiast 0,40 / 0,45 / 0,50) i górnym
+ograniczeniem mnożnika m_t w nakładce opcyjnej (`m_cap`). Wyniki dla bieżącej konfiguracji wymagają nowego
+przebiegu (kroki 4–6 w sekcji „Uruchomienie”).
+
 Przebieg `3ababedef5d8`: uniwersum `pit`, kopuły na sumach 5-dniowych reszt, 10 sub-funduszy z SF10, nakładka
 opcyjna `_ov`, benchmarki rynkowe. 226 dat rebalansowania 2008-01 – 2026-10, okres kalibracji 156 miesięcy,
 hold-out 69 miesięcy (2021-01 – 2026-09), 232 szeregi bazowe, 45 h CPU. Wszystkie stopy są miesięczne, netto po
@@ -52,13 +57,14 @@ Strategia główna R-vine × `ce_dep`: 2,53 / 3,85 / 3,30 / 3,48 / 10,92 w hold-
   niższy. Na siatce κ (kalibracja) najlepsze jest κ = 2 dla P1–P3 i κ ≤ 0,05 dla P4–P5.
 - **Koncentracja:** `ce_dep` trzyma średnio 6,6 (P1) do 2,5 (P5) sub-funduszy, a SF1 i SF2 mają łącznie 46% (P1)
   do 88% (P5) wagi w hold-out. Limit `w_max` wiąże w mniej niż 5% dat. Wagę SF ogranicza limit look-through:
-  W_k ≤ c_LT / maxᵢ w_{k,i}, co daje ok. 0,25 (P1) do 0,50 (P5).
+  W_k ≤ c_LT / maxᵢ w_{k,i}, co daje ok. 0,25 (P1) do 0,50 (P5). Po tym przebiegu `w_max` w P1–P3 obniżono
+  poniżej tego progu.
 - **Nakładka opcyjna:** warianty `ce_ov`, `ce_dep_ov` i `maxret_es_ov` mają wyższy średni CE niż bazowe
   (hold-out: +0,8 do +1,8 p.p., kalibracja: +1,2 do +3,1 p.p.). Różnica skupia się w dwóch miesiącach
   (2020-09 i 2021-01), w których modelowa σ_imp jest 2,5 razy wyższa od prognozy GARCH (m_t ≈ 2,5 przy
   medianie 1,08), a cały portfel trafia do kolumn SFk_OV. Bez nich przewaga w hold-out spada do +0,1 do
   +0,4 p.p., a w kalibracji do +0,4 do +2,4 p.p. `min_es_ov` ma CE ujemny. Wynik zależy więc od założeń
-  wyceny (sekcja „Moduł opcji”).
+  wyceny (sekcja „Moduł opcji”). Po tym przebiegu dodano ograniczenie `m_cap`.
 - **Istotność:** różnice są statystycznie nierozróżnialne. Model Confidence Set w hold-out obejmuje wszystkie
   32 szeregi w P1–P2 oraz 49–59 z 60 szeregów w P3–P5. Test Ledoita–Wolfa nie odrzuca równości wskaźnika
   Sharpe'a z `ew` dla strategii głównej (p = 0,27–0,97).
@@ -191,7 +197,7 @@ tests/             testy jednostkowe i integracyjne (bez sieci)
 
 ```bash
 pip install -e ".[dev]"
-pytest -q              # ok. 290 testów bez dostępu do sieci (ok. 2 min)
+pytest -q              # ok. 300 testów bez dostępu do sieci (ok. 2 min)
 pytest -m network      # testy sieciowe (źródła danych)
 ```
 
@@ -281,10 +287,13 @@ Benchmarki mają model `-`. Benchmarki rynkowe `idx_spx` i `idx_wig20` nie mają
 - **Winsoryzacja innowacji.** Symulowane innowacje są ograniczone do 2·max|ε̂| z okna, co zapobiega
   eksplozji rekursji GARCH przy rozkładach z η < 4.
 - **Krótki hold-out.** 69 miesięcy i niska moc testów miesięcznych utrudniają rozstrzygnięcia.
-- **Limity koncentracji.** Limit `w_max` prawie nigdy nie wiąże. Wagę SF ogranicza iloraz c_LT / maxᵢ w_{k,i},
-  więc profile agresywne trzymają 2–3 sub-fundusze, głównie SF1 i SF2.
-- **Nakładka opcyjna.** Mnożnik m_t = VIX/σ̂_SPX nie ma górnego ograniczenia i w pojedynczych datach sięga 2,5.
-  Premie sprzedawanych calli są wtedy zawyżone, a optymalizacja przenosi cały portfel do kolumn SFk_OV.
+- **Limity koncentracji.** W P4–P5 limit `w_max` nie wiąże. Wagę SF ogranicza iloraz c_LT / maxᵢ w_{k,i},
+  więc profile agresywne trzymają 2–3 sub-fundusze, głównie SF1 i SF2. W P1–P3 `w_max` (0,20–0,25) wiąże
+  z założenia. Wartości te wskazał przybliżony wariant kontrfaktyczny na przebiegu `3ababedef5d8`, w którym
+  hold-out był już znany, więc ocena w hold-out ma charakter opisowy.
+- **Nakładka opcyjna.** Mnożnik m_t = VIX/σ̂_SPX jest zaszumiony i bez ograniczenia sięga 2,5. Ograniczenie
+  `m_cap` (kwantyl 95% historii m_s z okna estymacji) obniża go w 19 z 226 dat, najwyżej do 1,67. Premie
+  tickerów proxy pozostają modelowe.
 - **Indeksy obligacji SF10.** Odzwierciedlają rolowaną pozycję jednego rocznika, a nie serię bieżącą,
   którą kupuje inwestor w dniu t. Prognoza stopy z 21 sesji pomija zmianę stopy w nowym okresie odsetkowym.
 
@@ -305,7 +314,8 @@ powierzchnię zmienności i replikację strategii PPUT. Dane rynkowe są odświe
 i włączane do NAV sub-funduszu według polityki: P0 (brak), P1 (stały put lub covered call), P2 (reguły na
 cenie ubezpieczenia m_t, trendzie i reżimie zmienności) albo P3 (LP max E[R] − λ·CVaR na scenariuszach
 GARCH-kopuła). σ_imp jest odtwarzana modelowo (GVZ dla ETF-ów na złoto, w pozostałych przypadkach
-σ̂_GARCH × VIX/σ̂_SPX), bo dla większości tickerów nie ma notowanych opcji miesięcznych. Warianty SFk_OV wchodzą
+σ̂_GARCH × m_t, m_t = VIX/σ̂_SPX z górnym ograniczeniem `m_cap`), bo dla większości tickerów nie ma notowanych
+opcji miesięcznych. Warianty SFk_OV wchodzą
 jako kolumny poziomu 2 optymalizacji profili ≥ P3. Wycena jest walidowana replikacją Cboe BXM i PPUT.
 
 ```bash
@@ -328,6 +338,9 @@ Wnioski z przebiegu `3ababedef5d8`:
   o 5,4 p.p. rocznie, a przy `atm_adj` = 0,775 (estymata z kwotowań SPY) o −0,7 p.p. Backtest używa `atm_adj = 1`.
 - **Przewaga wariantów `_ov` nie jest odporna.** Kolumny SFk_OV mają średnio 2–8% wagi w strategiach CE,
   a różnica CE skupia się w 2020-09 i 2021-01 (m_t ≈ 2,5). `min_es_ov` trzyma ok. 50% w SF1_OV i ma CE ujemny.
-- **Zalecane zmiany przed użyciem wyników `_ov`:** `atm_adj` ≈ 0,8 i β ≈ −0,5, górne ograniczenie m_t
-  (np. kwantyl 95% z okna rozszerzającego się) oraz niższe λ (0,1–0,25), przy którym decyzje są zróżnicowane.
+- **Zmiana po przebiegu:** m_t ma górne ograniczenie `implied_vol.m_cap` w `config/options.yaml`: kwantyl 95%
+  historii m_s z okna estymacji marginesu S&P 500 (dane ≤ t − 1). Na datach backtestu wiąże w 19 z 226 dat,
+  a w 2020-09 i 2021-01 obniża m_t z ok. 2,5 do 1,54 i 1,67.
+- **Pozostałe zalecenia przed użyciem wyników `_ov`:** `atm_adj` ≈ 0,8 i β ≈ −0,5 oraz niższe λ (0,1–0,25),
+  przy którym decyzje są zróżnicowane.
 

@@ -114,6 +114,9 @@ monthly_overlay:
     sigma_max: 1.5
     beta: 0.0                         # σ_imp(K) = σ_imp + β·ln(K/F); β ≠ 0 tylko w analizie wrażliwości
     m_horizon: 21                     # m_t = (VIX_t/100) / σ̂_SPX,t(21)
+    # Górne ograniczenie m_t: kwantyl historii m_s z okna estymacji marginesu S&P 500 (dane ≤ t − 1). Bez niego m_t
+    # sięga 2,5 po spokojnym okresie przy podwyższonym VIX, co zawyża premie tickerów proxy. quantile: null → brak.
+    m_cap: {quantile: 0.95, min_obs: 250}
     spx_name: SPX                     # artifacts/market/underlyings.parquet: (SPX, Close)
   signals:
     min_history_months: 36            # percentyle w oknie rozszerzającym się; wcześniej polityka = P0
