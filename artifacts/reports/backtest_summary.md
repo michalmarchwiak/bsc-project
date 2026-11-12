@@ -1,37 +1,37 @@
 # Backtest – podsumowanie
 
-Przebieg `3ababedef5d8`; daty rebalansowania 2008-01-02 – 2026-10-01 (226), w tym okresy realizacji: kalibracja 156 mies., hold-out 69 mies. Opóźnienie wykonania 1 sesja, koszt 0.1% wartości transakcji, r_f – WIBOR 1M.
+Przebieg `c3ec64d93522`; daty rebalansowania 2008-01-02 – 2026-10-01 (226), w tym okresy realizacji: kalibracja 156 mies., hold-out 69 mies. Opóźnienie wykonania 1 sesja, koszt 0.1% wartości transakcji, r_f – WIBOR 1M.
 Szeregi bazowe: 232 (7 modeli × 4 strategie × 5 profili + 7 modeli × 4 strategie × 3 profile z nakładką opcyjną `_ov` + ew + idx_spx + idx_wig20 + 5 × mv_hist).
 Scenariusze: mediana N = 12500, maks. 50000; odsetek par (data, model) z N = n_max: 0.2%.
-Czas: średnio 721 s/datę (1 proces), łącznie 45.2 h CPU.
+Czas: średnio 786 s/datę (1 proces), łącznie 49.4 h CPU.
 Luzowanie c_LT: 0.00% problemów poziomu 2; W_max: 0.00%; maxret_es bez rozwiązania przy ES ≤ ES(EW) (min ES): 0.00%.
 
 ## Najlepsze szeregi wg CE – próba kalibracyjna
 
 | profil | 1. | 2. | 3. | ew (CE) | rvine/ce_dep (CE, miejsce) | w MCS |
 |---|---|---|---|---:|---|---:|
-| P1 | cvine/ce_dep (2.32) | cvine/ce (2.09) | empirical/ce_dep (2.05) | 0.81 | 1.39 (6.) | 32 |
-| P2 | cvine/ce_dep (3.63) | cvine/ce (3.36) | empirical/ce_dep (3.34) | 2.50 | 2.84 (6.) | 30 |
-| P3 | cvine/ce_ov (8.14) | rvine/ce_ov (7.42) | gauss/maxret_es_ov (7.11) | 3.64 | 4.39 (26.) | 59 |
-| P4 | cvine/ce_ov (12.09) | cvine/ce_dep_ov (11.67) | cvine/ce (11.02) | 4.80 | 8.27 (22.) | 50 |
-| P5 | cvine/ce_ov (18.27) | indep/ce_ov (17.49) | cvine/ce (17.43) | 5.69 | 14.00 (24.) | 33 |
+| P1 | cvine/ce_dep (2.65) | empirical/ce_dep (2.31) | gauss/ce_dep (2.15) | 0.81 | 1.69 (8.) | 32 |
+| P2 | cvine/ce_dep (4.29) | empirical/ce_dep (3.90) | gauss/maxret_es (3.38) | 2.50 | 3.03 (8.) | 31 |
+| P3 | gauss/ce_ov (5.99) | rvine/ce_ov (5.89) | student_t/ce_ov (5.84) | 3.64 | 4.17 (28.) | 58 |
+| P4 | cvine/ce_ov (11.29) | cvine/ce (11.02) | cvine/ce_dep_ov (10.85) | 4.80 | 8.27 (19.) | 49 |
+| P5 | cvine/ce (17.43) | cvine/ce_ov (17.08) | cvine/ce_dep (16.65) | 5.69 | 14.00 (22.) | 33 |
 
 ## Najlepsze szeregi wg CE – próba hold-out
 
 | profil | 1. | 2. | 3. | ew (CE) | rvine/ce_dep (CE, miejsce) | w MCS |
 |---|---|---|---|---:|---|---:|
-| P1 | student_t/ce_dep (3.70) | gauss/ce_dep (3.56) | cvine/min_es (3.11) | 3.08 | 2.53 (6.) | 32 |
-| P2 | idx_spx (5.20) | ew (4.09) | gauss/ce_dep (4.06) | 4.09 | 3.85 (6.) | 32 |
-| P3 | idx_spx (7.03) | gauss/ce_dep_ov (6.65) | student_t/ce_dep_ov (6.06) | 4.77 | 3.30 (31.) | 59 |
-| P4 | gauss/ce_dep_ov (10.00) | cvine/maxret_es_ov (9.94) | gauss/ce_ov (9.88) | 5.45 | 3.48 (46.) | 49 |
-| P5 | gauss/ce_dep_ov (20.46) | gauss/ce_ov (19.85) | student_t/ce_dep_ov (17.40) | 5.96 | 10.92 (31.) | 51 |
+| P1 | cvine/ce (4.11) | ew (3.08) | cvine/min_es (3.08) | 3.08 | 2.50 (10.) | 28 |
+| P2 | cvine/ce (6.15) | idx_spx (5.20) | indep/ce (4.80) | 4.09 | 3.75 (14.) | 30 |
+| P3 | empirical/ce_ov (7.77) | cvine/ce (7.30) | empirical/ce (7.23) | 4.77 | 5.44 (19.) | 56 |
+| P4 | cvine/maxret_es_ov (9.20) | gauss/ce_dep_ov (9.05) | gauss/ce_ov (8.97) | 5.45 | 3.48 (45.) | 49 |
+| P5 | gauss/ce_dep_ov (18.92) | gauss/ce_ov (18.32) | gauss/ce (17.30) | 5.96 | 10.92 (31.) | 49 |
 
 ## Testy VaR/ES (szeregi modelowe, odsetek bez odrzucenia na poziomie 5%)
 
 | próba | T (mies.) | oczekiwane przekr. | śr. przekr. | Kupiec | Christoffersen cc | Z₂ | DE uc | DE cc(5) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| kalibracyjna | 156 | 3.9 | 14.7 | 42% | 42% | 27% | 32% | 32% |
-| hold-out | 69 | 1.7 | 6.1 | 61% | 74% | 58% | 57% | 43% |
+| kalibracyjna | 156 | 3.9 | 14.5 | 48% | 48% | 33% | 38% | 25% |
+| hold-out | 69 | 1.7 | 6.1 | 62% | 72% | 60% | 60% | 37% |
 
 Przy próbie miesięcznej oczekiwana liczba przekroczeń jest mała, więc moc testów jest niska.
 
@@ -41,9 +41,9 @@ CE zrealizowany [% rocznie] przy γ profilu; wartości średnie po 7 modelach za
 
 | profil | base | lag0 | q10 | rhoS |
 |---|---:|---:|---:|---:|
-| P1 | 0.71 | 2.04 | 0.70 | 0.46 |
-| P2 | 2.55 | 3.52 | 2.50 | 2.30 |
-| P3 | 4.29 | 4.95 | 4.25 | 4.45 |
+| P1 | 1.23 | 2.32 | 1.25 | 1.23 |
+| P2 | 2.98 | 3.73 | 3.08 | 3.03 |
+| P3 | 4.27 | 4.86 | 4.31 | 4.63 |
 | P4 | 8.57 | 9.06 | 8.57 | 8.59 |
 | P5 | 14.26 | 14.75 | 14.28 | 14.15 |
 
@@ -51,9 +51,9 @@ Siatka κ (CE [% rocznie], średnia po modelach) i wybór κ maksymalizujący Σ
 
 | profil | κ = 0 | κ = 0.05 | κ = 0.15 | κ = 0.35 | κ = 0.6 | κ = 1 | κ = 2 | κ wyjściowe | κ wybrane |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| P1 | 0.10 | 0.11 | 0.21 | 0.35 | 0.50 | 0.71 | 1.32 | 1 | 2 |
-| P2 | 1.91 | 1.91 | 1.94 | 2.21 | 2.55 | 3.19 | 3.69 | 0.6 | 2 |
-| P3 | 4.73 | 4.70 | 4.66 | 4.29 | 4.81 | 5.18 | 5.24 | 0.35 | 2 |
+| P1 | 0.42 | 0.53 | 0.66 | 0.87 | 1.07 | 1.23 | 1.47 | 1 | 2 |
+| P2 | 2.31 | 2.34 | 2.37 | 2.63 | 2.98 | 3.27 | 3.44 | 0.6 | 2 |
+| P3 | 4.40 | 4.40 | 4.38 | 4.27 | 4.52 | 4.77 | 5.01 | 0.35 | 2 |
 | P4 | 8.59 | 8.69 | 8.57 | 8.45 | 8.42 | 7.97 | 6.93 | 0.15 | 0.05 |
 | P5 | 14.66 | 14.26 | 13.66 | 13.46 | 13.11 | 11.91 | 8.22 | 0.05 | 0 |
 
