@@ -14,6 +14,8 @@ konstruowana z prognoz GARCH i indeksów zmienności Cboe.
 
 2. Mnożnik premii za ryzyko zmienności: m_t = (atm_adj · VIX_t/100) / σ̂_{SPX,t}(21) – stosunek zmienności ATM
    S&P 500 do prognozy GARCH (``atm_adj_in_m``; przy atm_adj = 1: m_t = VIX/σ̂_SPX).
+   Ograniczenie górne (``m_cap``): m_t ≤ kwantyl historii m_s z okna estymacji (dane ≤ t − 1), co usuwa skoki m_t
+   po spokojnym okresie przy podwyższonym VIX.
 
 3. Źródło ``iv_source`` (``config/options.yaml: monthly_overlay.implied_vol``):
    * VIX / OVX / GVZ: σ_imp = atm_adj · indeks/100; dla VIX przy τ ≠ 30 dni interpolacja wariancji całkowitej
@@ -117,6 +119,59 @@ def market_multiplier(vix_pct: float, sigma_spx: float, icfg: dict) -> float:
     VIX przewyższa zmienność ATM S&P 500; bez korekty m_t przenosiłby tę różnicę na σ_imp tickerów proxy."""
     adj = float(icfg.get("atm_adj", 1.0)) if icfg.get("atm_adj_in_m", True) else 1.0
     return vrp_multiplier(adj * vix_pct, sigma_spx)
+
+
+def filtered_variance(fit: MarginFit, r) -> tuple[np.ndarray, np.ndarray]:
+    """Innowacje ε_s i wariancje σ²_s (×scale²) z filtru AR(1)–GJR-GARCH przy parametrach ``fit`` na log-stopach ``r``.
+
+    Start filtru: wariancja próbkowa innowacji (wpływ startu zanika geometrycznie w tempie β)."""
+    y = fit.scale * np.asarray(r, dtype=float)
+    eps = y[1:] - fit.mu - fit.phi * y[:-1]
+    s2 = np.empty(len(eps))
+    if len(eps):
+        s2[0] = float(np.var(eps))
+    for i in range(1, len(eps)):
+        lev = fit.gamma if eps[i - 1] < 0 else 0.0
+        s2[i] = fit.omega + (fit.alpha + lev) * eps[i - 1] ** 2 + fit.beta * s2[i - 1]
+    return eps, s2
+
+
+def multiplier_history(fit: MarginFit, r: pd.Series, vix: pd.Series, n: int, skip: int = 0, trading_days: int = 252,
+                       atm_adj: float = 1.0) -> pd.Series:
+    """Historia m_s w oknie estymacji: (atm_adj · VIX_{s+1}/100) / σ̂_{SPX,s}(n) dla sesji s okna.
+
+    σ̂_{SPX,s}(n) to prognoza z informacji ≤ s przy parametrach ``fit``, a VIX pochodzi z kolejnej sesji okna, tak jak
+    w m_t (model z danych ≤ t − 1, VIX z t). Ostatnia sesja okna nie ma pary, więc szereg używa tylko danych z okna.
+    ``r`` – log-stopy S&P 500 w oknie (indeks dat), ``vix`` – poziomy VIX [p.p.] na tych samych datach."""
+    eps, s2 = filtered_variance(fit, r.to_numpy(float))
+    if len(eps) < 2:
+        return pd.Series(dtype=float)
+    nxt = fit.omega + (fit.alpha + np.where(eps < 0, fit.gamma, 0.0)) * eps ** 2 + fit.beta * s2
+    v = variance_path(nxt, fit.omega, persistence(fit), n, skip)
+    sig = np.sqrt(trading_days / n * v.sum(axis=-1)) / fit.scale
+    lvl = vix.reindex(r.index).to_numpy(float)[2:]          # VIX w sesji s + 1; eps[0] odpowiada r.index[1]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        m = np.where(sig[:-1] > 0, atm_adj * lvl / 100.0 / sig[:-1], np.nan)
+    return pd.Series(m, index=r.index[2:], name="m")
+
+
+def multiplier_cap(history, ccfg: dict | None) -> float:
+    """Górne ograniczenie m_t: kwantyl ``quantile`` historii m_s z okna estymacji (``m_cap`` w konfiguracji).
+
+    Brak sekcji, ``quantile: null`` albo mniej niż ``min_obs`` skończonych obserwacji → +inf (bez ograniczenia)."""
+    q = (ccfg or {}).get("quantile")
+    if q is None:
+        return float("inf")
+    h = np.asarray(history, dtype=float)
+    h = h[np.isfinite(h)]
+    if len(h) < int((ccfg or {}).get("min_obs", 250)):
+        return float("inf")
+    return float(np.quantile(h, float(q)))
+
+
+def capped_multiplier(m: float, cap: float) -> float:
+    """min(m_t, cap); NaN przechodzi bez zmian."""
+    return float(min(m, cap)) if np.isfinite(m) else m
 
 
 # --------------------------------------------------------------------------- indeksy zmienności

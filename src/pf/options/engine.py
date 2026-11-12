@@ -74,6 +74,18 @@ def variant_ledger(L: pd.DataFrame, spec: dict, icfg: dict) -> pd.DataFrame:
     return ledger_mod.reprice(L, sig, spec["beta"], icfg["sigma_min"])
 
 
+def multiplier_cap(market: MarketData, model, t: pd.Timestamp, cfg: dict, icfg: dict, skip: int, td: int) -> float:
+    """Ograniczenie m_t w dacie t: kwantyl historii m_s z okna estymacji marginesu S&P 500 (dane ≤ t − 1)."""
+    ccfg = icfg.get("m_cap")
+    if not ccfg or ccfg.get("quantile") is None or model.spx is None or "VIX" not in market.vol.columns:
+        return float("inf")
+    r = scenarios.spx_window(market, t, int(cfg["rebalance"]["window_days"]))
+    vix = market.vol["VIX"].dropna().reindex(r.index, method="ffill", tolerance=pd.Timedelta(days=7))
+    adj = float(icfg.get("atm_adj", 1.0)) if icfg.get("atm_adj_in_m", True) else 1.0
+    hist = ivm.multiplier_history(model.spx, r, vix, int(icfg.get("m_horizon", 21)), skip, td, adj)
+    return ivm.multiplier_cap(hist, ccfg)
+
+
 # --------------------------------------------------------------------------- krok daty
 
 def date_step(period: dict, market: MarketData, cfg: dict, ocfg: dict, subfunds: dict, seed: int,
@@ -97,7 +109,9 @@ def date_step(period: dict, market: MarketData, cfg: dict, ocfg: dict, subfunds:
     S_t = S_t.reindex(tickers)
     levels = {v: market.vol_level(v, t_open) for v in VOL_NAMES}
     sigma_spx = ivm.garch_vol(model.spx, int(icfg.get("m_horizon", 21)), skip, td) if model.spx else float("nan")
-    m = ivm.market_multiplier(levels.get("VIX", np.nan), sigma_spx, icfg)
+    m_raw = ivm.market_multiplier(levels.get("VIX", np.nan), sigma_spx, icfg)
+    m_cap = multiplier_cap(market, model, t, cfg, icfg, skip, td)
+    m = ivm.capped_multiplier(m_raw, m_cap)
     sig = ivm.sigma_table(tickers, model.margins, n, skip, m, levels, days, icfg, td)
     fx_t = market.fx_of(t_open, tickers)
     if pd.notna(t_close):
@@ -141,7 +155,7 @@ def date_step(period: dict, market: MarketData, cfg: dict, ocfg: dict, subfunds:
                 info_rows.append({"date": t, "subfund": sf, "policy": pname, "variant": spec["variant"],
                                   "kind": nav.overlay_kind(pos), **{k: v for k, v in info.items() if k != "zeta"}})
     state = {"date": t, "open": t_open, "close": t_close, "n_sessions": n, "tau": tau, "days": days, "m": m,
-             "sigma_spx": sigma_spx, **{f"lvl_{k}": v for k, v in levels.items()}, "rate_pln": y_pln,
+             "m_raw": m_raw, "m_cap": m_cap, "sigma_spx": sigma_spx, **{f"lvl_{k}": v for k, v in levels.items()}, "rate_pln": y_pln,
              "rate_usd": y_usd, "n_tickers": len(tickers), "dep_model": model.dep.name,
              "nu": float(getattr(model.dep, "nu", np.nan)), "model_cached": model.cached,
              "n_refit": len(getattr(model, "refit", [])), "refit": ",".join(getattr(model, "refit", [])),

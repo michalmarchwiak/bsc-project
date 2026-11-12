@@ -138,6 +138,34 @@ def test_date_step_deterministic_and_no_lookahead(setup):
     assert np.isfinite(a["state"]["m"].iloc[0])
 
 
+def test_date_step_multiplier_cap(setup):
+    market, cfg, ocfg, periods = setup
+    per = periods.iloc[2].to_dict()
+
+    def step(quantile):
+        o = overlay_config()
+        o["implied_vol"]["m_cap"] = {"quantile": quantile, "min_obs": 100}
+        res = engine.date_step(per, market, cfg, o, SUBFUNDS, seed=11)
+        return res["state"].iloc[0], res["tickers"].set_index("ticker")
+
+    free, tick_free = step(None)
+    assert free["m"] == free["m_raw"] and free["m_cap"] == float("inf")
+    low, tick_low = step(0.05)                                        # kwantyl 5% wiąże w prawie każdej dacie
+    assert low["m_raw"] == pytest.approx(free["m_raw"]) and np.isfinite(low["m_cap"])
+    assert low["m_cap"] < low["m_raw"] and low["m"] == pytest.approx(low["m_cap"])
+    proxy = tick_low["iv_source"] == "proxy"
+    ratio = tick_low.loc[proxy, "sigma_imp"] / tick_free.loc[proxy, "sigma_imp"]
+    np.testing.assert_allclose(ratio.to_numpy(), low["m"] / free["m"], rtol=1e-9)   # σ_imp proxy skaluje się z m_t
+    index = ~proxy                                                                # GVZ: bez wpływu ograniczenia
+    np.testing.assert_allclose(tick_low.loc[index, "sigma_imp"], tick_free.loc[index, "sigma_imp"])
+    # ograniczenie używa tylko danych sprzed t_j
+    trunc = engine.date_step(per, _truncate(market, per["open"]),
+                             cfg, {**overlay_config(), "implied_vol": {**overlay_config()["implied_vol"],
+                                                                         "m_cap": {"quantile": 0.05, "min_obs": 100}}},
+                             SUBFUNDS, seed=11)["state"].iloc[0]
+    assert trunc["m_cap"] == pytest.approx(low["m_cap"], rel=1e-12)
+
+
 def test_consolidation_p012_and_nav(setup):
     market, cfg, ocfg, periods = setup
     parts = [engine.date_step(periods.iloc[j].to_dict(), market, cfg, ocfg, SUBFUNDS, seed=11)

@@ -198,3 +198,18 @@ def test_mv_two_level_limits():
     assert res.W.sum() == pytest.approx(1.0)
     assert res.x.max() <= res.flags["lt_factor"] * prof.c_lt + 1e-9
     assert res.flags["lt_relaxed"]   # 2 SF × limity P2 są niedopuszczalne bez luzowania
+
+
+def test_config_subfund_limits_bind_for_conservative_profiles():
+    """P1–P3: w_max poniżej c_lt/c_sf (limit SF wiąże przed look-through); limity niemalejące z ryzykiem profilu."""
+    profs = load_profiles(config.load("profiles"))
+    order = ["P1", "P2", "P3", "P4", "P5"]
+    for pid in ("P1", "P2", "P3"):
+        assert 0.20 <= profs[pid].w_max <= 0.25 and profs[pid].w_max < profs[pid].c_lt / profs[pid].c_sf
+    w = [profs[p].w_max for p in order]
+    assert w == sorted(w)
+    ub, flags = relaxed_upper_bounds(np.full(8, profs["P1"].c_sf), profs["P1"].w_max, profs["P1"].c_lt)
+    assert not flags["wmax_relaxed"] and not flags["lt_relaxed"] and ub.max() == pytest.approx(profs["P1"].w_max)
+    _, tight = relaxed_upper_bounds(np.full(4, profs["P1"].c_sf), profs["P1"].w_max, profs["P1"].c_lt)
+    assert tight["wmax_relaxed"]
+

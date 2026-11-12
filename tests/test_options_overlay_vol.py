@@ -1,6 +1,7 @@
 """Nakładka opcyjna – Etap 2: prognoza GARCH zmienności, m_t, σ z indeksów Cboe, proxy, korekta skośności."""
 
 import numpy as np
+import pandas as pd
 import pytest
 from scipy import integrate
 
@@ -103,3 +104,55 @@ def test_market_multiplier_atm_adjustment():
     assert ivm.market_multiplier(20.0, 0.16, {"atm_adj": 1.0}) == pytest.approx(1.25)
     assert ivm.market_multiplier(20.0, 0.16, {"atm_adj": 0.8}) == pytest.approx(1.0)
     assert ivm.market_multiplier(20.0, 0.16, {"atm_adj": 0.8, "atm_adj_in_m": False}) == pytest.approx(1.25)
+
+
+# --------------------------------------------------------------------------- ograniczenie m_t (m_cap)
+
+def _spx_returns(n=400, seed=5):
+    rng = np.random.default_rng(seed)
+    idx = pd.bdate_range("2015-01-05", periods=n)
+    return pd.Series(rng.standard_t(6, size=n) * 0.009, index=idx)
+
+
+def test_multiplier_history_constant_variance():
+    r = _spx_returns()
+    vix = pd.Series(20.0, index=r.index)
+    f = fit(mu=0.0, phi=0.0, alpha=0.0, gamma=0.0, beta=0.0, omega=1.44)
+    h = ivm.multiplier_history(f, r, vix, 21, skip=1)
+    assert h.index.equals(r.index[2:]) and len(h) == len(r) - 2
+    np.testing.assert_allclose(h.to_numpy(), 0.20 / (np.sqrt(252 * 1.44) / 100), rtol=1e-12)
+    half = ivm.multiplier_history(f, r, vix, 21, skip=1, atm_adj=0.5)
+    np.testing.assert_allclose(half.to_numpy(), 0.5 * h.to_numpy(), rtol=1e-12)
+
+
+def test_multiplier_history_matches_m_t_definition_and_window_only():
+    r = _spx_returns()
+    vix = pd.Series(15.0 + 10.0 * np.abs(np.sin(np.arange(len(r)) / 17.0)), index=r.index)
+    f = fit()
+    h = ivm.multiplier_history(f, r, vix, 21, skip=1)
+    # ostatni element: model ze stanem w przedostatniej sesji okna i VIX z ostatniej sesji okna (jak m_t w dacie t)
+    eps, s2 = ivm.filtered_variance(f, r.to_numpy())
+    state = fit(last_eps=float(eps[-2]), last_sigma2=float(s2[-2]))
+    m_last = ivm.vrp_multiplier(float(vix.iloc[-1]), ivm.garch_vol(state, 21, 1))
+    assert h.iloc[-1] == pytest.approx(m_last, rel=1e-12)
+    # historia do sesji s zależy od danych po s tylko przez start filtru (wariancja próbkowa okna), który zanika z β
+    cut = 300
+    h_cut = ivm.multiplier_history(f, r.iloc[:cut], vix.iloc[:cut], 21, skip=1)
+    np.testing.assert_allclose(h_cut.to_numpy()[150:], h.iloc[150:cut - 2].to_numpy(), rtol=1e-6)
+    # brak VIX w sesji → NaN w historii, bez wpływu na pozostałe sesje
+    gap = vix.copy()
+    gap.iloc[50] = np.nan
+    hg = ivm.multiplier_history(f, r, gap, 21, skip=1)
+    assert np.isnan(hg.iloc[48]) and hg.drop(hg.index[48]).equals(h.drop(h.index[48]))
+
+
+def test_multiplier_cap_quantile_min_obs_and_disabled():
+    hist = np.concatenate([np.linspace(0.5, 1.5, 300), [np.nan, np.inf]])
+    cap = ivm.multiplier_cap(hist, {"quantile": 0.95, "min_obs": 250})
+    assert cap == pytest.approx(np.quantile(np.linspace(0.5, 1.5, 300), 0.95))
+    assert ivm.multiplier_cap(hist, {"quantile": 0.95, "min_obs": 301}) == float("inf")
+    assert ivm.multiplier_cap(hist, {"quantile": None}) == float("inf")
+    assert ivm.multiplier_cap(hist, None) == float("inf")
+    assert ivm.capped_multiplier(2.5, cap) == pytest.approx(cap)
+    assert ivm.capped_multiplier(1.0, cap) == 1.0 and ivm.capped_multiplier(1.0, float("inf")) == 1.0
+    assert np.isnan(ivm.capped_multiplier(float("nan"), cap))
