@@ -95,7 +95,7 @@ def test_pipeline_end_to_end(tmp_path):
     assert {"options/ledger", "subfunds_overlay_nav", "options/portfolio_periods", "options/annual_mc"} <= set(manifest)
     assert manifest["options/ledger"]["params"]["band"] == ocfg["band"]
     path = om.write_report(cons, pp, None, annual, ocfg, pcfg, tmp_path)
-    md = path.read_text()
+    md = path.read_text(encoding="utf-8")
     assert "hipotetyczne" in md and "## Portfele" in md and "Scenariusze roczne" in md and "| SF1 | P3 |" in md
     again = om.load_consolidated(tmp_path)
     assert len(again["ledger"]) == len(led) and len(again["decisions"]) == len(cons["decisions_out"])
