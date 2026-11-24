@@ -105,7 +105,7 @@
     }
   },
   "market/vol_indices": {
-    "updated_utc": "2026-11-21T03:26:11+00:00",
+    "updated_utc": "2026-11-24T06:21:05+00:00",
     "versions": {
       "python": "3.12.16",
       "numpy": "2.5.5",
@@ -116,105 +116,105 @@
       "requests": "2.34.2"
     },
     "path": "market/vol_indices.parquet",
-    "sha256": "3f25d2804c3cd85910feddb7f9f0836bd962de2b917297327c5c7d5dede93297",
-    "n_rows": 5542,
+    "sha256": "b0cb56649488fb95de865c5197092ea6f5e923610356f587bd502e3107d62506",
+    "n_rows": 5543,
     "params": {
       "validation": {
         "VIX9D": {
           "source": "cboe",
-          "n_obs": 3995,
+          "n_obs": 3996,
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
           "first_date": "2011-01-04",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 3
         },
         "VIX": {
           "source": "cboe",
-          "n_obs": 5540,
+          "n_obs": 5541,
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
           "first_date": "2005-01-03",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 3
         },
         "VIX3M": {
           "source": "cboe",
-          "n_obs": 4321,
+          "n_obs": 4322,
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
           "first_date": "2009-09-18",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 3
         },
         "VIX6M": {
           "source": "cboe",
-          "n_obs": 4753,
+          "n_obs": 4754,
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
           "first_date": "2008-01-02",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 3
         },
         "VIX1Y": {
           "source": "cboe",
-          "n_obs": 4998,
+          "n_obs": 4999,
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
           "first_date": "2007-01-03",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 3
         },
         "VVIX": {
           "source": "cboe",
-          "n_obs": 5152,
+          "n_obs": 5153,
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
           "first_date": "2006-03-06",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 15
         },
         "SKEW": {
           "source": "cboe",
-          "n_obs": 5502,
+          "n_obs": 5503,
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
           "first_date": "2005-01-03",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 3
         },
         "OVX": {
           "source": "cboe",
-          "n_obs": 4319,
+          "n_obs": 4320,
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
           "first_date": "2009-09-18",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 3
         },
         "GVZ": {
           "source": "cboe",
-          "n_obs": 4319,
+          "n_obs": 4320,
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
           "first_date": "2009-09-18",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 3
         }
       }
     }
   },
   "market/underlyings": {
-    "updated_utc": "2026-11-21T03:26:13+00:00",
+    "updated_utc": "2026-11-24T06:21:08+00:00",
     "versions": {
       "python": "3.12.16",
       "numpy": "2.5.5",
@@ -225,38 +225,38 @@
       "requests": "2.34.2"
     },
     "path": "market/underlyings.parquet",
-    "sha256": "4c7d09d56d858c0008c0d87c77499446ce1fcf443cb49393724403a2f3f33e5a",
-    "n_rows": 5507,
+    "sha256": "ef7ee7465b421ecf272fdfa678b8022497ae5736b26f85d3927bca8fa7274e59",
+    "n_rows": 5508,
     "params": {
       "validation": {
         "SPY": {
           "source": "yahoo",
-          "n_obs": 5507,
+          "n_obs": 5508,
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
           "first_date": "2005-01-03",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 3
         },
         "SPX": {
           "source": "yahoo",
-          "n_obs": 5507,
+          "n_obs": 5508,
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
           "first_date": "2005-01-03",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 3
         },
         "SPXTR": {
           "source": "yahoo",
-          "n_obs": 5507,
+          "n_obs": 5508,
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
           "first_date": "2005-01-03",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 3
         },
         "WIG20": {
@@ -265,45 +265,45 @@
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
-          "first_date": "2026-11-20",
-          "last_date": "2026-11-20",
+          "first_date": "2026-11-23",
+          "last_date": "2026-11-23",
           "max_gap_bdays": null
         },
         "GLD": {
           "source": "yahoo",
-          "n_obs": 5507,
+          "n_obs": 5508,
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
           "first_date": "2005-01-03",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 3
         },
         "USO": {
           "source": "yahoo",
-          "n_obs": 5188,
+          "n_obs": 5189,
           "n_duplicates": 0,
           "n_nonpositive": 0,
           "n_missing": 0,
           "first_date": "2006-04-10",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 3
         },
         "IRX": {
           "source": "yahoo",
-          "n_obs": 5495,
+          "n_obs": 5496,
           "n_duplicates": 0,
           "n_nonpositive": 7,
           "n_missing": 0,
           "first_date": "2005-01-03",
-          "last_date": "2026-11-20",
+          "last_date": "2026-11-23",
           "max_gap_bdays": 8
         }
       }
     }
   },
   "raw/options_snapshots/SPY/latest": {
-    "updated_utc": "2026-11-21T03:27:00+00:00",
+    "updated_utc": "2026-11-24T06:21:54+00:00",
     "versions": {
       "python": "3.12.16",
       "numpy": "2.5.5",
@@ -313,9 +313,9 @@
       "yfinance": "1.8.0",
       "requests": "2.34.2"
     },
-    "path": "raw/options_snapshots/date=2026-11-20/SPY.parquet",
-    "sha256": "cfc0caab3105232a29283478f88bd6126f52e5c1e1fa70e5914bafe819b2c35c",
-    "n_rows": 10260,
+    "path": "raw/options_snapshots/date=2026-11-24/SPY.parquet",
+    "sha256": "3d1f27b79b7baec45c1a01c4359547df3a0e8818c3dd9980fa107a5ab0193931",
+    "n_rows": 9930,
     "params": {
       "source": "yfinance",
       "note": "dane nieoficjalne, użytek osobisty"
