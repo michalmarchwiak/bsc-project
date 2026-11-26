@@ -317,8 +317,8 @@
     \item \(W_k\le\min(W_{\max},c_{LT}/m_k)\), więc \(W_{\max}\) wiąże
       tylko poniżej \(c_{LT}/c_{SF}\): dla P1--P3 ustawiono go poniżej
       tego progu.
-    \item Wykresy struktury: przebieg \texttt{7d0ff370e76f}; tabele:
-      \texttt{3ababedef5d8} (\(W_{\max}\) = 0,40/0,45/0,50 dla P1--P3).
+    \item Wyniki na kolejnych slajdach: przebieg \texttt{7d0ff370e76f}
+      z powyższymi limitami.
   \end{itemize}
   \src{config/profiles.yaml}{Parametry profili}
 \end{frame}
@@ -504,13 +504,13 @@
     na poziomie 97,5\%}\par\medskip
   \begin{tikzpicture}[x=.55cm,y=.37cm,font=\small]
     \fill[Teal!27] (0,3.2) rectangle (3.9,3.85);
-    \fill[Teal] (0,2.43) rectangle (14.7,3.08);
+    \fill[Teal] (0,2.43) rectangle (14.5,3.08);
     \fill[Teal!27] (0,1.15) rectangle (1.7,1.8);
     \fill[Teal] (0,.38) rectangle (6.1,1.03);
     \node[anchor=east] at (-.25,3.18) {Kalibracja (156)};
     \node[anchor=east] at (-.25,1.1) {Hold-out (69)};
     \node[anchor=west] at (3.9,3.52) {3,9};
-    \node[anchor=west] at (14.7,2.75) {14,7};
+    \node[anchor=west] at (14.5,2.75) {14,5};
     \node[anchor=west] at (1.7,1.47) {1,7};
     \node[anchor=west] at (6.1,.7) {6,1};
     \node at (9.5,4.55)
@@ -525,10 +525,10 @@
       -- niezależność przekroczeń.
     \item ES: test \(Z_2\) \citep{acerbi2014} i test na PIT
       \(u_t=\hat F_t(L_t)\) \citep{du2017}.
-    \item Około 55\% przekroczeń w hold-oucie przypadło na 2022 r.;
+    \item Około 53\% przekroczeń w hold-oucie przypadło na 2022 r.;
       przy próbie miesięcznej moc testów jest niska.
   \end{itemize}
-  \src{artifacts/reports/backtest_summary.md}{Raport przebiegu 3ababedef5d8}
+  \src{artifacts/reports/backtest_summary.md}{Raport przebiegu 7d0ff370e76f}
 \end{frame}
 
 \begin{frame}{Wpływ na alokację zależał od profilu}
@@ -541,9 +541,9 @@
     Profil & \texttt{ce\_dep} & \texttt{ce} & Równe wagi
            & Śr.--wariancja & SPY\\
     \midrule
-    P1 & 2,16  & 1,03  & 3,08 & 2,02  & 2,49\\
-    P2 & 3,06  & 2,09  & 4,09 & 3,36  & 5,20\\
-    P3 & 3,59  & 2,52  & 4,77 & 5,62  & 7,03\\
+    P1 & 2,53  & 2,31  & 3,08 & 2,57  & 2,49\\
+    P2 & 3,96  & 4,24  & 4,09 & 4,25  & 5,20\\
+    P3 & 5,44  & 5,94  & 4,77 & 5,61  & 7,03\\
     P4 & 5,88  & 6,92  & 5,45 & 8,43  & 8,88\\
     P5 & 13,02 & 13,12 & 5,96 & 11,42 & 10,28\\
     \bottomrule
@@ -553,10 +553,10 @@
     \item Wyniki \texttt{ce\_dep} i \texttt{ce} uśredniono po
       siedmiu modelach. Obie strategie pobiły wszystkie benchmarki
       tylko w P5.
-    \item Kara \(\kappa\) podnosi CE w P1--P3, obniża w P4--P5;
+    \item Kara \(\kappa\) podnosi CE tylko w P1 (w kalibracji też w P2);
       MCS nie rozróżnia większości strategii.
   \end{itemize}
-  \src{README.md}{Tabela wyników przebiegu 3ababedef5d8}
+  \src{artifacts/reports/ranking_holdout.md}{Ranking hold-out przebiegu 7d0ff370e76f}
 \end{frame}
 
 % ============================================================ zakończenie
@@ -578,9 +578,9 @@
   \begin{enumerate}
     \item \textbf{Modelowanie.} R-vine ma najlepsze BIC i jako jedyny
       należy do MCS według log-score poza próbą, ale najlepsze portfele
-      w hold-oucie dały kopuły Gaussa i \(t\).
+      w hold-oucie dały C-vine (P1, P2, P4) i kopuła Gaussa (P5).
     \item \textbf{Użyteczność.} Kara za zależność w ogonie zwiększa CE
-      inwestorów o wysokim \(\gamma\) (P1--P3), obniża dla P4--P5.
+      tylko przy najwyższym \(\gamma\) (P1), w pozostałych profilach obniża.
     \item \textbf{Struktura.} Koncentrację w P4--P5 wyznacza limit
       look-through \(c_{LT}\) (głównie SF1 i SF2), w P1--P3 limit
       \(W_{\max}\).
