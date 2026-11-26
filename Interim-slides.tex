@@ -3,6 +3,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern,amsmath,amssymb,booktabs,tikz}
 \usetikzlibrary{positioning,arrows.meta}
+\usepackage[authoryear,round]{natbib}
+\bibpunct{(}{)}{;}{a}{}{,}
 \graphicspath{{figures/backtest/}}
 
 \definecolor{Ink}{HTML}{15263C}
@@ -14,6 +16,11 @@
 \setbeamercolor{block title}{fg=white,bg=Teal}
 \setbeamercolor{block body}{fg=Ink,bg=Paper}
 \setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{bibliography item}{}
+\setbeamercolor{bibliography entry author}{fg=Ink}
+\setbeamercolor{bibliography entry title}{fg=Ink}
+\setbeamercolor{bibliography entry location}{fg=Teal}
+\setbeamercolor{bibliography entry note}{fg=Teal}
 \setbeamertemplate{footline}{%
   \hfill\color{Teal}\insertframenumber\,/\,\inserttotalframenumber
   \hspace{5mm}\vspace{2mm}}
@@ -53,7 +60,9 @@
   \begin{itemize}
     \item \textbf{Model danych.} Rozkład łączny stóp zwrotu
       \(F(r_1,\dots,r_d)=C\bigl(F_1(r_1),\dots,F_d(r_d)\bigr)\):
-      osobno marginesy \(F_i\), osobno kopuła \(C\) (tw.\ Sklara).
+      osobno marginesy \(F_i\), osobno kopuła \(C\) (tw.\ Sklara;
+      \citealp{sklar1959}). Korelacja liniowa nie opisuje
+      zależności w ogonach \citep{embrechts2002}.
     \item \textbf{Decyzja.} Wagi maksymalizują ekwiwalent pewności
       funkcji użyteczności CRRA z karą za zależność w dolnym ogonie.
     \item \textbf{Ocena ryzyka.} VaR i ES z symulacji Monte Carlo,
@@ -72,6 +81,8 @@
       \item Dzienne log-stopy w PLN:
         \(r_{i,t}=\ln P_{i,t}-\ln P_{i,t-1}\).
       \item WIBOR 1M jako stopa wolna od ryzyka.
+      \item Aktywa USA przeliczone na PLN zawierają ryzyko
+        walutowe \citep{kurach2016}.
     \end{itemize}
     \column{.47\textwidth}
     \textbf{Struktura dwupoziomowa}
@@ -104,12 +115,14 @@
   \begin{itemize}
     \item AR(1) opisuje średnią, GJR-GARCH(1,1) -- skupianie zmienności
       i asymetrię (\(\delta>0\): spadki zwiększają zmienność bardziej
-      niż wzrosty).
-    \item Skośny rozkład \(t\) Hansena: grube ogony (\(\eta\)) i
+      niż wzrosty; \citealp{glosten1993}; dla rynków CEE:
+      \citealp{botoc2017}).
+    \item Skośny rozkład \(t\) \citet{hansen1994}: grube ogony (\(\eta\)) i
       skośność (\(\lambda\)).
-    \item Estymacja MNW; standaryzowane reszty
+    \item Estymacja MNW (pakiet \texttt{arch}, \citealp{arch});
+      standaryzowane reszty
       \(\hat z_t=\hat\varepsilon_t/\hat\sigma_t\) są w przybliżeniu iid
-      i przenoszą informację o zależności.
+      i przenoszą informację o zależności \citep{mcneil2000}.
     \item SF10: margines deterministyczny, \(r_h=\hat\mu\) (średnia z 21
       sesji), poza kopułą.
   \end{itemize}
@@ -153,15 +166,16 @@
                               F(u_{b_e}\mid u_{D_e})\Bigr),
   \]
   a warunkowe dystrybuanty liczymy rekurencyjnie \(h\)-funkcjami
-  \(h(u\mid v)=\partial C(u,v)/\partial v\).
+  \(h(u\mid v)=\partial C(u,v)/\partial v\)
+  \citep{bedford2002,aas2009}.
   \begin{itemize}
-    \item Struktura: algorytm Dißmanna (maks.\ drzewa rozpinające
+    \item Struktura: algorytm \citet{dissmann2013} (maks.\ drzewa rozpinające
       z wagami \(|\hat\tau_{\text{Kendall}}|\)), obcięcie na \(L=3\).
     \item Rodziny: Gauss, \(t\), Clayton, Gumbel (z obrotami), Frank;
       wybór AIC, sekwencyjna MNW.
     \item Porównanie: R-, C-, D-vine, Gauss, \(t\)-Student,
-      niezależność, empiryczna; AIC/BIC, test Vuonga, log-score
-      poza próbą.
+      niezależność, empiryczna; AIC/BIC, test \citet{vuong1989},
+      log-score poza próbą; por.\ \citet{muller2024}.
   \end{itemize}
   \src{src/pf/models/rvine.py}{Estymacja R-vine}
 \end{frame}
@@ -213,13 +227,15 @@
     Nie jest subaddytywny.
     \column{.50\textwidth}
     \textbf{ES} -- średnia strata w najgorszych \(1-\alpha\)
-    scenariuszach. Miara koherentna, wypukła w wagach.
+    scenariuszach. Miara koherentna \citep{artzner1999,acerbi2002},
+    wypukła w wagach.
   \end{columns}
   \medskip
   Empirycznie:
   \(\widehat{\mathrm{ES}}_\alpha=\frac{1}{\lceil(1-\alpha)N\rceil}
   \sum_{s\in\text{ogon}}L_s\).
-  Poziom w backteście: \(\alpha=97{,}5\%\), horyzont 21 sesji.
+  Poziom w backteście: \(\alpha=97{,}5\%\), horyzont 21 sesji
+  \citep[rozdz.~2]{mcneil2005}.
   \src{src/pf/opt/cvar.py}{Empiryczne VaR i ES}
 \end{frame}
 
@@ -232,7 +248,8 @@
       u_\gamma(g)=\frac{g^{1-\gamma}}{1-\gamma},\qquad
       u_1(g)=\ln g,
     \]
-    względna awersja do ryzyka \(-g\,u''/u'=\gamma\) jest stała.
+    względna awersja do ryzyka \(-g\,u''/u'=\gamma\) jest stała
+    \citep{pratt1964}.
     Ekwiwalent pewności na scenariuszach:
     \[
       \mathrm{CE}_\gamma(w)=\Bigl(\tfrac1N\sum_{s}
@@ -267,7 +284,8 @@
   \]
   \begin{itemize}
     \item Funkcja celu jest wklęsła \(\Rightarrow\) optimum globalne
-      (SLSQP z gradientem \(\nabla D=2\Lambda w\)).
+      (SLSQP z gradientem \(\nabla D=2\Lambda w\);
+      \citealp{scipy2020}).
     \item Niezależne aktywa: \(\Lambda_{ij}\approx q\); komonotoniczne:
       \(\Lambda_{ij}=1\). SF10 (stała stopa) ma \(\Lambda_{ij}=0\).
     \item \(\sigma^{EW}\) skaluje karę do zmienności portfela równych wag.
@@ -330,7 +348,7 @@
 \end{frame}
 
 \begin{frame}{Strategie porównawcze: minimalizacja ES jako LP}
-  Dla \(N\) jednakowo prawdopodobnych scenariuszy (Rockafellar--Uryasev):
+  Dla \(N\) jednakowo prawdopodobnych scenariuszy \citep{rockafellar2000}:
   \[
     \begin{aligned}
       \min_{w,\,z,\,u}\quad &
@@ -346,7 +364,7 @@
     \item \texttt{ce}: \(\kappa=0\); \texttt{ce\_dep}: z karą
       za zależność (strategia główna).
     \item Benchmarki: równe wagi, średnia--wariancja
-      (\(\max\mu^\top w-\tfrac\gamma2 w^\top\Sigma w\), \(\Sigma\) Ledoita--Wolfa),
+      (\(\max\mu^\top w-\tfrac\gamma2 w^\top\Sigma w\), \(\Sigma\) wg \citealp{ledoit2004}),
       SPY, WIG20TR.
   \end{itemize}
   \src{src/pf/opt/cvar.py}{Implementacja optymalizacji opartej na ES}
@@ -448,17 +466,17 @@
     \column{.55\textwidth}
     \textbf{MC ex post} na zrealizowanych dziennych stopach netto:
     \begin{itemize}
-      \item \textbf{Bootstrap stacjonarny} (Politis--Romano): bloki
+      \item \textbf{Bootstrap stacjonarny} \citep{politis1994}: bloki
         o długości \(\sim\mathrm{Geom}(1/b)\),
-        \(b=\max\bigl(\hat b(r),\hat b(r^2)\bigr)\) -- zachowuje
-        autokorelację i skupianie zmienności.
-      \item \textbf{FHS}: GJR-GARCH na szeregu, \(\varepsilon_h=\sigma_h\hat z^*\),
+        \(b=\max\bigl(\hat b(r),\hat b(r^2)\bigr)\),
+        \(\hat b\) wg \citet{politis2004}.
+      \item \textbf{FHS} \citep{barone1999}: GJR-GARCH na szeregu, \(\varepsilon_h=\sigma_h\hat z^*\),
         \(\hat z^*\) losowane ze zwracaniem z reszt.
       \item Ścieżki 21-dniowe \(\Rightarrow\)
         \(R=\prod_h(1+r_h)-1\), ES ex post z SE.
     \end{itemize}
-    \textbf{Wnioskowanie:} MCS (bootstrap stacjonarny, 5000 repl.),
-    test Ledoita--Wolfa różnicy Sharpe'a (bootstrap blokowy, blok 3 mies.).
+    {\small\textbf{Wnioskowanie:} MCS \citep{hansen2011}, 5000 repl.;
+    różnica Sharpe'a \citep{ledoit2008}, blok 3 mies.\par}
     \column{.42\textwidth}
     \centering
     {\small ES 97,5\% [\%], R-vine \(\times\) \texttt{ce\_dep}, P3, hold-out}\par
@@ -504,9 +522,10 @@
   \begin{itemize}
     \item Kupiec: \(\mathrm{LR}=-2\ln\frac{(1-p)^{T-n}p^{n}}
       {(1-\hat p)^{T-n}\hat p^{n}}\sim\chi^2_1\), \(p=1-\alpha\),
-      \(\hat p=n/T\); Christoffersen -- niezależność przekroczeń.
-    \item ES: test Acerbiego--Szekely \(Z_2\) i Du--Escanciano na PIT
-      \(u_t=\hat F_t(L_t)\).
+      \(\hat p=n/T\) \citep{kupiec1995}; \citet{christoffersen1998}
+      -- niezależność przekroczeń.
+    \item ES: test \(Z_2\) \citep{acerbi2014} i test na PIT
+      \(u_t=\hat F_t(L_t)\) \citep{du2017}.
     \item Około 55\% przekroczeń w hold-oucie przypadło na 2022 r.;
       przy próbie miesięcznej moc testów jest niska.
   \end{itemize}
@@ -574,6 +593,114 @@
     mierzą różne aspekty działania modelu.
   \end{block}
   \src{README.md}{Wyniki, interpretacja i ograniczenia badania}
+\end{frame}
+
+% ============================================================ bibliografia
+\begin{frame}[allowframebreaks]{Bibliografia}
+  \scriptsize
+  \begin{thebibliography}{99}
+    \setlength{\itemsep}{1pt}
+    \bibitem[Aas i in.(2009)]{aas2009}
+      Aas, K., Czado, C., Frigessi, A., Bakken, H. (2009).
+      Pair-copula constructions of multiple dependence.
+      \emph{Insurance: Mathematics and Economics}, 44(2), 182--198.
+    \bibitem[Acerbi i Székely(2014)]{acerbi2014}
+      Acerbi, C., Székely, B. (2014). Backtesting expected shortfall.
+      \emph{Risk}, 27(11), 76--81.
+    \bibitem[Acerbi i Tasche(2002)]{acerbi2002}
+      Acerbi, C., Tasche, D. (2002). On the coherence of expected shortfall.
+      \emph{Journal of Banking \& Finance}, 26(7), 1487--1503.
+    \bibitem[Artzner i in.(1999)]{artzner1999}
+      Artzner, P., Delbaen, F., Eber, J.-M., Heath, D. (1999).
+      Coherent measures of risk. \emph{Mathematical Finance}, 9(3), 203--228.
+    \bibitem[Barone-Adesi i in.(1999)]{barone1999}
+      Barone-Adesi, G., Giannopoulos, K., Vosper, L. (1999).
+      VaR without correlations for portfolios of derivative securities.
+      \emph{Journal of Futures Markets}, 19(5), 583--602.
+    \bibitem[Bedford i Cooke(2002)]{bedford2002}
+      Bedford, T., Cooke, R.\,M. (2002). Vines -- a new graphical model for
+      dependent random variables. \emph{Annals of Statistics}, 30(4), 1031--1068.
+    \bibitem[Bo\c{t}oc(2017)]{botoc2017}
+      Bo\c{t}oc, C. (2017). Univariate and bivariate volatility in Central
+      European stock markets. \emph{Prague Economic Papers}, 26(2), 127--141.
+    \bibitem[Christoffersen(1998)]{christoffersen1998}
+      Christoffersen, P.\,F. (1998). Evaluating interval forecasts.
+      \emph{International Economic Review}, 39(4), 841--862.
+    \bibitem[Dißmann i in.(2013)]{dissmann2013}
+      Dißmann, J., Brechmann, E.\,C., Czado, C., Kurowicka, D. (2013).
+      Selecting and estimating regular vine copulae and application to
+      financial returns. \emph{Computational Statistics \& Data Analysis},
+      59, 52--69.
+    \bibitem[Du i Escanciano(2017)]{du2017}
+      Du, Z., Escanciano, J.\,C. (2017). Backtesting expected shortfall:
+      accounting for tail risk. \emph{Management Science}, 63(4), 940--958.
+    \bibitem[Embrechts i in.(2002)]{embrechts2002}
+      Embrechts, P., McNeil, A.\,J., Straumann, D. (2002). Correlation and
+      dependence in risk management: properties and pitfalls. W:
+      M.\,A.\,H. Dempster (red.), \emph{Risk Management: Value at Risk and
+      Beyond}, Cambridge University Press, 176--223.
+    \bibitem[Glosten i in.(1993)]{glosten1993}
+      Glosten, L.\,R., Jagannathan, R., Runkle, D.\,E. (1993). On the relation
+      between the expected value and the volatility of the nominal excess
+      return on stocks. \emph{Journal of Finance}, 48(5), 1779--1801.
+    \bibitem[Hansen(1994)]{hansen1994}
+      Hansen, B.\,E. (1994). Autoregressive conditional density estimation.
+      \emph{International Economic Review}, 35(3), 705--730.
+    \bibitem[Hansen i in.(2011)]{hansen2011}
+      Hansen, P.\,R., Lunde, A., Nason, J.\,M. (2011). The model confidence
+      set. \emph{Econometrica}, 79(2), 453--497.
+    \bibitem[Kupiec(1995)]{kupiec1995}
+      Kupiec, P.\,H. (1995). Techniques for verifying the accuracy of risk
+      measurement models. \emph{Journal of Derivatives}, 3(2), 73--84.
+    \bibitem[Kurach i Papla(2016)]{kurach2016}
+      Kurach, R., Papla, D. (2016). Should pension funds hedge currency risk?
+      The case of Poland. \emph{Baltic Journal of Economics}, 16(2), 81--94.
+    \bibitem[Ledoit i Wolf(2004)]{ledoit2004}
+      Ledoit, O., Wolf, M. (2004). A well-conditioned estimator for
+      large-dimensional covariance matrices. \emph{Journal of Multivariate
+      Analysis}, 88(2), 365--411.
+    \bibitem[Ledoit i Wolf(2008)]{ledoit2008}
+      Ledoit, O., Wolf, M. (2008). Robust performance hypothesis testing with
+      the Sharpe ratio. \emph{Journal of Empirical Finance}, 15(5), 850--859.
+    \bibitem[McNeil i Frey(2000)]{mcneil2000}
+      McNeil, A.\,J., Frey, R. (2000). Estimation of tail-related risk
+      measures for heteroscedastic financial time series: an extreme value
+      approach. \emph{Journal of Empirical Finance}, 7(3--4), 271--300.
+    \bibitem[McNeil i in.(2005)]{mcneil2005}
+      McNeil, A.\,J., Frey, R., Embrechts, P. (2005). \emph{Quantitative Risk
+      Management: Concepts, Techniques and Tools}. Princeton University Press.
+    \bibitem[Müller i Righi(2024)]{muller2024}
+      Müller, F.\,M., Righi, M.\,B. (2024). Comparison of Value at Risk (VaR)
+      multivariate forecast models. \emph{Computational Economics}, 63,
+      75--110.
+    \bibitem[Politis i Romano(1994)]{politis1994}
+      Politis, D.\,N., Romano, J.\,P. (1994). The stationary bootstrap.
+      \emph{Journal of the American Statistical Association}, 89(428),
+      1303--1313.
+    \bibitem[Politis i White(2004)]{politis2004}
+      Politis, D.\,N., White, H. (2004). Automatic block-length selection for
+      the dependent bootstrap. \emph{Econometric Reviews}, 23(1), 53--70.
+    \bibitem[Pratt(1964)]{pratt1964}
+      Pratt, J.\,W. (1964). Risk aversion in the small and in the large.
+      \emph{Econometrica}, 32(1--2), 122--136.
+    \bibitem[Rockafellar i Uryasev(2000)]{rockafellar2000}
+      Rockafellar, R.\,T., Uryasev, S. (2000). Optimization of conditional
+      value-at-risk. \emph{Journal of Risk}, 2(3), 21--41.
+    \bibitem[Sheppard i in.(2024)]{arch}
+      Sheppard, K. i in. (2024). \emph{arch: ARCH models, bootstrap and
+      multiple comparison procedures in Python} (oprogramowanie, wersja 7).
+      Zenodo, doi:10.5281/zenodo.593254.
+    \bibitem[Sklar(1959)]{sklar1959}
+      Sklar, A. (1959). Fonctions de répartition à \(n\) dimensions et leurs
+      marges. \emph{Publications de l'Institut de Statistique de
+      l'Université de Paris}, 8, 229--231.
+    \bibitem[Virtanen i in.(2020)]{scipy2020}
+      Virtanen, P. i in. (2020). SciPy 1.0: fundamental algorithms for
+      scientific computing in Python. \emph{Nature Methods}, 17, 261--272.
+    \bibitem[Vuong(1989)]{vuong1989}
+      Vuong, Q.\,H. (1989). Likelihood ratio tests for model selection and
+      non-nested hypotheses. \emph{Econometrica}, 57(2), 307--333.
+  \end{thebibliography}
 \end{frame}
 
 \begin{frame}{Źródła w repozytorium}
