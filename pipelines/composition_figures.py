@@ -7,7 +7,8 @@ i ``config.json`` przebiegu (limity profili).
 
 Wyjście (``figures/backtest/``):
   subfund_composition_<P>.png  – wagi tickerów w każdym SF w czasie (szereg główny, profil P);
-  portfolio_W_profiles.png     – wagi SF w portfelu w czasie dla wybranych profili;
+  portfolio_W_<P>-<Q>.png      – wagi SF w portfelu w czasie, jeden plik na grupę profili
+                                 (domyślnie portfolio_W_P1-P3.png i portfolio_W_P4-P5.png);
   portfolio_W_mean.png         – średni skład W w kalibracji i hold-out, P1–P5;
   lookthrough_max_x.png        – maxᵢ xᵢ w czasie wobec limitu c_LT profilu.
 
@@ -87,7 +88,7 @@ def subfund_composition(df: pd.DataFrame, profile: str, top: int = 5) -> str:
 
 
 def portfolio_W(df: pd.DataFrame, profiles: list[str]) -> str:
-    """Wagi SF w portfelu (poziom 2) w czasie dla wybranych profili."""
+    """Wagi SF w portfelu (poziom 2) w czasie dla grupy profili; plik ``portfolio_W_<pierwszy>-<ostatni>.png``."""
     W = (df.drop_duplicates(["date", "profile", "subfund"])
            .pivot_table(index=["profile", "date"], columns="subfund", values="W_sf").fillna(0.0))
     fig, axes = plt.subplots(len(profiles), 1, figsize=(13, 1.8 * len(profiles) + 0.9), sharex=True,
@@ -102,7 +103,7 @@ def portfolio_W(df: pd.DataFrame, profiles: list[str]) -> str:
         ax.set_ylabel(p, fontsize=13)
         ax.tick_params(labelsize=11)
     np.atleast_1d(axes)[0].legend(ncol=5, fontsize=11, loc="lower left", bbox_to_anchor=(0, 1.02), frameon=False)
-    return _save(fig, "portfolio_W_profiles.png")
+    return _save(fig, f"portfolio_W_{profiles[0]}-{profiles[-1]}.png")
 
 
 def portfolio_W_mean(df: pd.DataFrame, profiles: list[str]) -> str:
@@ -164,7 +165,8 @@ def main(argv=None):
     ap.add_argument("--model", default="rvine")
     ap.add_argument("--strategy", default="ce_dep")
     ap.add_argument("--profile", default="P3", help="profil wykresu składu sub-funduszy")
-    ap.add_argument("--profiles-w", default="P1,P3,P5", help="profile wykresu W w czasie")
+    ap.add_argument("--profiles-w", default="P1,P2,P3;P4,P5",
+                    help="grupy profili wykresu W w czasie (grupy rozdzielone „;”, jeden plik na grupę)")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
@@ -179,7 +181,7 @@ def main(argv=None):
 
     df = load(run_id, args.model, args.strategy)
     files = [subfund_composition(df, args.profile),
-             portfolio_W(df, args.profiles_w.split(",")),
+             *[portfolio_W(df, g.split(",")) for g in args.profiles_w.split(";")],
              portfolio_W_mean(df, profiles),
              lookthrough(df, profiles, c_lt)]
     for f in files:
