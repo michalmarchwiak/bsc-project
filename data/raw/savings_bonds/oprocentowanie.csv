@@ -1158,6 +1158,7 @@ COI1027,4,rok,4.65
 COI1127,1,rok,6.75
 COI1127,2,rok,6.15
 COI1127,3,rok,4.15
+COI1127,4,rok,5.35
 COI1227,1,rok,6.75
 COI1227,2,rok,6.25
 COI1227,3,rok,4.05
@@ -1193,6 +1194,7 @@ COI1028,2,rok,4.4
 COI1028,3,rok,4.9
 COI1128,1,rok,6.3
 COI1128,2,rok,4.4
+COI1128,3,rok,5.6
 COI1228,1,rok,6.3
 COI1228,2,rok,4.3
 COI0129,1,rok,6.3
@@ -1216,6 +1218,7 @@ COI0929,2,rok,4.5
 COI1029,1,rok,5.5
 COI1029,2,rok,4.9
 COI1129,1,rok,5.25
+COI1129,2,rok,5.6
 COI1229,1,rok,5
 COI0130,1,rok,5
 COI0230,1,rok,5
@@ -1227,6 +1230,7 @@ COI0730,1,rok,4.75
 COI0830,1,rok,4.75
 COI0930,1,rok,4.75
 COI1030,1,rok,4.75
+COI1130,1,rok,4.75
 DOR0624,1,miesiąc,5.5
 DOR0624,2,miesiąc,6.25
 DOR0624,3,miesiąc,6.75
@@ -1970,6 +1974,7 @@ DOR1226,20,miesiąc,3.9
 DOR1226,21,miesiąc,3.9
 DOR1226,22,miesiąc,3.9
 DOR1226,23,miesiąc,3.9
+DOR1226,24,miesiąc,3.9
 DOR0127,1,miesiąc,5.9
 DOR0127,2,miesiąc,5.9
 DOR0127,3,miesiąc,5.9
@@ -1992,6 +1997,7 @@ DOR0127,19,miesiąc,3.9
 DOR0127,20,miesiąc,3.9
 DOR0127,21,miesiąc,3.9
 DOR0127,22,miesiąc,3.9
+DOR0127,23,miesiąc,3.9
 DOR0227,1,miesiąc,5.9
 DOR0227,2,miesiąc,5.9
 DOR0227,3,miesiąc,5.9
@@ -2013,6 +2019,7 @@ DOR0227,18,miesiąc,3.9
 DOR0227,19,miesiąc,3.9
 DOR0227,20,miesiąc,3.9
 DOR0227,21,miesiąc,3.9
+DOR0227,22,miesiąc,3.9
 DOR0327,1,miesiąc,5.9
 DOR0327,2,miesiąc,5.9
 DOR0327,3,miesiąc,5.9
@@ -2033,6 +2040,7 @@ DOR0327,17,miesiąc,3.9
 DOR0327,18,miesiąc,3.9
 DOR0327,19,miesiąc,3.9
 DOR0327,20,miesiąc,3.9
+DOR0327,21,miesiąc,3.9
 DOR0427,1,miesiąc,5.9
 DOR0427,2,miesiąc,5.9
 DOR0427,3,miesiąc,5.4
@@ -2052,6 +2060,7 @@ DOR0427,16,miesiąc,3.9
 DOR0427,17,miesiąc,3.9
 DOR0427,18,miesiąc,3.9
 DOR0427,19,miesiąc,3.9
+DOR0427,20,miesiąc,3.9
 DOR0527,1,miesiąc,5.9
 DOR0527,2,miesiąc,5.4
 DOR0527,3,miesiąc,5.4
@@ -2070,6 +2079,7 @@ DOR0527,15,miesiąc,3.9
 DOR0527,16,miesiąc,3.9
 DOR0527,17,miesiąc,3.9
 DOR0527,18,miesiąc,3.9
+DOR0527,19,miesiąc,3.9
 DOR0627,1,miesiąc,5.4
 DOR0627,2,miesiąc,5.4
 DOR0627,3,miesiąc,5.15
@@ -2087,6 +2097,7 @@ DOR0627,14,miesiąc,3.9
 DOR0627,15,miesiąc,3.9
 DOR0627,16,miesiąc,3.9
 DOR0627,17,miesiąc,3.9
+DOR0627,18,miesiąc,3.9
 DOR0727,1,miesiąc,5.4
 DOR0727,2,miesiąc,5.15
 DOR0727,3,miesiąc,5.15
@@ -2103,6 +2114,7 @@ DOR0727,13,miesiąc,3.9
 DOR0727,14,miesiąc,3.9
 DOR0727,15,miesiąc,3.9
 DOR0727,16,miesiąc,3.9
+DOR0727,17,miesiąc,3.9
 DOR0827,1,miesiąc,5.15
 DOR0827,2,miesiąc,5.15
 DOR0827,3,miesiąc,4.9
@@ -2118,6 +2130,7 @@ DOR0827,12,miesiąc,3.9
 DOR0827,13,miesiąc,3.9
 DOR0827,14,miesiąc,3.9
 DOR0827,15,miesiąc,3.9
+DOR0827,16,miesiąc,3.9
 DOR0927,1,miesiąc,5.15
 DOR0927,2,miesiąc,4.9
 DOR0927,3,miesiąc,4.65
@@ -2132,6 +2145,7 @@ DOR0927,11,miesiąc,3.9
 DOR0927,12,miesiąc,3.9
 DOR0927,13,miesiąc,3.9
 DOR0927,14,miesiąc,3.9
+DOR0927,15,miesiąc,3.9
 DOR1027,1,miesiąc,4.9
 DOR1027,2,miesiąc,4.65
 DOR1027,3,miesiąc,4.4
@@ -2145,6 +2159,7 @@ DOR1027,10,miesiąc,3.9
 DOR1027,11,miesiąc,3.9
 DOR1027,12,miesiąc,3.9
 DOR1027,13,miesiąc,3.9
+DOR1027,14,miesiąc,3.9
 DOR1127,1,miesiąc,4.65
 DOR1127,2,miesiąc,4.4
 DOR1127,3,miesiąc,4.15
@@ -2157,6 +2172,7 @@ DOR1127,9,miesiąc,3.9
 DOR1127,10,miesiąc,3.9
 DOR1127,11,miesiąc,3.9
 DOR1127,12,miesiąc,3.9
+DOR1127,13,miesiąc,3.9
 DOR1227,1,miesiąc,4.4
 DOR1227,2,miesiąc,4.15
 DOR1227,3,miesiąc,4.15
@@ -2168,6 +2184,7 @@ DOR1227,8,miesiąc,3.9
 DOR1227,9,miesiąc,3.9
 DOR1227,10,miesiąc,3.9
 DOR1227,11,miesiąc,3.9
+DOR1227,12,miesiąc,3.9
 DOR0128,1,miesiąc,4.4
 DOR0128,2,miesiąc,4.15
 DOR0128,3,miesiąc,4.15
@@ -2178,6 +2195,7 @@ DOR0128,7,miesiąc,3.9
 DOR0128,8,miesiąc,3.9
 DOR0128,9,miesiąc,3.9
 DOR0128,10,miesiąc,3.9
+DOR0128,11,miesiąc,3.9
 DOR0228,1,miesiąc,4.4
 DOR0228,2,miesiąc,4.15
 DOR0228,3,miesiąc,3.9
@@ -2187,6 +2205,7 @@ DOR0228,6,miesiąc,3.9
 DOR0228,7,miesiąc,3.9
 DOR0228,8,miesiąc,3.9
 DOR0228,9,miesiąc,3.9
+DOR0228,10,miesiąc,3.9
 DOR0328,1,miesiąc,4.4
 DOR0328,2,miesiąc,3.9
 DOR0328,3,miesiąc,3.9
@@ -2195,6 +2214,7 @@ DOR0328,5,miesiąc,3.9
 DOR0328,6,miesiąc,3.9
 DOR0328,7,miesiąc,3.9
 DOR0328,8,miesiąc,3.9
+DOR0328,9,miesiąc,3.9
 DOR0428,1,miesiąc,4.15
 DOR0428,2,miesiąc,3.9
 DOR0428,3,miesiąc,3.9
@@ -2202,27 +2222,35 @@ DOR0428,4,miesiąc,3.9
 DOR0428,5,miesiąc,3.9
 DOR0428,6,miesiąc,3.9
 DOR0428,7,miesiąc,3.9
+DOR0428,8,miesiąc,3.9
 DOR0528,1,miesiąc,4.15
 DOR0528,2,miesiąc,3.9
 DOR0528,3,miesiąc,3.9
 DOR0528,4,miesiąc,3.9
 DOR0528,5,miesiąc,3.9
 DOR0528,6,miesiąc,3.9
+DOR0528,7,miesiąc,3.9
 DOR0628,1,miesiąc,4.15
 DOR0628,2,miesiąc,3.9
 DOR0628,3,miesiąc,3.9
 DOR0628,4,miesiąc,3.9
 DOR0628,5,miesiąc,3.9
+DOR0628,6,miesiąc,3.9
 DOR0728,1,miesiąc,4.15
 DOR0728,2,miesiąc,3.9
 DOR0728,3,miesiąc,3.9
 DOR0728,4,miesiąc,3.9
+DOR0728,5,miesiąc,3.9
 DOR0828,1,miesiąc,4.15
 DOR0828,2,miesiąc,3.9
 DOR0828,3,miesiąc,3.9
+DOR0828,4,miesiąc,3.9
 DOR0928,1,miesiąc,4.15
 DOR0928,2,miesiąc,3.9
+DOR0928,3,miesiąc,3.9
 DOR1028,1,miesiąc,4.15
+DOR1028,2,miesiąc,3.9
+DOR1128,1,miesiąc,4.15
 DOS0601,1,cały okres (stała stopa),10
 DOS0701,1,cały okres (stała stopa),10
 DOS0801,1,cały okres (stała stopa),10
@@ -4078,6 +4106,7 @@ EDO1127,6,rok,18.7
 EDO1127,7,rok,9.7
 EDO1127,8,rok,6.4
 EDO1127,9,rok,4.4
+EDO1127,10,rok,5.6
 EDO1227,1,rok,2.7
 EDO1227,2,rok,3.3
 EDO1227,3,rok,4
@@ -4185,6 +4214,7 @@ EDO1128,5,rok,18.7
 EDO1128,6,rok,9.7
 EDO1128,7,rok,6.4
 EDO1128,8,rok,4.4
+EDO1128,9,rok,5.6
 EDO1228,1,rok,2.7
 EDO1228,2,rok,4
 EDO1228,3,rok,4.6
@@ -4280,6 +4310,7 @@ EDO1129,4,rok,18.7
 EDO1129,5,rok,9.7
 EDO1129,6,rok,6.4
 EDO1129,7,rok,4.4
+EDO1129,8,rok,5.6
 EDO1229,1,rok,2.7
 EDO1229,2,rok,4.6
 EDO1229,3,rok,8.3
@@ -4363,6 +4394,7 @@ EDO1130,3,rok,18.2
 EDO1130,4,rok,9.2
 EDO1130,5,rok,5.9
 EDO1130,6,rok,3.9
+EDO1130,7,rok,5.1
 EDO1230,1,rok,1.7
 EDO1230,2,rok,7.8
 EDO1230,3,rok,18.9
@@ -4434,6 +4466,7 @@ EDO1131,2,rok,18.2
 EDO1131,3,rok,9.2
 EDO1131,4,rok,5.9
 EDO1131,5,rok,3.9
+EDO1131,6,rok,5.1
 EDO1231,1,rok,1.7
 EDO1231,2,rok,18.9
 EDO1231,3,rok,7.6
@@ -4493,6 +4526,7 @@ EDO1132,1,rok,7.25
 EDO1132,2,rok,9.45
 EDO1132,3,rok,6.15
 EDO1132,4,rok,4.15
+EDO1132,5,rok,5.35
 EDO1232,1,rok,7.25
 EDO1232,2,rok,7.85
 EDO1232,3,rok,6.25
@@ -4540,6 +4574,7 @@ EDO1033,4,rok,4.9
 EDO1133,1,rok,7
 EDO1133,2,rok,6.4
 EDO1133,3,rok,4.4
+EDO1133,4,rok,5.6
 EDO1233,1,rok,7
 EDO1233,2,rok,6.5
 EDO1233,3,rok,4.3
@@ -4575,6 +4610,7 @@ EDO1034,2,rok,4.9
 EDO1034,3,rok,5.4
 EDO1134,1,rok,6.55
 EDO1134,2,rok,4.9
+EDO1134,3,rok,6.1
 EDO1234,1,rok,6.55
 EDO1234,2,rok,4.8
 EDO0135,1,rok,6.55
@@ -4598,6 +4634,7 @@ EDO0935,2,rok,5
 EDO1035,1,rok,6
 EDO1035,2,rok,5.4
 EDO1135,1,rok,5.75
+EDO1135,2,rok,6.1
 EDO1235,1,rok,5.6
 EDO0136,1,rok,5.6
 EDO0236,1,rok,5.6
@@ -4609,6 +4646,7 @@ EDO0736,1,rok,5.35
 EDO0836,1,rok,5.35
 EDO0936,1,rok,5.35
 EDO1036,1,rok,5.35
+EDO1136,1,rok,5.35
 OTS0118,1,cały okres,1.5
 OTS0218,1,cały okres,1.5
 OTS0318,1,cały okres,1.5
@@ -4718,6 +4756,7 @@ OTS1026,1,cały okres,2
 OTS1126,1,cały okres,2
 OTS1226,1,cały okres,2
 OTS0127,1,cały okres,2
+OTS0227,1,cały okres,2
 ROD1028,1,rok,3
 ROD1028,2,rok,3.8
 ROD1028,3,rok,4
@@ -4739,6 +4778,7 @@ ROD1128,7,rok,19.2
 ROD1128,8,rok,10.2
 ROD1128,9,rok,6.9
 ROD1128,10,rok,4.9
+ROD1128,11,rok,6.1
 ROD1228,1,rok,3.2
 ROD1228,2,rok,4.1
 ROD1228,3,rok,3.8
@@ -4858,6 +4898,7 @@ ROD1129,6,rok,19.2
 ROD1129,7,rok,10.2
 ROD1129,8,rok,6.9
 ROD1129,9,rok,4.9
+ROD1129,10,rok,6.1
 ROD1229,1,rok,3.2
 ROD1229,2,rok,3.8
 ROD1229,3,rok,4.5
@@ -4965,6 +5006,7 @@ ROD1130,5,rok,19.2
 ROD1130,6,rok,10.2
 ROD1130,7,rok,6.9
 ROD1130,8,rok,4.9
+ROD1130,9,rok,6.1
 ROD1230,1,rok,3.2
 ROD1230,2,rok,4.5
 ROD1230,3,rok,5.1
@@ -5060,6 +5102,7 @@ ROD1131,4,rok,19.2
 ROD1131,5,rok,10.2
 ROD1131,6,rok,6.9
 ROD1131,7,rok,4.9
+ROD1131,8,rok,6.1
 ROD1231,1,rok,3.2
 ROD1231,2,rok,5.1
 ROD1231,3,rok,8.8
@@ -5143,6 +5186,7 @@ ROD1132,3,rok,18.7
 ROD1132,4,rok,9.7
 ROD1132,5,rok,6.4
 ROD1132,6,rok,4.4
+ROD1132,7,rok,5.6
 ROD1232,1,rok,2
 ROD1232,2,rok,8.3
 ROD1232,3,rok,19.4
@@ -5214,6 +5258,7 @@ ROD1133,2,rok,18.7
 ROD1133,3,rok,9.7
 ROD1133,4,rok,6.4
 ROD1133,5,rok,4.4
+ROD1133,6,rok,5.6
 ROD1233,1,rok,2
 ROD1233,2,rok,19.4
 ROD1233,3,rok,8.1
@@ -5273,6 +5318,7 @@ ROD1134,1,rok,7.5
 ROD1134,2,rok,9.95
 ROD1134,3,rok,6.65
 ROD1134,4,rok,4.65
+ROD1134,5,rok,5.85
 ROD1234,1,rok,7.5
 ROD1234,2,rok,8.35
 ROD1234,3,rok,6.75
@@ -5320,6 +5366,7 @@ ROD1035,4,rok,5.4
 ROD1135,1,rok,7.25
 ROD1135,2,rok,6.9
 ROD1135,3,rok,4.9
+ROD1135,4,rok,6.1
 ROD1235,1,rok,7.25
 ROD1235,2,rok,7
 ROD1235,3,rok,4.8
@@ -5355,6 +5402,7 @@ ROD1036,2,rok,5.4
 ROD1036,3,rok,5.9
 ROD1136,1,rok,6.8
 ROD1136,2,rok,5.4
+ROD1136,3,rok,6.6
 ROD1236,1,rok,6.8
 ROD1236,2,rok,5.3
 ROD0137,1,rok,6.8
@@ -5378,6 +5426,7 @@ ROD0937,2,rok,5.5
 ROD1037,1,rok,6.25
 ROD1037,2,rok,5.9
 ROD1137,1,rok,6
+ROD1137,2,rok,6.6
 ROD1237,1,rok,5.85
 ROD0138,1,rok,5.85
 ROD0238,1,rok,5.85
@@ -5389,6 +5438,7 @@ ROD0738,1,rok,5.6
 ROD0838,1,rok,5.6
 ROD0938,1,rok,5.6
 ROD1038,1,rok,5.6
+ROD1138,1,rok,5.6
 ROR0623,1,miesiąc,5.25
 ROR0623,2,miesiąc,6
 ROR0623,3,miesiąc,6.5
@@ -5904,6 +5954,7 @@ ROR1226,8,miesiąc,3.75
 ROR1226,9,miesiąc,3.75
 ROR1226,10,miesiąc,3.75
 ROR1226,11,miesiąc,3.75
+ROR1226,12,miesiąc,3.75
 ROR0127,1,miesiąc,4.25
 ROR0127,2,miesiąc,4
 ROR0127,3,miesiąc,4
@@ -5914,6 +5965,7 @@ ROR0127,7,miesiąc,3.75
 ROR0127,8,miesiąc,3.75
 ROR0127,9,miesiąc,3.75
 ROR0127,10,miesiąc,3.75
+ROR0127,11,miesiąc,3.75
 ROR0227,1,miesiąc,4.25
 ROR0227,2,miesiąc,4
 ROR0227,3,miesiąc,3.75
@@ -5923,6 +5975,7 @@ ROR0227,6,miesiąc,3.75
 ROR0227,7,miesiąc,3.75
 ROR0227,8,miesiąc,3.75
 ROR0227,9,miesiąc,3.75
+ROR0227,10,miesiąc,3.75
 ROR0327,1,miesiąc,4.25
 ROR0327,2,miesiąc,3.75
 ROR0327,3,miesiąc,3.75
@@ -5931,6 +5984,7 @@ ROR0327,5,miesiąc,3.75
 ROR0327,6,miesiąc,3.75
 ROR0327,7,miesiąc,3.75
 ROR0327,8,miesiąc,3.75
+ROR0327,9,miesiąc,3.75
 ROR0427,1,miesiąc,4
 ROR0427,2,miesiąc,3.75
 ROR0427,3,miesiąc,3.75
@@ -5938,27 +5992,35 @@ ROR0427,4,miesiąc,3.75
 ROR0427,5,miesiąc,3.75
 ROR0427,6,miesiąc,3.75
 ROR0427,7,miesiąc,3.75
+ROR0427,8,miesiąc,3.75
 ROR0527,1,miesiąc,4
 ROR0527,2,miesiąc,3.75
 ROR0527,3,miesiąc,3.75
 ROR0527,4,miesiąc,3.75
 ROR0527,5,miesiąc,3.75
 ROR0527,6,miesiąc,3.75
+ROR0527,7,miesiąc,3.75
 ROR0627,1,miesiąc,4
 ROR0627,2,miesiąc,3.75
 ROR0627,3,miesiąc,3.75
 ROR0627,4,miesiąc,3.75
 ROR0627,5,miesiąc,3.75
+ROR0627,6,miesiąc,3.75
 ROR0727,1,miesiąc,4
 ROR0727,2,miesiąc,3.75
 ROR0727,3,miesiąc,3.75
 ROR0727,4,miesiąc,3.75
+ROR0727,5,miesiąc,3.75
 ROR0827,1,miesiąc,4
 ROR0827,2,miesiąc,3.75
 ROR0827,3,miesiąc,3.75
+ROR0827,4,miesiąc,3.75
 ROR0927,1,miesiąc,4
 ROR0927,2,miesiąc,3.75
+ROR0927,3,miesiąc,3.75
 ROR1027,1,miesiąc,4
+ROR1027,2,miesiąc,3.75
+ROR1127,1,miesiąc,4
 ROS1022,1,rok,2.6
 ROS1022,2,rok,3.55
 ROS1022,3,rok,3.75
@@ -6330,6 +6392,7 @@ ROS1127,2,rok,18.45
 ROS1127,3,rok,9.45
 ROS1127,4,rok,6.15
 ROS1127,5,rok,4.15
+ROS1127,6,rok,5.35
 ROS1227,1,rok,1.5
 ROS1227,2,rok,19.15
 ROS1227,3,rok,7.85
@@ -6389,6 +6452,7 @@ ROS1128,1,rok,7.2
 ROS1128,2,rok,9.7
 ROS1128,3,rok,6.4
 ROS1128,4,rok,4.4
+ROS1128,5,rok,5.6
 ROS1228,1,rok,7.2
 ROS1228,2,rok,8.1
 ROS1228,3,rok,6.5
@@ -6436,6 +6500,7 @@ ROS1029,4,rok,5.15
 ROS1129,1,rok,6.95
 ROS1129,2,rok,6.65
 ROS1129,3,rok,4.65
+ROS1129,4,rok,5.85
 ROS1229,1,rok,6.95
 ROS1229,2,rok,6.75
 ROS1229,3,rok,4.55
@@ -6471,6 +6536,7 @@ ROS1030,2,rok,4.9
 ROS1030,3,rok,5.4
 ROS1130,1,rok,6.5
 ROS1130,2,rok,4.9
+ROS1130,3,rok,6.1
 ROS1230,1,rok,6.5
 ROS1230,2,rok,4.8
 ROS0131,1,rok,6.5
@@ -6494,6 +6560,7 @@ ROS0931,2,rok,5
 ROS1031,1,rok,5.7
 ROS1031,2,rok,5.4
 ROS1131,1,rok,5.45
+ROS1131,2,rok,6.1
 ROS1231,1,rok,5.2
 ROS0132,1,rok,5.2
 ROS0232,1,rok,5.2
@@ -6505,6 +6572,7 @@ ROS0732,1,rok,5
 ROS0832,1,rok,5
 ROS0932,1,rok,5
 ROS1032,1,rok,5
+ROS1132,1,rok,5
 TOS0825,1,cały okres (stała stopa),6.5
 TOS0925,1,cały okres (stała stopa),6.5
 TOS1025,1,cały okres (stała stopa),6.85
@@ -6556,6 +6624,7 @@ TOS0729,1,cały okres (stała stopa),4.4
 TOS0829,1,cały okres (stała stopa),4.4
 TOS0929,1,cały okres (stała stopa),4.4
 TOS1029,1,cały okres (stała stopa),4.4
+TOS1129,1,cały okres (stała stopa),4.4
 TOZ0515,1,półrocze,4.97
 TOZ0515,2,półrocze,4.77
 TOZ0515,3,półrocze,3.26
