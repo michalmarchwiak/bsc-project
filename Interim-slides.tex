@@ -317,9 +317,8 @@
     \item \(W_k\le\min(W_{\max},c_{LT}/m_k)\), więc \(W_{\max}\) wiąże
       tylko poniżej \(c_{LT}/c_{SF}\): dla P1--P3 ustawiono go poniżej
       tego progu.
-    \item Wyniki na kolejnych slajdach pochodzą z przebiegu
-      \texttt{3ababedef5d8}, liczonego jeszcze z \(W_{\max}\) =
-      0,40 / 0,45 / 0,50 dla P1--P3.
+    \item Wykresy struktury: przebieg \texttt{7d0ff370e76f}; tabele:
+      \texttt{3ababedef5d8} (\(W_{\max}\) = 0,40/0,45/0,50 dla P1--P3).
   \end{itemize}
   \src{config/profiles.yaml}{Parametry profili}
 \end{frame}
@@ -421,11 +420,11 @@
   \includegraphics[width=\textwidth]{lookthrough_max_x.png}\par
   \raggedright\medskip
   \begin{itemize}
-    \item Największa ekspozycja na pojedynczy instrument
-      \(\max_i x_i\) leży na limicie \(c_{LT}\) w 87--100\% dat.
-    \item To \(c_{LT}\), a nie \(W_{\max}\), ogranicza koncentrację:
-      \(W_k\le c_{LT}/m_k\) daje ok.\ 0,25 (P1) do 0,50 (P5).
-    \item Stąd profile agresywne trzymają 2--3 subfundusze.
+    \item P4--P5: \(\max_i x_i\) leży na limicie \(c_{LT}\) w 91--94\% dat;
+      \(W_k\le c_{LT}/m_k\le0{,}50\), więc portfel trzyma 2--3 subfundusze.
+    \item P1--P3: \(c_{SF}W_{\max}=0{,}04/0{,}056/0{,}075<c_{LT}\), więc
+      wiąże \(W_{\max}\) (98--100\% dat), a \(c_{LT}\) tylko przy
+      \(1/n_k>c_{SF}\) (0--52\% dat); mediana 6--8 subfunduszy.
   \end{itemize}
   \srcmain{pipelines/composition_figures.py}{Kod wykresu: pipelines/composition\_figures.py}
 \end{frame}
@@ -582,8 +581,9 @@
       w hold-oucie dały kopuły Gaussa i \(t\).
     \item \textbf{Użyteczność.} Kara za zależność w ogonie zwiększa CE
       inwestorów o wysokim \(\gamma\) (P1--P3), obniża dla P4--P5.
-    \item \textbf{Struktura.} Koncentrację wyznacza limit look-through
-      \(c_{LT}\); profile agresywne trzymają głównie SF1 i SF2.
+    \item \textbf{Struktura.} Koncentrację w P4--P5 wyznacza limit
+      look-through \(c_{LT}\) (głównie SF1 i SF2), w P1--P3 limit
+      \(W_{\max}\).
     \item \textbf{Ryzyko.} Prognozy ES są zaniżone względem bootstrapu
       i FHS ex post, a przekroczeń VaR jest ok.\ 3,5--4 razy więcej
       niż oczekiwano.
