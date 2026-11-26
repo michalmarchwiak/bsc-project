@@ -1,6 +1,6 @@
 {
   "models/rvine_full_sample": {
-    "updated_utc": "2026-11-17T11:26:43+00:00",
+    "updated_utc": "2026-11-26T08:50:39+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.5",
@@ -322,7 +322,7 @@
     }
   },
   "reports/dependence_models_full_sample": {
-    "updated_utc": "2026-11-17T11:26:43+00:00",
+    "updated_utc": "2026-11-26T08:50:39+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.5",
@@ -333,7 +333,7 @@
       "requests": "2.34.2"
     },
     "path": "reports/dependence_models_full_sample.csv",
-    "sha256": "1b363338bc11b6e3549bed6d99f2f249970ee30064efedce6444bf4478b43dee",
+    "sha256": "6b9902a85240c17dcf0201287e714e326e385800b3133a209753c16b63d3bc70",
     "n_rows": 7,
     "params": {
       "returns": "data/processed/log_returns_pln.csv",
@@ -424,7 +424,7 @@
     }
   },
   "market/riskfree_pln": {
-    "updated_utc": "2026-11-17T11:25:12+00:00",
+    "updated_utc": "2026-11-26T08:49:34+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.5",
@@ -546,7 +546,7 @@
     }
   },
   "options/ledger": {
-    "updated_utc": "2026-11-17T11:41:55+00:00",
+    "updated_utc": "2026-11-26T08:54:04+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.5",
@@ -602,7 +602,7 @@
     }
   },
   "options/overlay_decisions": {
-    "updated_utc": "2026-11-17T11:41:55+00:00",
+    "updated_utc": "2026-11-26T08:54:04+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.5",
@@ -675,7 +675,7 @@
     }
   },
   "subfunds_overlay_nav": {
-    "updated_utc": "2026-11-17T11:41:55+00:00",
+    "updated_utc": "2026-11-26T08:54:04+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.5",
@@ -703,7 +703,7 @@
     }
   },
   "options/portfolio_periods": {
-    "updated_utc": "2026-11-17T11:45:35+00:00",
+    "updated_utc": "2026-11-26T08:54:23+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.5",
@@ -737,7 +737,7 @@
     }
   },
   "reports/options_validation": {
-    "updated_utc": "2026-11-17T11:45:36+00:00",
+    "updated_utc": "2026-11-26T08:54:23+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.5",
@@ -748,7 +748,7 @@
       "requests": "2.34.2"
     },
     "path": "reports/options_validation.csv",
-    "sha256": "2033d6648b6ff2f5657e3ecda9a603fef8fc0b166dcc0ff38d3f64b57894d843",
+    "sha256": "3e97721904daf27c59bc75901898a5da48fc5e5b3113262d1c3f7f20e568b143",
     "n_rows": 156,
     "params": {
       "status": "ok",
@@ -758,14 +758,14 @@
       },
       "atm_adj_estimate": {
         "status": "ok",
-        "atm_adj": 0.772796945688506,
-        "n_obs": 1521,
+        "atm_adj": 0.7816431052442647,
+        "n_obs": 1935,
         "iqr": [
-          0.7273742520612644,
-          0.8231833768149197
+          0.7359695440992129,
+          0.8277176595738873
         ],
         "first_date": "2026-10-30",
-        "last_date": "2026-11-16"
+        "last_date": "2026-11-25"
       },
       "validation": {
         "BXM": {
@@ -786,7 +786,7 @@
     }
   },
   "options/annual_mc": {
-    "updated_utc": "2026-11-17T11:45:49+00:00",
+    "updated_utc": "2026-11-26T08:54:37+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.5",
@@ -817,7 +817,7 @@
     }
   },
   "reports/options_monthly_backtest": {
-    "updated_utc": "2026-11-17T11:45:50+00:00",
+    "updated_utc": "2026-11-26T08:54:37+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.5",
@@ -828,7 +828,7 @@
       "requests": "2.34.2"
     },
     "path": "reports/options_monthly_backtest.md",
-    "sha256": "627be56aabce7f9ff427fecce23840bb6248aa15efb943482e247ad2685275d9",
+    "sha256": "1aefa33cbe2fc4ca0ab4142f26515083328432cdd92aa85cd3c8e2c9a27fadc6",
     "params": {
       "n_series_sf": 783,
       "portfolio": true
@@ -1027,7 +1027,7 @@
     }
   },
   "backtest/7d0ff370e76f/periods": {
-    "updated_utc": "2026-11-17T17:50:32+00:00",
+    "updated_utc": "2026-11-26T09:05:38+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.5",
@@ -1050,7 +1050,7 @@
     }
   },
   "backtest/7d0ff370e76f/es_mc": {
-    "updated_utc": "2026-11-17T17:53:00+00:00",
+    "updated_utc": "2026-11-26T09:07:59+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.5",
@@ -1061,7 +1061,7 @@
       "requests": "2.34.2"
     },
     "path": "backtest/7d0ff370e76f/es_mc.parquet",
-    "sha256": "b36f87e5355eb059a02fa80529a13007214a7ff8f9e6c7a85cadc7c3925beb25",
+    "sha256": "6ae30a80166f049995f73804fcdacc18deb67f1337ad54ca8fe64a3d9c8865c3",
     "n_rows": 9744,
     "params": {
       "expost_mc": {
@@ -1076,7 +1076,7 @@
     }
   },
   "backtest/7d0ff370e76f/ranking": {
-    "updated_utc": "2026-11-17T17:53:56+00:00",
+    "updated_utc": "2026-11-26T09:08:52+00:00",
     "versions": {
       "python": "3.13.0",
       "numpy": "2.5.5",
@@ -1087,7 +1087,7 @@
       "requests": "2.34.2"
     },
     "path": "backtest/7d0ff370e76f/ranking_holdout.parquet",
-    "sha256": "77b76a65909eea29104831957b8630a0ee23aaddf184b2af1728a3fb163a4692",
+    "sha256": "cdce2ad1456c87ce06fe119dcb36f9f5a72b82f35fca316f4cb49e097b427a8d",
     "params": {
       "ranking": {
         "mcs_size": 0.1,

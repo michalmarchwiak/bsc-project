@@ -13,7 +13,7 @@ Luzowanie c_LT: 0.00% problemów poziomu 2; W_max: 0.00%; maxret_es bez rozwiąz
 | P1 | cvine/ce_dep (2.65) | empirical/ce_dep (2.31) | gauss/ce_dep (2.15) | 0.81 | 1.69 (8.) | 32 |
 | P2 | cvine/ce_dep (4.29) | empirical/ce_dep (3.90) | gauss/maxret_es (3.38) | 2.50 | 3.03 (8.) | 31 |
 | P3 | gauss/ce_ov (5.99) | rvine/ce_ov (5.89) | student_t/ce_ov (5.84) | 3.64 | 4.17 (28.) | 59 |
-| P4 | cvine/ce_ov (11.29) | cvine/ce (11.02) | cvine/ce_dep_ov (10.85) | 4.80 | 8.27 (19.) | 46 |
+| P4 | cvine/ce_ov (11.29) | cvine/ce (11.02) | cvine/ce_dep_ov (10.85) | 4.80 | 8.27 (19.) | 51 |
 | P5 | cvine/ce (17.43) | cvine/ce_ov (17.08) | cvine/ce_dep (16.65) | 5.69 | 14.00 (22.) | 37 |
 
 ## Najlepsze szeregi wg CE – próba hold-out
@@ -23,7 +23,7 @@ Luzowanie c_LT: 0.00% problemów poziomu 2; W_max: 0.00%; maxret_es bez rozwiąz
 | P1 | cvine/ce (4.11) | ew (3.08) | cvine/min_es (3.08) | 3.08 | 2.50 (10.) | 28 |
 | P2 | cvine/ce (6.15) | idx_spx (5.20) | indep/ce (4.80) | 4.09 | 3.75 (14.) | 30 |
 | P3 | empirical/ce_ov (7.77) | cvine/ce (7.30) | empirical/ce (7.23) | 4.77 | 5.44 (19.) | 56 |
-| P4 | cvine/maxret_es_ov (9.20) | gauss/ce_dep_ov (9.05) | gauss/ce_ov (8.97) | 5.45 | 3.48 (45.) | 49 |
+| P4 | cvine/maxret_es_ov (9.20) | gauss/ce_dep_ov (9.05) | gauss/ce_ov (8.97) | 5.45 | 3.48 (45.) | 46 |
 | P5 | gauss/ce_dep_ov (18.92) | gauss/ce_ov (18.32) | gauss/ce (17.30) | 5.96 | 10.92 (31.) | 49 |
 
 ## Testy VaR/ES (szeregi modelowe, odsetek bez odrzucenia na poziomie 5%)
